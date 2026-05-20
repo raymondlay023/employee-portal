@@ -12,6 +12,8 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::view('profile', 'profile')->middleware(['auth'])->name('profile');
 
+    Route::view('daily-work-logs', 'daily-work-logs')->name('daily-work-logs.index');
+
     Route::resource('employees', EmployeeController::class);
 
     // Attendance
