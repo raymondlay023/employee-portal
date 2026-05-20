@@ -5,7 +5,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LeaveRequestController;
 
-Route::view('/', 'welcome');
+Route::redirect('/', '/login');
 
 Route::middleware(['auth','verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
