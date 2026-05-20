@@ -20,7 +20,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: false);
     }
 }; ?>
 
@@ -39,18 +39,18 @@ new #[Layout('layouts.guest')] class extends Component
     <x-auth-session-status class="mb-6" :status="session('status')" />
 
     <form wire:submit="login" class="space-y-6">
-        <!-- Email Address -->
+        <!-- NIK / Email Input -->
         <div>
-            <label for="email" class="block text-sm font-semibold text-slate-700 mb-1.5">Email address</label>
+            <label for="login" class="block text-sm font-semibold text-slate-700 mb-1.5">NIK or Email Address</label>
             <div class="relative group">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-brand-500">
                     <svg class="h-5 w-5 text-slate-400 group-focus-within:text-brand-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                 </div>
-                <input wire:model="form.email" id="email" type="email" class="block w-full pl-11 px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium shadow-sm placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all" placeholder="you@company.com" required autofocus autocomplete="username">
+                <input wire:model="form.login" id="login" type="text" class="block w-full pl-11 px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium shadow-sm placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all" placeholder="e.g. 12345 or admin@example.com" required autofocus autocomplete="username">
             </div>
-            <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+            <x-input-error :messages="$errors->get('form.login')" class="mt-2" />
         </div>
 
         <!-- Password -->

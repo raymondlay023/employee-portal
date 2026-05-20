@@ -27,8 +27,8 @@
                     <div class="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 inline-block mb-8 shadow-xl">
                         <x-application-logo class="w-20 h-20 text-white" />
                     </div>
-                    <h1 class="text-5xl font-extrabold mb-6 tracking-tight drop-shadow-sm">Enterprise HR Portal</h1>
-                    <p class="text-brand-100 text-xl max-w-md mx-auto leading-relaxed font-medium">Streamline your workforce management with our premium integrated HR and Payroll solution.</p>
+                    <h1 class="text-5xl font-extrabold mb-6 tracking-tight drop-shadow-sm">Employee Portal</h1>
+                    <p class="text-brand-100 text-xl max-w-md mx-auto leading-relaxed font-medium">Access your personalized workspace, manage your attendance, and request leave seamlessly.</p>
                 </div>
             </div>
 

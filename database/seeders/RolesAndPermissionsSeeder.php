@@ -50,7 +50,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // Employee: Basic access
         $roleEmployee = Role::create(['name' => 'Employee']);
         $roleEmployee->givePermissionTo([
-            'view employees',
             'view attendance',
             'view leaves'
         ]);

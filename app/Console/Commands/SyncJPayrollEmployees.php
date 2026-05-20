@@ -108,9 +108,31 @@ class SyncJPayrollEmployees extends Command
                 $branch = 'Jakarta'; // Default or logic based
             }
 
+            // Resolve and provision User account
+            $user = \App\Models\User::where('nik', $emp['NIK'])->first();
+            if (!$user) {
+                $user = \App\Models\User::create([
+                    'name' => $emp['Name'] ?? 'Unknown',
+                    'nik' => $emp['NIK'],
+                    'email' => $emp['NIK'] . '@employee-portal.local',
+                    'password' => bcrypt('12345678'), // Default password
+                ]);
+            } else {
+                // Update name in case it changed in JPayroll API
+                $user->update([
+                    'name' => $emp['Name'] ?? $user->name,
+                ]);
+            }
+
+            // Securely assign the Employee role if they do not have a role yet
+            if (!$user->hasRole('Employee') && !$user->hasRole('Admin') && !$user->hasRole('HR') && !$user->hasRole('Manager')) {
+                $user->assignRole('Employee');
+            }
+
             Employee::updateOrCreate(
                 ['employee_id' => $emp['NIK']],
                 [
+                    'user_id' => $user->id,
                     'first_name' => $firstName,
                     'last_name' => $lastName,
                     'gender' => $gender,

@@ -37,14 +37,16 @@
                     </thead>
                     <tbody>
                         @forelse($logs as $log)
-                        <tr class="border-t">
-                            <td class="p-2">{{ $log->clock_in_at?->toDateString() }}</td>
-                            <td class="p-2">{{ $log->clock_in_at?->toDateTimeString() }}</td>
-                            <td class="p-2">{{ $log->clock_out_at?->toDateTimeString() ?? '-' }}</td>
-                            <td class="p-2">{{ $log->note ?? '-' }}</td>
-                        </tr>
+                            <tr class="border-t">
+                                <td class="p-2">{{ $log->clock_in_at }}</td>
+                                <td class="p-2">{{ $log->clock_in_at }}</td>
+                                <td class="p-2">{{ $log->clock_out_at ?? '-' }}</td>
+                                <td class="p-2">{{ $log->note ?? '-' }}</td>
+                            </tr>
                         @empty
-                        <tr><td colspan="4" class="p-2">No logs found</td></tr>
+                            <tr>
+                                <td colspan="4" class="p-2">No logs found</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
