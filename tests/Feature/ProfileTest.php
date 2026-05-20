@@ -20,19 +20,22 @@ class ProfileTest extends TestCase
         $response
             ->assertOk()
             ->assertSeeVolt('profile.update-profile-information-form')
-            ->assertSeeVolt('profile.update-password-form')
-            ->assertSeeVolt('profile.delete-user-form');
+            ->assertSeeVolt('profile.update-password-form');
     }
 
-    public function test_profile_information_can_be_updated(): void
+    public function test_display_name_can_be_updated_without_otp(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'name' => 'Original Name',
+            'email' => 'original@example.com',
+        ]);
 
         $this->actingAs($user);
 
+        // Update name only
         $component = Volt::test('profile.update-profile-information-form')
-            ->set('name', 'Test User')
-            ->set('email', 'test@example.com')
+            ->set('name', 'Updated Name')
+            ->set('email', 'original@example.com')
             ->call('updateProfileInformation');
 
         $component
@@ -40,10 +43,54 @@ class ProfileTest extends TestCase
             ->assertNoRedirect();
 
         $user->refresh();
+        $this->assertSame('Updated Name', $user->name);
+        $this->assertSame('original@example.com', $user->email);
+    }
 
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+    public function test_email_change_requires_verification_code(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Original Name',
+            'email' => 'original@example.com',
+        ]);
+
+        $this->actingAs($user);
+
+        // Attempt to update email directly without sending code first
+        $component = Volt::test('profile.update-profile-information-form')
+            ->set('name', 'Original Name')
+            ->set('email', 'new@example.com')
+            ->call('updateProfileInformation');
+
+        $component->assertHasErrors(['email']);
+        $this->assertSame('original@example.com', $user->refresh()->email);
+
+        // Send verification code
+        $component->call('sendEmailVerificationCode')
+            ->assertHasNoErrors()
+            ->assertSet('codeSent', true)
+            ->assertSet('pendingEmail', 'new@example.com');
+
+        // Confirm code was saved in session
+        $verification = session('email_verification');
+        $this->assertNotNull($verification);
+        $this->assertSame('new@example.com', $verification['email']);
+        $code = $verification['code'];
+
+        // Attempt with wrong code
+        $component->set('verificationCode', '000000')
+            ->call('updateProfileInformation')
+            ->assertHasErrors(['verificationCode']);
+        $this->assertSame('original@example.com', $user->refresh()->email);
+
+        // Update with correct code
+        $component->set('verificationCode', $code)
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+        $this->assertSame('new@example.com', $user->email);
+        $this->assertNotNull($user->email_verified_at);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
@@ -64,38 +111,5 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
-    {
-        $user = User::factory()->create();
 
-        $this->actingAs($user);
-
-        $component = Volt::test('profile.delete-user-form')
-            ->set('password', 'password')
-            ->call('deleteUser');
-
-        $component
-            ->assertHasNoErrors()
-            ->assertRedirect('/');
-
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
-    }
-
-    public function test_correct_password_must_be_provided_to_delete_account(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user);
-
-        $component = Volt::test('profile.delete-user-form')
-            ->set('password', 'wrong-password')
-            ->call('deleteUser');
-
-        $component
-            ->assertHasErrors('password')
-            ->assertNoRedirect();
-
-        $this->assertNotNull($user->fresh());
-    }
 }

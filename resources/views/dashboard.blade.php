@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-2xl text-gray-900 tracking-tight">
-                {{ __('Good morning, ') . auth()->user()->name . ' 👋' }}
+                {{ __('Hello, ') . auth()->user()->name }}
             </h2>
             <div class="text-sm text-gray-500 font-medium">
                 {{ now()->format('l, F j, Y') }}
