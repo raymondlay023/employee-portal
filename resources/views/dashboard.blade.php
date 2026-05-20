@@ -160,77 +160,79 @@
                     </div>
                 @endcan
 
-                <!-- Daily Work Logs Card (Today's Progress) -->
-                @php
-                    $todayWorkLogs = \App\Models\DailyWorkLog::where('user_id', $user->id)
-                        ->where('date', now()->toDateString())
-                        ->orderBy('start_time', 'asc')
-                        ->get();
-                        
-                    $todayTotalHours = 0;
-                    foreach ($todayWorkLogs as $wlog) {
-                        if (!empty($wlog->start_time) && !empty($wlog->end_time)) {
-                            try {
-                                $start = \Carbon\Carbon::createFromFormat('H:i', substr($wlog->start_time, 0, 5));
-                                $end = \Carbon\Carbon::createFromFormat('H:i', substr($wlog->end_time, 0, 5));
-                                if ($end->greaterThan($start)) {
-                                    $todayTotalHours += ($end->timestamp - $start->timestamp) / 3600;
-                                }
-                            } catch (\Exception $e) {}
+                @can('view daily logs')
+                    <!-- Daily Work Logs Card (Today's Progress) -->
+                    @php
+                        $todayWorkLogs = \App\Models\DailyWorkLog::where('user_id', $user->id)
+                            ->where('date', now()->toDateString())
+                            ->orderBy('start_time', 'asc')
+                            ->get();
+                            
+                        $todayTotalHours = 0;
+                        foreach ($todayWorkLogs as $wlog) {
+                            if (!empty($wlog->start_time) && !empty($wlog->end_time)) {
+                                try {
+                                    $start = \Carbon\Carbon::createFromFormat('H:i', substr($wlog->start_time, 0, 5));
+                                    $end = \Carbon\Carbon::createFromFormat('H:i', substr($wlog->end_time, 0, 5));
+                                    if ($end->greaterThan($start)) {
+                                        $todayTotalHours += ($end->timestamp - $start->timestamp) / 3600;
+                                    }
+                                } catch (\Exception $e) {}
+                            }
                         }
-                    }
+                        
+                        $todayPercentage = min(100, ($todayTotalHours / 8) * 100);
+                        $todayIsComplete = $todayTotalHours >= 8;
+                        $todayFormattedHours = number_format($todayTotalHours, $todayTotalHours == (int)$todayTotalHours ? 0 : 1);
+                    @endphp
                     
-                    $todayPercentage = min(100, ($todayTotalHours / 8) * 100);
-                    $todayIsComplete = $todayTotalHours >= 8;
-                    $todayFormattedHours = number_format($todayTotalHours, $todayTotalHours == (int)$todayTotalHours ? 0 : 1);
-                @endphp
-                
-                <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-emerald-50/40 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
-                    
-                    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                        <div class="space-y-3 flex-grow">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Activity & Timesheet Desk</span>
-                                @if ($todayIsComplete)
-                                    <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">TARGET REACHED</span>
-                                @elseif ($todayTotalHours > 0)
-                                    <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">IN PROGRESS</span>
+                    <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-emerald-50/40 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                        
+                        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                            <div class="space-y-3 flex-grow">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Activity & Timesheet Desk</span>
+                                    @if ($todayIsComplete)
+                                        <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">TARGET REACHED</span>
+                                    @elseif ($todayTotalHours > 0)
+                                        <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">IN PROGRESS</span>
+                                    @else
+                                        <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">READY</span>
+                                    @endif
+                                </div>
+                                
+                                <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
+                                    {{ $todayFormattedHours }} Hour{{ $todayTotalHours != 1 ? 's' : '' }} Logged for Today
+                                </h3>
+                                
+                                <!-- Small Progress Bar -->
+                                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/50 max-w-md">
+                                    <div 
+                                        class="h-full bg-gradient-to-r {{ $todayIsComplete ? 'from-emerald-400 to-teal-500' : 'from-brand-500 to-brand-700' }} rounded-full transition-all duration-500" 
+                                        style="width: {{ $todayPercentage }}%"
+                                    ></div>
+                                </div>
+
+                                @if($todayWorkLogs->isNotEmpty())
+                                    <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                                        Latest activity: <span class="font-bold text-slate-700">{{ $todayWorkLogs->last()->activity }}</span> ({{ $todayWorkLogs->last()->start_time }} - {{ $todayWorkLogs->last()->end_time }})
+                                    </p>
                                 @else
-                                    <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">READY</span>
+                                    <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                                        You haven't recorded any work slots for today yet. Make sure to log your hourly work to reach the 8-hour target.
+                                    </p>
                                 @endif
                             </div>
-                            
-                            <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
-                                {{ $todayFormattedHours }} Hour{{ $todayTotalHours != 1 ? 's' : '' }} Logged for Today
-                            </h3>
-                            
-                            <!-- Small Progress Bar -->
-                            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/50 max-w-md">
-                                <div 
-                                    class="h-full bg-gradient-to-r {{ $todayIsComplete ? 'from-emerald-400 to-teal-500' : 'from-brand-500 to-brand-700' }} rounded-full transition-all duration-500" 
-                                    style="width: {{ $todayPercentage }}%"
-                                ></div>
+
+                            <div class="flex-shrink-0">
+                                <a href="{{ route('daily-work-logs.index') }}" class="inline-flex justify-center items-center px-5 py-3 bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100 hover:text-brand-800 rounded-xl font-bold text-xs transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
+                                    Manage Timesheet
+                                </a>
                             </div>
-
-                            @if($todayWorkLogs->isNotEmpty())
-                                <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                                    Latest activity: <span class="font-bold text-slate-700">{{ $todayWorkLogs->last()->activity }}</span> ({{ $todayWorkLogs->last()->start_time }} - {{ $todayWorkLogs->last()->end_time }})
-                                </p>
-                            @else
-                                <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                                    You haven't recorded any work slots for today yet. Make sure to log your hourly work to reach the 8-hour target.
-                                </p>
-                            @endif
-                        </div>
-
-                        <div class="flex-shrink-0">
-                            <a href="{{ route('daily-work-logs.index') }}" class="inline-flex justify-center items-center px-5 py-3 bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100 hover:text-brand-800 rounded-xl font-bold text-xs transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
-                                Manage Timesheet
-                            </a>
                         </div>
                     </div>
-                </div>
+                @endcan
 
                 @can('view leaves')
                     <!-- Leaves Card -->
