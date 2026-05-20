@@ -79,12 +79,14 @@
                             Search Directory
                         </a>
                     @endcan
-                    <a href="{{ route('attendance.index') }}" class="inline-flex items-center px-4 py-2.5 bg-brand-800 border border-brand-600 text-white font-bold text-xs rounded-xl hover:bg-brand-700 transition-all shadow-md shadow-black/5 hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
-                        </svg>
-                        Attendance History
-                    </a>
+                    @can('view attendance')
+                        <a href="{{ route('attendance.index') }}" class="inline-flex items-center px-4 py-2.5 bg-brand-800 border border-brand-600 text-white font-bold text-xs rounded-xl hover:bg-brand-700 transition-all shadow-md shadow-black/5 hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
+                            </svg>
+                            Attendance History
+                        </a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -95,94 +97,170 @@
             <!-- Left Side Column: Attendance and Leaves (Takes 2 Cols) -->
             <div class="lg:col-span-2 space-y-6">
                 
-                <!-- Attendance Card (Live Digital Clock & Actions) -->
-                <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-brand-50/40 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
-                    
-                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Attendance Desk</span>
+                @can('view attendance')
+                    <!-- Attendance Card (Live Digital Clock & Actions) -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-brand-50/40 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                        
+                        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Attendance Desk</span>
+                                    @if ($todayLog)
+                                        <span class="flex h-2 w-2 relative">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                        </span>
+                                        <span class="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">ACTIVE SHIFT</span>
+                                    @else
+                                        <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">READY</span>
+                                    @endif
+                                </div>
+                                
+                                <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
+                                    @if ($todayLog)
+                                        Active shift started at {{ \Carbon\Carbon::parse($todayLog->clock_in_at)->format('H:i') }}
+                                    @else
+                                        Ready to record your daily attendance
+                                    @endif
+                                </h3>
+                                
+                                <p class="text-xs text-slate-500 leading-relaxed max-w-lg">
+                                    @if ($todayLog)
+                                        Shift is active. Make sure to clock out when finishing your work day to complete log registration.
+                                    @else
+                                        Ensure your device location services are active. Clock in to begin recording your portal shift.
+                                    @endif
+                                </p>
+                            </div>
+
+                            <!-- Spacious Digital Clock & Forms -->
+                            <div class="flex flex-col items-center md:items-end justify-center gap-3 flex-shrink-0 bg-slate-50/60 p-5 rounded-2xl border border-slate-100/50 w-full md:w-auto">
+                                <span class="text-2xl font-black text-slate-800 tracking-wider font-mono" id="clock-display">
+                                    {{ now()->format('H:i:s') }}
+                                </span>
+                                
                                 @if ($todayLog)
-                                    <span class="flex h-2 w-2 relative">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                    </span>
-                                    <span class="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">ACTIVE SHIFT</span>
+                                    <form action="{{ route('attendance.clock-out') }}" method="POST" class="w-full">
+                                        @csrf
+                                        <button type="submit" class="w-full px-6 py-2.5 bg-red-650 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shadow-red-500/10 hover:shadow-red-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
+                                            Clock Out Now
+                                        </button>
+                                    </form>
+                                @else
+                                    <form action="{{ route('attendance.clock-in') }}" method="POST" class="w-full">
+                                        @csrf
+                                        <button type="submit" class="w-full px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
+                                            Clock In Now
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endcan
+
+                <!-- Daily Work Logs Card (Today's Progress) -->
+                @php
+                    $todayWorkLogs = \App\Models\DailyWorkLog::where('user_id', $user->id)
+                        ->where('date', now()->toDateString())
+                        ->orderBy('start_time', 'asc')
+                        ->get();
+                        
+                    $todayTotalHours = 0;
+                    foreach ($todayWorkLogs as $wlog) {
+                        if (!empty($wlog->start_time) && !empty($wlog->end_time)) {
+                            try {
+                                $start = \Carbon\Carbon::createFromFormat('H:i', substr($wlog->start_time, 0, 5));
+                                $end = \Carbon\Carbon::createFromFormat('H:i', substr($wlog->end_time, 0, 5));
+                                if ($end->greaterThan($start)) {
+                                    $todayTotalHours += ($end->timestamp - $start->timestamp) / 3600;
+                                }
+                            } catch (\Exception $e) {}
+                        }
+                    }
+                    
+                    $todayPercentage = min(100, ($todayTotalHours / 8) * 100);
+                    $todayIsComplete = $todayTotalHours >= 8;
+                    $todayFormattedHours = number_format($todayTotalHours, $todayTotalHours == (int)$todayTotalHours ? 0 : 1);
+                @endphp
+                
+                <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-emerald-50/40 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                    
+                    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                        <div class="space-y-3 flex-grow">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Activity & Timesheet Desk</span>
+                                @if ($todayIsComplete)
+                                    <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">TARGET REACHED</span>
+                                @elseif ($todayTotalHours > 0)
+                                    <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">IN PROGRESS</span>
                                 @else
                                     <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">READY</span>
                                 @endif
                             </div>
                             
                             <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
-                                @if ($todayLog)
-                                    Active shift started at {{ \Carbon\Carbon::parse($todayLog->clock_in_at)->format('H:i') }}
-                                @else
-                                    Ready to record your daily attendance
-                                @endif
+                                {{ $todayFormattedHours }} Hour{{ $todayTotalHours != 1 ? 's' : '' }} Logged for Today
                             </h3>
                             
-                            <p class="text-xs text-slate-500 leading-relaxed max-w-lg">
-                                @if ($todayLog)
-                                    Shift is active. Make sure to clock out when finishing your work day to complete log registration.
-                                @else
-                                    Ensure your device location services are active. Clock in to begin recording your portal shift.
-                                @endif
-                            </p>
-                        </div>
-
-                        <!-- Spacious Digital Clock & Forms -->
-                        <div class="flex flex-col items-center md:items-end justify-center gap-3 flex-shrink-0 bg-slate-50/60 p-5 rounded-2xl border border-slate-100/50 w-full md:w-auto">
-                            <span class="text-2xl font-black text-slate-800 tracking-wider font-mono" id="clock-display">
-                                {{ now()->format('H:i:s') }}
-                            </span>
-                            
-                            @if ($todayLog)
-                                <form action="{{ route('attendance.clock-out') }}" method="POST" class="w-full">
-                                    @csrf
-                                    <button type="submit" class="w-full px-6 py-2.5 bg-red-650 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shadow-red-500/10 hover:shadow-red-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
-                                        Clock Out Now
-                                    </button>
-                                </form>
-                            @else
-                                <form action="{{ route('attendance.clock-in') }}" method="POST" class="w-full">
-                                    @csrf
-                                    <button type="submit" class="w-full px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
-                                        Clock In Now
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Leaves Card -->
-                <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-indigo-50/40 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
-                    
-                    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Leave Balance Desk</span>
-                                <span class="text-[10px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full font-bold">ONLINE</span>
+                            <!-- Small Progress Bar -->
+                            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/50 max-w-md">
+                                <div 
+                                    class="h-full bg-gradient-to-r {{ $todayIsComplete ? 'from-emerald-400 to-teal-500' : 'from-brand-500 to-brand-700' }} rounded-full transition-all duration-500" 
+                                    style="width: {{ $todayPercentage }}%"
+                                ></div>
                             </div>
-                            
-                            <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
-                                {{ $pendingLeaves > 0 ? "$pendingLeaves Pending Requests awaiting review" : "No active pending leave requests" }}
-                            </h3>
-                            
-                            <p class="text-xs text-slate-500 leading-relaxed max-w-lg">
-                                Review your personal balances, create medical or personal leave requests, and monitor manager approvals directly.
-                            </p>
+
+                            @if($todayWorkLogs->isNotEmpty())
+                                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                                    Latest activity: <span class="font-bold text-slate-700">{{ $todayWorkLogs->last()->activity }}</span> ({{ $todayWorkLogs->last()->start_time }} - {{ $todayWorkLogs->last()->end_time }})
+                                </p>
+                            @else
+                                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                                    You haven't recorded any work slots for today yet. Make sure to log your hourly work to reach the 8-hour target.
+                                </p>
+                            @endif
                         </div>
 
                         <div class="flex-shrink-0">
-                            <a href="{{ route('leave-requests.create') }}" class="inline-flex justify-center items-center px-5 py-3 bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-800 rounded-xl font-bold text-xs transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
-                                Request Time Off
+                            <a href="{{ route('daily-work-logs.index') }}" class="inline-flex justify-center items-center px-5 py-3 bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100 hover:text-brand-800 rounded-xl font-bold text-xs transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
+                                Manage Timesheet
                             </a>
                         </div>
                     </div>
                 </div>
+
+                @can('view leaves')
+                    <!-- Leaves Card -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-indigo-50/40 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                        
+                        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Leave Balance Desk</span>
+                                    <span class="text-[10px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full font-bold">ONLINE</span>
+                                </div>
+                                
+                                <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
+                                    {{ $pendingLeaves > 0 ? "$pendingLeaves Pending Requests awaiting review" : "No active pending leave requests" }}
+                                </h3>
+                                
+                                <p class="text-xs text-slate-500 leading-relaxed max-w-lg">
+                                    Review your personal balances, create medical or personal leave requests, and monitor manager approvals directly.
+                                </p>
+                            </div>
+
+                            <div class="flex-shrink-0">
+                                <a href="{{ route('leave-requests.create') }}" class="inline-flex justify-center items-center px-5 py-3 bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-800 rounded-xl font-bold text-xs transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
+                                    Request Time Off
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endcan
 
             </div>
 

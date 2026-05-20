@@ -20,6 +20,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'manage attendance']);
         Permission::create(['name' => 'view leaves']);
         Permission::create(['name' => 'manage leaves']);
+        Permission::create(['name' => 'view daily logs']);
 
         // Create roles and assign created permissions
 
@@ -35,12 +36,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'view attendance',
             'manage attendance',
             'view leaves',
-            'manage leaves'
+            'manage leaves',
+            'view daily logs'
         ]);
 
         // Manager: Can view team data and approve leaves
         $roleManager = Role::create(['name' => 'Manager']);
         $roleManager->givePermissionTo([
+            'view daily logs',
             'view employees',
             'view attendance',
             'view leaves',
@@ -50,8 +53,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // Employee: Basic access
         $roleEmployee = Role::create(['name' => 'Employee']);
         $roleEmployee->givePermissionTo([
-            'view attendance',
-            'view leaves'
+            'view daily logs',
+            // 'view attendance',
+            // 'view leaves'
         ]);
     }
 }
