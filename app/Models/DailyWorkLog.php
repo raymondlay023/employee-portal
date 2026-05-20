@@ -16,6 +16,7 @@ class DailyWorkLog extends Model
         'end_time',
         'activity',
         'remarks',
+        'proof_path',
     ];
 
     public function user()

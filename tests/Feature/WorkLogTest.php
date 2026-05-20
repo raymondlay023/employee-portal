@@ -144,4 +144,121 @@ class WorkLogTest extends TestCase
             'remarks' => 'Discussed timesheet system with managers',
         ]);
     }
+
+    /**
+     * Test that start and end time ranges can be overridden.
+     */
+    public function test_can_override_time_range_with_valid_times(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '08:00')
+            ->set('logs.0.end_time', '09:00')
+            ->set('logs.0.activity', 'Coding')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('daily_work_logs', [
+            'user_id' => $user->id,
+            'start_time' => '08:00',
+            'end_time' => '09:00',
+            'activity' => 'Coding',
+        ]);
+    }
+
+    /**
+     * Test that overlapping time ranges cannot be saved.
+     */
+    public function test_cannot_save_overlapping_time_ranges(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '08:00')
+            ->set('logs.0.end_time', '09:30')
+            ->set('logs.0.activity', 'Task 1')
+            ->call('addHourSlot')
+            ->set('logs.1.start_time', '09:00')
+            ->set('logs.1.end_time', '10:00')
+            ->set('logs.1.activity', 'Task 2')
+            ->call('save');
+
+        $component->assertHasErrors(['logs.0.start_time', 'logs.1.start_time']);
+        $this->assertDatabaseEmpty('daily_work_logs');
+    }
+
+    /**
+     * Test that start time must be before end time.
+     */
+    public function test_cannot_save_if_start_time_is_after_end_time(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '10:00')
+            ->set('logs.0.end_time', '09:00')
+            ->set('logs.0.activity', 'Task')
+            ->call('save');
+
+        $component->assertHasErrors(['logs.0.start_time']);
+        $this->assertDatabaseEmpty('daily_work_logs');
+    }
+
+    /**
+     * Test that users can upload an image proof.
+     */
+    public function test_can_upload_image_proof_for_time_slot(): void
+    {
+        \Storage::fake('public');
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('screenshot.jpg');
+
+        $component = Volt::test('pages.work-logs')
+            ->set('logs.0.activity', 'Dev Work')
+            ->set('newProofs.0', $file)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $log = DailyWorkLog::first();
+        $this->assertNotNull($log->proof_path);
+        
+        \Storage::disk('public')->assertExists($log->proof_path);
+    }
+
+    /**
+     * Test that users can delete an uploaded proof.
+     */
+    public function test_can_delete_image_proof(): void
+    {
+        \Storage::fake('public');
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('screenshot.jpg');
+
+        $component = Volt::test('pages.work-logs')
+            ->set('logs.0.activity', 'Dev Work')
+            ->set('newProofs.0', $file)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $log = DailyWorkLog::first();
+        $this->assertNotNull($log->proof_path);
+        \Storage::disk('public')->assertExists($log->proof_path);
+
+        // Now delete it
+        $component->call('deleteProof', 0);
+
+        $this->assertNull(DailyWorkLog::first()->proof_path);
+        \Storage::disk('public')->assertMissing($log->proof_path);
+    }
 }
+
