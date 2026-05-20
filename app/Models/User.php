@@ -39,11 +39,13 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    public function employee()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasOne(Employee::class);
     }
 }
