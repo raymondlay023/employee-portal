@@ -16,11 +16,15 @@ class Employee extends Model
         'first_name',
         'last_name',
         'email',
+        'gender',
         'department_id',
         'designation_id',
         'phone',
         'joined_at',
         'status',
+        'account_type',
+        'organization_structure',
+        'branch',
         'skills',
     ];
 

@@ -42,24 +42,12 @@ class EmployeeController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        $departments = Department::all();
-        $designations = Designation::all();
-
-        return view('employees.create', compact('departments','designations'));
-    }
+    // Removed because employees are now synced from JPayroll API
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreEmployeeRequest $request)
-    {
-        $data = $request->validated();
-        $employee = Employee::create($data);
-
-        return redirect()->route('employees.show', $employee)->with('success','Employee created');
-    }
+    // Removed because employees are now synced from JPayroll API
 
     /**
      * Display the specified resource.
@@ -73,31 +61,15 @@ class EmployeeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Employee $employee)
-    {
-        $departments = Department::all();
-        $designations = Designation::all();
-
-        return view('employees.edit', compact('employee','departments','designations'));
-    }
+    // Removed because employees are now synced from JPayroll API
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateEmployeeRequest $request, Employee $employee)
-    {
-        $employee->update($request->validated());
-
-        return redirect()->route('employees.show', $employee)->with('success','Employee updated');
-    }
+    // Removed because employees are now synced from JPayroll API
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Employee $employee)
-    {
-        $employee->delete();
-
-        return redirect()->route('employees.index')->with('success','Employee deleted');
-    }
+    // Removed because employees are now synced from JPayroll API
 }

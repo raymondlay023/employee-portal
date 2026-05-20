@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'jpayroll' => [
+        'url' => env('JPAYROLL_API_URL'),
+        'key' => env('JPAYROLL_API_KEY'),
+        'company_area' => env('JPAYROLL_COMPANY_AREA'),
+    ],
+
 ];

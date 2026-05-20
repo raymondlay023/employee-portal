@@ -4,10 +4,6 @@
             <h2 class="font-semibold text-2xl text-gray-900 tracking-tight">
                 {{ __('Employees Directory') }}
             </h2>
-            <a href="{{ route('employees.create') }}" class="btn">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                New Employee
-            </a>
         </div>
     </x-slot>
 
@@ -89,13 +85,7 @@
                                     {{ $emp->joined_at?->format('M j, Y') ?? 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{{ route('employees.show', $emp) }}" class="text-brand-600 hover:text-brand-900 mr-3">View</a>
-                                    <a href="{{ route('employees.edit', $emp) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
-                                    <form action="{{ route('employees.destroy', $emp) }}" method="POST" class="inline" onsubmit="return confirm('Delete this employee?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="text-red-600 hover:text-red-900">Delete</button>
-                                    </form>
+                                    <a href="{{ route('employees.show', $emp) }}" class="text-brand-600 hover:text-brand-900">View</a>
                                 </td>
                             </tr>
                             @empty

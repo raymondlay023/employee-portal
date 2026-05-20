@@ -10,24 +10,6 @@
                 </a>
                 <h1 class="text-2xl font-bold text-gray-900">Employee Profile</h1>
             </div>
-            
-            @can('manage employees')
-            <div class="flex items-center space-x-3">
-                <a href="{{ route('employees.edit', $employee) }}" wire:navigate class="btn-secondary flex items-center space-x-2">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                    </svg>
-                    <span>Edit Profile</span>
-                </a>
-                <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this employee?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-100 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all">
-                        Delete
-                    </button>
-                </form>
-            </div>
-            @endcan
         </div>
 
         @if(session('success'))
@@ -64,13 +46,13 @@
                             <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                             </svg>
-                            {{ $employee->email }}
+                            {{ $employee->email ?? '-' }}
                         </div>
                         <div class="flex items-center text-sm text-gray-500">
                             <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
                             </svg>
-                            {{ $employee->phone ?? 'No Phone Provided' }}
+                            {{ $employee->phone ?? '-' }}
                         </div>
                     </div>
                 </div>
@@ -97,6 +79,18 @@
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wider text-gray-500">Designation</dt>
                             <dd class="mt-1 text-sm text-gray-900 font-medium">{{ $employee->designation?->title ?? 'N/A' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-gray-500">Gender</dt>
+                            <dd class="mt-1 text-sm text-gray-900 font-medium">{{ $employee->gender == 'M' ? 'Male' : ($employee->gender == 'F' ? 'Female' : 'N/A') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-gray-500">Account Type</dt>
+                            <dd class="mt-1 text-sm text-gray-900 font-medium">{{ $employee->account_type ?? 'N/A' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-gray-500">Branch</dt>
+                            <dd class="mt-1 text-sm text-gray-900 font-medium">{{ $employee->branch ?? 'N/A' }}</dd>
                         </div>
                     </div>
                 </div>
