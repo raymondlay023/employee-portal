@@ -251,6 +251,8 @@ class WorkLogTest extends TestCase
         $file = \Illuminate\Http\UploadedFile::fake()->image('screenshot.jpg');
 
         $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '08:00')
+            ->set('logs.0.end_time', '09:00')
             ->set('logs.0.activity', 'Dev Work')
             ->set('newProofs.0', $file)
             ->call('save')
