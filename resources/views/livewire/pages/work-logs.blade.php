@@ -37,8 +37,8 @@ new class extends Component
                     'id' => null,
                     'user_id' => auth()->id(),
                     'date' => $this->date,
-                    'start_time' => '07:30',
-                    'end_time' => '08:30',
+                    'start_time' => '',
+                    'end_time' => '',
                     'activity' => '',
                     'remarks' => '',
                     'proof_path' => null,
@@ -59,34 +59,15 @@ new class extends Component
         $this->loadLogs();
     }
 
-    /**
-     * Add next chronological hour slot.
-     */
     public function addHourSlot(): void
     {
-        if (empty($this->logs)) {
-            $nextStart = '07:30';
-        } else {
-            $lastLog = end($this->logs);
-            $nextStart = $lastLog['end_time'];
-        }
-
-        // Parse start time "HH:MM" and add 1 hour
-        [$hours, $minutes] = explode(':', $nextStart);
-        $newHours = (int)$hours + 1;
-        
-        if ($newHours >= 24) {
-            $newHours = 0; // wrap around
-        }
-        
-        $nextEnd = sprintf('%02d:%02d', $newHours, (int)$minutes);
-
+        // Append an empty timeslot so the user must enter start and end times manually
         $this->logs[] = [
             'id' => null,
             'user_id' => auth()->id(),
             'date' => $this->date,
-            'start_time' => $nextStart,
-            'end_time' => $nextEnd,
+            'start_time' => '',
+            'end_time' => '',
             'activity' => '',
             'remarks' => '',
             'proof_path' => null,
