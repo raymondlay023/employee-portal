@@ -61,13 +61,40 @@ new class extends Component
 
     public function addHourSlot(): void
     {
-        // Append an empty timeslot so the user must enter start and end times manually
+        $nextStart = '';
+        $nextEnd = '';
+
+        if (!empty($this->logs)) {
+            // Find the last non-empty end_time from the end
+            for ($i = count($this->logs) - 1; $i >= 0; $i--) {
+                $candidate = $this->logs[$i]['end_time'] ?? '';
+                $candidate = trim(substr($candidate, 0, 5));
+                if ($candidate !== '') {
+                    if (preg_match('/^\d{1,2}:\d{2}$/', $candidate)) {
+                        try {
+                            $start = \Carbon\Carbon::createFromFormat('H:i', $candidate);
+                            $end = $start->copy()->addHour();
+                            $nextStart = $start->format('H:i');
+                            $nextEnd = $end->format('H:i');
+                        } catch (\Exception $e) {
+                            // ignore parse errors and fall back to empty
+                            $nextStart = '';
+                            $nextEnd = '';
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        // If we found a valid nextStart, prefill both start and end (end = +1 hour).
+        // Otherwise append an empty slot for manual input.
         $this->logs[] = [
             'id' => null,
             'user_id' => auth()->id(),
             'date' => $this->date,
-            'start_time' => '',
-            'end_time' => '',
+            'start_time' => $nextStart,
+            'end_time' => $nextEnd,
             'activity' => '',
             'remarks' => '',
             'proof_path' => null,
@@ -97,7 +124,7 @@ new class extends Component
                 unset($this->newProofs[$index]);
             }
 
-            session()->flash('success', 'Last time slot removed.');
+            $this->dispatch('toast', ['message' => 'Last time slot removed.', 'type' => 'success']);
         }
     }
 
@@ -126,7 +153,7 @@ new class extends Component
             $this->logs[$index]['proof_path'] = null;
         }
 
-        session()->flash('success', 'Proof image removed.');
+        $this->dispatch('toast', ['message' => 'Proof image removed.', 'type' => 'success']);
     }
 
     /**
@@ -139,23 +166,60 @@ new class extends Component
             'logs.*.end_time' => 'required',
             'logs.*.activity' => 'required|string|max:255',
             'logs.*.remarks' => 'nullable|string|max:1000',
-            'newProofs.*' => 'nullable|image|max:10240', // 10MB max
+            'newProofs.*' => 'nullable|image|max:5120', // 5MB max (in KB)
         ], [
             'logs.*.activity.required' => 'The activity field is required.',
             'logs.*.start_time.required' => 'Start time is required.',
             'logs.*.end_time.required' => 'End time is required.',
             'newProofs.*.image' => 'The proof must be an image file.',
-            'newProofs.*.max' => 'The proof must not be larger than 10MB.',
+            'newProofs.*.max' => 'The proof must not be larger than 5MB.',
         ]);
 
-        // Custom validation: check start_time < end_time
+        // Custom validation: check start_time < end_time and proof presence/size
         $hasErrors = false;
         foreach ($this->logs as $index => $log) {
             $start = $log['start_time'];
             $end = $log['end_time'];
             if ($start >= $end) {
-                $this->addError("logs.{$index}.start_time", "Start time must be before end time.");
+                $msg = "Start time must be before end time.";
+                $this->addError("logs.{$index}.start_time", $msg);
+                $errorMessages[] = $msg;
                 $hasErrors = true;
+            }
+
+            // Proof presence: either existing proof_path or a newly uploaded proof is required
+            $hasExistingProof = !empty($log['proof_path']);
+            $hasNewProof = isset($this->newProofs[$index]) && $this->newProofs[$index];
+
+            if (!$hasExistingProof && !$hasNewProof) {
+                $msg = "Proof image is required for this time slot.";
+                $this->addError("newProofs.{$index}", $msg);
+                $errorMessages[] = $msg;
+                $hasErrors = true;
+            }
+
+            // If a new proof exists, double-check its size (bytes) to be <= 5MB
+            if ($hasNewProof) {
+                try {
+                    $file = $this->newProofs[$index];
+                    $sizeBytes = null;
+                    if (is_object($file)) {
+                        if (method_exists($file, 'getSize')) {
+                            $sizeBytes = $file->getSize();
+                        } elseif (method_exists($file, 'getClientSize')) {
+                            $sizeBytes = $file->getClientSize();
+                        }
+                    }
+
+                    if ($sizeBytes !== null && $sizeBytes > 5 * 1024 * 1024) {
+                        $msg = "The proof must not be larger than 5MB.";
+                        $this->addError("newProofs.{$index}", $msg);
+                        $errorMessages[] = $msg;
+                        $hasErrors = true;
+                    }
+                } catch (\Exception $e) {
+                    // ignore size-check failures, rely on validation rules
+                }
             }
         }
 
@@ -170,14 +234,17 @@ new class extends Component
 
                 // Overlap check: A.start < B.end && A.end > B.start
                 if ($startA < $endB && $endA > $startB) {
-                    $this->addError("logs.{$i}.start_time", "This time slot overlaps with another slot.");
-                    $this->addError("logs.{$j}.start_time", "This time slot overlaps with another slot.");
+                    $msg = "This time slot overlaps with another slot.";
+                    $this->addError("logs.{$i}.start_time", $msg);
+                    $this->addError("logs.{$j}.start_time", $msg);
+                    $errorMessages[] = $msg;
                     $hasErrors = true;
                 }
             }
         }
 
         if ($hasErrors) {
+            // Show inline errors only; no error toast
             return;
         }
 
@@ -221,11 +288,11 @@ new class extends Component
         // Clear temporary uploads array
         $this->newProofs = [];
 
-        session()->flash('success', 'Daily work logs saved successfully.');
+        $this->dispatch('toast', ['message' => 'Daily work logs saved successfully.', 'type' => 'success']);
     }
 }; ?>
 
-<div class="space-y-6">
+<div class="space-y-6 pb-28 md:pb-0">
     <!-- Top Level Greeting & Headers -->
     <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 to-brand-900 text-white shadow-xl p-8 group transition-all duration-300">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/15 via-transparent to-transparent pointer-events-none"></div>
@@ -254,16 +321,6 @@ new class extends Component
             </div>
         </div>
     </div>
-
-    <!-- Dual Action Status Alerts -->
-    @if (session('success'))
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-4 flex items-center space-x-3 shadow-sm transition-all duration-300">
-            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span class="text-sm font-semibold">{{ session('success') }}</span>
-        </div>
-    @endif
 
     <!-- Dynamic Work Progress Indicator -->
     @php
@@ -388,7 +445,8 @@ new class extends Component
 
         <!-- Dynamic Form Fields -->
         <form wire:submit.prevent="save" class="divide-y divide-slate-100">
-            <div class="overflow-x-auto">
+            <!-- Desktop Table View (Hidden on mobile) -->
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50/20 text-slate-400 text-[10px] uppercase font-bold tracking-wider border-b border-slate-100">
@@ -409,19 +467,25 @@ new class extends Component
                                                 type="time" 
                                                 wire:model="logs.{{ $index }}.start_time" 
                                                 class="w-24 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.start_time') ? 'border-red-300 bg-red-50/10' : '' }}"
-                                                required
                                             />
                                             <span class="text-xs text-slate-400 font-bold">—</span>
                                             <input 
                                                 type="time" 
                                                 wire:model="logs.{{ $index }}.end_time" 
-                                                class="w-24 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.start_time') ? 'border-red-300 bg-red-50/10' : '' }}"
-                                                required
+                                                class="w-24 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.end_time') ? 'border-red-300 bg-red-50/10' : '' }}"
                                             />
                                         </div>
                                         @error('logs.' . $index . '.start_time')
-                                            <span class="text-[10px] font-semibold text-red-650 flex items-center gap-0.5 mt-1 leading-tight">
-                                                <svg class="w-3.5 h-3.5 text-red-550 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
+                                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+                                                </svg>
+                                                {{ $message }}
+                                            </span>
+                                        @enderror
+                                        @error('logs.' . $index . '.end_time')
+                                            <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
+                                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
                                                 </svg>
                                                 {{ $message }}
@@ -438,11 +502,11 @@ new class extends Component
                                             wire:model="logs.{{ $index }}.activity" 
                                             placeholder="e.g., Code Review, Standup, Development"
                                             class="w-full text-sm font-semibold text-slate-800 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.activity') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}"
-                                            required
+                                            
                                         />
                                         @error('logs.' . $index . '.activity')
-                                            <span class="text-[10px] font-semibold text-red-650 flex items-center gap-0.5 mt-1 leading-tight">
-                                                <svg class="w-3.5 h-3.5 text-red-550 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
+                                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
                                                 </svg>
                                                 {{ $message }}
@@ -460,7 +524,7 @@ new class extends Component
                                         class="w-full text-sm text-slate-600 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors py-2 px-3 resize-y {{ $errors->has('logs.' . $index . '.remarks') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}"
                                     ></textarea>
                                     @error('logs.' . $index . '.remarks')
-                                        <span class="text-[10px] font-semibold text-red-650 flex items-center gap-0.5 mt-1 leading-tight">
+                                        <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
                                             {{ $message }}
                                         </span>
                                     @enderror
@@ -520,7 +584,7 @@ new class extends Component
                                         @else
                                             <!-- Upload Button -->
                                             <label for="proof-input-{{ $index }}" 
-                                                   class="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-650 hover:text-slate-800 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer w-full text-center">
+                                                   class="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-655 hover:text-slate-800 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer w-full text-center">
                                                 <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                                 </svg>
@@ -543,7 +607,7 @@ new class extends Component
                                     </div>
                                     
                                     @error('newProofs.' . $index)
-                                        <span class="text-[10px] font-semibold text-red-650 block mt-1 leading-tight">
+                                        <span class="text-[10px] font-semibold text-red-600 block mt-1 leading-tight">
                                             {{ $message }}
                                         </span>
                                     @enderror
@@ -554,25 +618,259 @@ new class extends Component
                 </table>
             </div>
 
+            <!-- Mobile Card View (Hidden on desktop) -->
+            <div class="md:hidden p-4 space-y-4">
+                @foreach ($logs as $index => $log)
+                    <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 space-y-4 relative">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <span class="text-xs font-black text-slate-800 tracking-wide">Time Slot #{{ $index + 1 }}</span>
+                        </div>
+
+                        <!-- Time Range Fields -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Time Range</label>
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="time" 
+                                    wire:model="logs.{{ $index }}.start_time" 
+                                    class="w-full text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.start_time') ? 'border-red-300 bg-red-50/10' : '' }}"
+                                />
+                                <span class="text-xs text-slate-400 font-bold">—</span>
+                                <input 
+                                    type="time" 
+                                    wire:model="logs.{{ $index }}.end_time" 
+                                    class="w-full text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.end_time') ? 'border-red-300 bg-red-50/10' : '' }}"
+                                />
+                            </div>
+                            @error('logs.' . $index . '.start_time')
+                                <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
+                                    <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+                                    </svg>
+                                    {{ $message }}
+                                </span>
+                            @enderror
+                            @error('logs.' . $index . '.end_time')
+                                <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
+                                    <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+                                    </svg>
+                                    {{ $message }}
+                                </span>
+                            @enderror
+                        </div>
+
+                        <!-- Activity Field -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Activity Name</label>
+                            <input 
+                                type="text" 
+                                wire:model="logs.{{ $index }}.activity" 
+                                placeholder="e.g., Code Review, Standup, Development"
+                                class="w-full text-sm font-semibold text-slate-800 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.activity') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}"
+                            />
+                            @error('logs.' . $index . '.activity')
+                                <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
+                                    <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+                                    </svg>
+                                    {{ $message }}
+                                </span>
+                            @enderror
+                        </div>
+
+                        <!-- Remarks Field -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Detailed Remarks</label>
+                            <textarea 
+                                wire:model="logs.{{ $index }}.remarks" 
+                                rows="2"
+                                placeholder="What are you working on in this current time?"
+                                class="w-full text-sm text-slate-600 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors py-2 px-3 resize-y {{ $errors->has('logs.' . $index . '.remarks') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}"
+                            ></textarea>
+                            @error('logs.' . $index . '.remarks')
+                                <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
+                                    {{ $message }}
+                                </span>
+                            @enderror
+                        </div>
+
+                        <!-- Proof Attachment Field -->
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Proof Attachment</label>
+                            <div class="flex items-center gap-3">
+                                @if (!empty($log['proof_path']))
+                                    <!-- Thumbnail Preview -->
+                                    <div class="relative group/thumb rounded-xl overflow-hidden border border-slate-200 shadow-sm w-12 h-12 flex-shrink-0 bg-slate-50 cursor-pointer"
+                                         x-on:click="$dispatch('open-lightbox', { url: '{{ asset('storage/' . $log['proof_path']) }}' })">
+                                        <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-110" alt="Proof thumbnail">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Delete Proof Button -->
+                                    <button type="button" 
+                                            wire:click="deleteProof({{ $index }})" 
+                                            class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-xl border border-red-100 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                        </svg>
+                                        Delete Proof
+                                    </button>
+                                @elseif (isset($newProofs[$index]))
+                                    <!-- Temporary Upload Preview / Pending Save Status -->
+                                    <div class="relative group/thumb rounded-xl overflow-hidden border border-amber-300 shadow-sm w-12 h-12 flex-shrink-0 bg-amber-50">
+                                        @if (method_exists($newProofs[$index], 'temporaryUrl'))
+                                            <img src="{{ $newProofs[$index]->temporaryUrl() }}" class="w-full h-full object-cover" alt="Temporary upload">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-amber-500">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        <div class="absolute inset-0 bg-amber-500/10 flex items-center justify-center">
+                                            <span class="text-[8px] font-black uppercase text-amber-700 bg-white/90 px-1 py-0.5 rounded shadow-sm tracking-widest">PENDING</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Cancel Upload Button -->
+                                    <button type="button" 
+                                            wire:click="deleteProof({{ $index }})" 
+                                            class="text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-2 rounded-xl border border-amber-100 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                        </svg>
+                                        Cancel Upload
+                                    </button>
+                                @else
+                                    <!-- Upload Button -->
+                                    <label for="proof-input-mobile-{{ $index }}" 
+                                           class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-650 hover:text-slate-800 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer w-full text-center">
+                                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                        </svg>
+                                        Attach Proof Image
+                                    </label>
+                                    <input type="file" 
+                                           id="proof-input-mobile-{{ $index }}" 
+                                           wire:model="newProofs.{{ $index }}" 
+                                           class="hidden" 
+                                           accept="image/*" />
+                                @endif
+                            </div>
+                            
+                            <div wire:loading wire:target="newProofs.{{ $index }}" class="text-[10px] text-indigo-650 font-bold mt-1 flex items-center gap-1">
+                                <svg class="animate-spin h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Uploading image...
+                            </div>
+                            
+                            @error('newProofs.' . $index)
+                                <span class="text-[10px] font-semibold text-red-600 block mt-1 leading-tight">
+                                    {{ $message }}
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
             <!-- Footer Save Bar -->
-            <div class="bg-slate-50/50 p-6 flex items-center justify-between border-t border-slate-100">
+            <div class="bg-slate-50/50 p-6 flex items-center justify-between border-t border-slate-100 md:relative md:static md:bottom-auto md:w-auto" id="timesheet-footer">
                 <div class="text-xs text-slate-500 font-medium">
                     Please make sure to click **Save Timesheet** to persist all daily logs.
                 </div>
                 
-                <button 
-                    type="submit"
-                    wire:loading.attr="disabled"
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0"
-                >
-                    <svg wire:loading wire:target="save" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Save Timesheet
-                </button>
+                <div class="flex items-center gap-3">
+                    @if(count($logs) > 0)
+                        <button 
+                            type="button"
+                            wire:click="addHourSlot"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer border-0 hidden md:inline-flex"
+                        >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Add Next Hour
+                        </button>
+
+                        <!-- Mobile visible add button (always visible when logs exist) -->
+                        <button 
+                            type="button"
+                            wire:click="addHourSlot"
+                            class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer md:hidden"
+                        >
+                            Add Slot
+                        </button>
+                    @endif
+
+                    <button 
+                        type="submit"
+                        wire:loading.attr="disabled"
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0"
+                    >
+                        <svg wire:loading wire:target="save" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Save Timesheet
+                    </button>
+                </div>
             </div>
         </form>
+    </div>
+
+    <!-- Toast container (bottom-right) -->
+    <div id="toast-container-alpine" x-data="{ toasts: [] }" x-init="window.addEventListener('toast', e => {
+            const id = Date.now() + Math.random();
+            const message = toastMessageFrom(e.detail);
+            const toast = { id, message, type: (e.detail && e.detail.type) || 'success' };
+            toasts.push(toast);
+            setTimeout(() => { toasts = toasts.filter(t => t.id !== id) }, 4000);
+        })" class="fixed bottom-6 right-6 z-50 space-y-3">
+        <script>
+            // Normalize payload to a message string
+            function toastMessageFrom(detail) {
+                if (!detail) return '';
+                if (typeof detail === 'string') return detail;
+                if (Array.isArray(detail)) {
+                    if (detail.length === 1) {
+                        const first = detail[0];
+                        if (!first) return '';
+                        if (typeof first === 'string') return first;
+                        if (first.message) return first.message;
+                        return JSON.stringify(first);
+                    }
+                    // multiple args - join if strings
+                    const strings = detail.filter(d => typeof d === 'string');
+                    if (strings.length) return strings.join(' ');
+                    return JSON.stringify(detail);
+                }
+                if (detail.message) return detail.message;
+                if (detail[0] && detail[0].message) return detail[0].message;
+                return JSON.stringify(detail);
+            }
+
+            // Forward Livewire server emits named `toast` to a window-level CustomEvent so our toast listeners work
+            if (window.livewire && typeof window.livewire.on === 'function') {
+                window.livewire.on('toast', function() {
+                    const payload = arguments.length === 1 ? arguments[0] : Array.from(arguments);
+                    window.dispatchEvent(new CustomEvent('toast', { detail: payload }));
+                });
+            }
+        </script>
+        <template x-for="toast in toasts" :key="toast.id">
+            <div :class="toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-800'" class="border rounded-xl p-3 shadow-md max-w-xs">
+                <div x-text="toast.message" class="text-sm font-semibold"></div>
+            </div>
+        </template>
     </div>
 
     <!-- Glassmorphic Fullscreen Lightbox Modal -->
