@@ -26,9 +26,9 @@ class WorkLogTest extends TestCase
     }
 
     /**
-     * Test that the work logs component initializes with today's date and a default slot of 07:30 - 08:30.
+     * Test that the work logs component initializes with today's date and an empty default slot.
      */
-    public function test_component_initializes_with_default_time_slot(): void
+    public function test_component_initializes_with_empty_time_slot(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -39,8 +39,8 @@ class WorkLogTest extends TestCase
             ->assertCount('logs', 1);
 
         $logs = $component->get('logs');
-        $this->assertSame('07:30', $logs[0]['start_time']);
-        $this->assertSame('08:30', $logs[0]['end_time']);
+        $this->assertSame('', $logs[0]['start_time']);
+        $this->assertSame('', $logs[0]['end_time']);
         $this->assertNull($logs[0]['id']);
     }
 
@@ -53,6 +53,8 @@ class WorkLogTest extends TestCase
         $this->actingAs($user);
 
         $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '07:30')
+            ->set('logs.0.end_time', '08:30')
             ->call('addHourSlot');
 
         $component->assertCount('logs', 2);
@@ -98,11 +100,17 @@ class WorkLogTest extends TestCase
      */
     public function test_saving_logs_requires_activity(): void
     {
+        \Storage::fake('public');
+        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '07:30')
+            ->set('logs.0.end_time', '08:30')
             ->set('logs.0.activity', '') // blank activity
+            ->set('newProofs.0', $file)
             ->call('save');
 
         $component->assertHasErrors(['logs.0.activity']);
@@ -114,15 +122,23 @@ class WorkLogTest extends TestCase
      */
     public function test_can_save_work_logs_to_database(): void
     {
+        \Storage::fake('public');
+        $file1 = \Illuminate\Http\UploadedFile::fake()->image('proof1.jpg');
+        $file2 = \Illuminate\Http\UploadedFile::fake()->image('proof2.jpg');
+
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '07:30')
+            ->set('logs.0.end_time', '08:30')
             ->set('logs.0.activity', 'Coding Features')
             ->set('logs.0.remarks', 'Worked on Daily Work Log feature')
+            ->set('newProofs.0', $file1)
             ->call('addHourSlot')
             ->set('logs.1.activity', 'Meeting')
             ->set('logs.1.remarks', 'Discussed timesheet system with managers')
+            ->set('newProofs.1', $file2)
             ->call('save')
             ->assertHasNoErrors();
 
@@ -150,6 +166,9 @@ class WorkLogTest extends TestCase
      */
     public function test_can_override_time_range_with_valid_times(): void
     {
+        \Storage::fake('public');
+        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+
         $user = User::factory()->create();
         $this->actingAs($user);
 
@@ -157,6 +176,7 @@ class WorkLogTest extends TestCase
             ->set('logs.0.start_time', '08:00')
             ->set('logs.0.end_time', '09:00')
             ->set('logs.0.activity', 'Coding')
+            ->set('newProofs.0', $file)
             ->call('save')
             ->assertHasNoErrors();
 
@@ -173,6 +193,10 @@ class WorkLogTest extends TestCase
      */
     public function test_cannot_save_overlapping_time_ranges(): void
     {
+        \Storage::fake('public');
+        $file1 = \Illuminate\Http\UploadedFile::fake()->image('proof1.jpg');
+        $file2 = \Illuminate\Http\UploadedFile::fake()->image('proof2.jpg');
+
         $user = User::factory()->create();
         $this->actingAs($user);
 
@@ -180,10 +204,12 @@ class WorkLogTest extends TestCase
             ->set('logs.0.start_time', '08:00')
             ->set('logs.0.end_time', '09:30')
             ->set('logs.0.activity', 'Task 1')
+            ->set('newProofs.0', $file1)
             ->call('addHourSlot')
             ->set('logs.1.start_time', '09:00')
             ->set('logs.1.end_time', '10:00')
             ->set('logs.1.activity', 'Task 2')
+            ->set('newProofs.1', $file2)
             ->call('save');
 
         $component->assertHasErrors(['logs.0.start_time', 'logs.1.start_time']);
@@ -195,6 +221,9 @@ class WorkLogTest extends TestCase
      */
     public function test_cannot_save_if_start_time_is_after_end_time(): void
     {
+        \Storage::fake('public');
+        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+
         $user = User::factory()->create();
         $this->actingAs($user);
 
@@ -202,6 +231,7 @@ class WorkLogTest extends TestCase
             ->set('logs.0.start_time', '10:00')
             ->set('logs.0.end_time', '09:00')
             ->set('logs.0.activity', 'Task')
+            ->set('newProofs.0', $file)
             ->call('save');
 
         $component->assertHasErrors(['logs.0.start_time']);
@@ -233,18 +263,64 @@ class WorkLogTest extends TestCase
     }
 
     /**
-     * Test that users can delete an uploaded proof.
+     * Test that deleting a proof removes it from component state and requires a new proof to save.
      */
-    public function test_can_delete_image_proof(): void
+    public function test_deleting_proof_removes_it_from_state_and_requires_new_proof(): void
     {
         \Storage::fake('public');
 
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $file = \Illuminate\Http\UploadedFile::fake()->image('screenshot.jpg');
+        $file1 = \Illuminate\Http\UploadedFile::fake()->image('proof1.jpg');
 
         $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '07:30')
+            ->set('logs.0.end_time', '08:30')
+            ->set('logs.0.activity', 'Dev Work')
+            ->set('newProofs.0', $file1)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $log = DailyWorkLog::first();
+        $this->assertNotNull($log->proof_path);
+        \Storage::disk('public')->assertExists($log->proof_path);
+
+        // Delete proof (clears component state)
+        $component->call('deleteProof', 0);
+
+        // Assert that trying to save without a new proof fails validation
+        $component->call('save')
+            ->assertHasErrors(['newProofs.0']);
+
+        // Upload a new proof and save successfully
+        $file2 = \Illuminate\Http\UploadedFile::fake()->image('proof2.jpg');
+        $component->set('newProofs.0', $file2)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $updatedLog = DailyWorkLog::first();
+        $this->assertNotNull($updatedLog->proof_path);
+        $this->assertNotEquals($log->proof_path, $updatedLog->proof_path);
+        \Storage::disk('public')->assertExists($updatedLog->proof_path);
+        \Storage::disk('public')->assertMissing($log->proof_path);
+    }
+
+    /**
+     * Test that a user can undo a marked proof deletion and keep their original proof safe.
+     */
+    public function test_can_undo_marked_proof_deletion(): void
+    {
+        \Storage::fake('public');
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+
+        $component = Volt::test('pages.work-logs')
+            ->set('logs.0.start_time', '07:30')
+            ->set('logs.0.end_time', '08:30')
             ->set('logs.0.activity', 'Dev Work')
             ->set('newProofs.0', $file)
             ->call('save')
@@ -254,11 +330,21 @@ class WorkLogTest extends TestCase
         $this->assertNotNull($log->proof_path);
         \Storage::disk('public')->assertExists($log->proof_path);
 
-        // Now delete it
+        // Mark proof for deletion
         $component->call('deleteProof', 0);
+        $this->assertTrue($component->get('pendingDeletions.0'));
 
-        $this->assertNull(DailyWorkLog::first()->proof_path);
-        \Storage::disk('public')->assertMissing($log->proof_path);
+        // Undo deletion
+        $component->call('undoDeleteProof', 0);
+        $this->assertNull($component->get('pendingDeletions.0'));
+
+        // Save again and assert no changes or errors
+        $component->call('save')
+            ->assertHasNoErrors();
+
+        $originalLog = DailyWorkLog::first();
+        $this->assertSame($log->proof_path, $originalLog->proof_path);
+        \Storage::disk('public')->assertExists($log->proof_path);
     }
 }
 
