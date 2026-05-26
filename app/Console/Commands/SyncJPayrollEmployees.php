@@ -48,7 +48,7 @@ class SyncJPayrollEmployees extends Command
                 continue;
             }
 
-            // Map Date
+            // Map Dates
             $joinedAt = null;
             if (!empty($emp['StartDate'])) {
                 try {
@@ -58,9 +58,18 @@ class SyncJPayrollEmployees extends Command
                 }
             }
 
+            $endDate = null;
+            if (!empty($emp['EndDate'])) {
+                try {
+                    $endDate = Carbon::createFromFormat('d/m/Y', $emp['EndDate'])->format('Y-m-d');
+                } catch (\Exception $e) {
+                    // fallback if format doesn't match
+                }
+            }
+
             // Determine Status
             $status = 'active';
-            if (!empty($emp['EndDate'])) {
+            if ($endDate !== null) {
                 $status = 'resigned';
             }
 
@@ -139,6 +148,7 @@ class SyncJPayrollEmployees extends Command
                     'department_id' => $departmentId,
                     'designation_id' => $designationId,
                     'joined_at' => $joinedAt,
+                    'end_date' => $endDate,
                     'status' => $status,
                     'account_type' => $accountType,
                     'organization_structure' => $emp['OrganizationStructure'] ?? null,

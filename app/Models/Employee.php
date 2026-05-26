@@ -21,6 +21,7 @@ class Employee extends Model
         'designation_id',
         'phone',
         'joined_at',
+        'end_date',
         'status',
         'account_type',
         'organization_structure',
@@ -30,8 +31,14 @@ class Employee extends Model
 
     protected $casts = [
         'joined_at' => 'date',
+        'end_date' => 'date',
         'skills' => 'array',
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('end_date')->where('status', 'active');
+    }
 
     public function department()
     {

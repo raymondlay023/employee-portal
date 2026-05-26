@@ -361,8 +361,8 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Synced Employees</p>
-                            <p class="text-2xl font-black text-slate-900 leading-tight">{{\App\Models\Employee::count() ?? 0}}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Employees</p>
+                            <p class="text-2xl font-black text-slate-900 leading-tight">{{\App\Models\Employee::active()->count() ?? 0}}</p>
                         </div>
                     </div>
 
