@@ -40,16 +40,6 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    // Removed because employees are now synced from JPayroll API
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    // Removed because employees are now synced from JPayroll API
-
-    /**
      * Display the specified resource.
      */
     public function show(Employee $employee)
@@ -57,19 +47,4 @@ class EmployeeController extends Controller
         $employee->load(['department','designation']);
         return view('employees.show', compact('employee'));
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    // Removed because employees are now synced from JPayroll API
-
-    /**
-     * Update the specified resource in storage.
-     */
-    // Removed because employees are now synced from JPayroll API
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    // Removed because employees are now synced from JPayroll API
 }
