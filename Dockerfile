@@ -52,12 +52,14 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 
-# Optimize Laravel
+# Optimize Laravel autoloading
 RUN composer dump-autoload --optimize --no-scripts \
-    && php artisan package:discover --ansi \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+    && php artisan package:discover --ansi
 
+# Setup entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 EXPOSE 9000
 CMD ["php-fpm"]
