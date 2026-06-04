@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./:/var/www/html
+      - code_data:/var/www/html
       - storage_app:/var/www/html/storage/app
       - storage_logs:/var/www/html/storage/logs
     depends_on:
@@ -42,7 +42,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./:/var/www/html:ro
+      - code_data:/var/www/html:ro
       - storage_app:/var/www/html/storage/app:ro
     depends_on:
       - app
@@ -69,6 +69,7 @@ services:
       - redis_data:/data
 
 volumes:
+  code_data:
   db_data:
   redis_data:
   storage_app:

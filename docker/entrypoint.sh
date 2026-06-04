@@ -23,6 +23,12 @@ if [ "$DB_CONNECTION" = "mysql" ]; then
     echo "Database is ready!"
 fi
 
+# ... after the "Database is ready!" echo
+if [ ! -f "/var/www/html/vendor/autoload.php" ]; then
+    echo "Vendor folder not found! Something is wrong with the volume mount."
+    exit 1
+fi
+
 # Run Laravel optimizations to cache runtime environment configuration
 echo "Caching configuration and routes..."
 php artisan config:cache
