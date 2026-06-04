@@ -12,6 +12,7 @@ services:
     env_file:
       - .env
     volumes:
+      - ./:/var/www/html
       - storage_app:/var/www/html/storage/app
       - storage_logs:/var/www/html/storage/logs
     depends_on:
@@ -41,6 +42,7 @@ services:
     ports:
       - "8080:80"
     volumes:
+      - ./:/var/www/html:ro
       - storage_app:/var/www/html/storage/app:ro
     depends_on:
       - app
