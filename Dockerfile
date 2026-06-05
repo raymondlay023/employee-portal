@@ -30,6 +30,10 @@ RUN apt-get update && apt-get install -y \
   && docker-php-ext-enable redis \
   && rm -rf /var/lib/apt/lists/*
 
+# Secure PHP upload limits for production
+RUN echo "upload_max_filesize = 20M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 20M" >> /usr/local/etc/php/conf.d/uploads.ini
+
 # Copy Composer binary
 COPY --from=composer_builder /usr/bin/composer /usr/bin/composer
 
