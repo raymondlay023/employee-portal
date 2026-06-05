@@ -564,49 +564,7 @@ new class extends Component
                                 <!-- Proof Attachment -->
                                 <td class="py-4 px-6 align-top">
                                     <div class="flex items-center gap-2">
-                                        @if (!empty($log['proof_path']))
-                                            @if (isset($pendingDeletions[$index]))
-                                                <!-- Pending Deletion Thumbnail with Red desaturated overlay -->
-                                                <div class="relative group/thumb rounded-xl overflow-hidden border border-red-300 shadow-sm w-12 h-12 flex-shrink-0 bg-red-50 opacity-60 filter grayscale">
-                                                    <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover" alt="Proof thumbnail">
-                                                    <div class="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-                                                        <span class="text-[7px] font-black uppercase text-red-700 bg-white/95 px-1 py-0.5 rounded shadow-sm tracking-wide">TO DELETE</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Undo Deletion Button -->
-                                                <button type="button" 
-                                                        wire:click="undoDeleteProof({{ $index }})" 
-                                                        class="text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg border border-indigo-100 transition-colors cursor-pointer flex-shrink-0"
-                                                        title="Undo Delete">
-                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                                                    </svg>
-                                                </button>
-                                            @else
-                                                <!-- Thumbnail Preview -->
-                                                <div class="relative group/thumb rounded-xl overflow-hidden border border-slate-200 shadow-sm w-12 h-12 flex-shrink-0 bg-slate-50 cursor-pointer"
-                                                     x-on:click="$dispatch('open-lightbox', { url: '{{ asset('storage/' . $log['proof_path']) }}' })">
-                                                    <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-110" alt="Proof thumbnail">
-                                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Delete Proof Button -->
-                                                <button type="button" 
-                                                        wire:click="deleteProof({{ $index }})" 
-                                                        class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-lg border border-red-100 transition-colors cursor-pointer flex-shrink-0"
-                                                        title="Delete proof">
-                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                                    </svg>
-                                                </button>
-                                            @endif
-                                        @elseif (isset($newProofs[$index]))
+                                        @if (isset($newProofs[$index]))
                                             <!-- Temporary Upload Preview / Pending Save Status -->
                                             <div class="relative group/thumb rounded-xl overflow-hidden border border-amber-300 shadow-sm w-12 h-12 flex-shrink-0 bg-amber-50">
                                                 @if (method_exists($newProofs[$index], 'temporaryUrl'))
@@ -632,21 +590,73 @@ new class extends Component
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
+                                        @elseif (!empty($log['proof_path']))
+                                            @if (isset($pendingDeletions[$index]))
+                                                <!-- Pending Deletion Thumbnail with Red desaturated overlay -->
+                                                <div class="relative group/thumb rounded-xl overflow-hidden border border-red-300 shadow-sm w-12 h-12 flex-shrink-0 bg-red-50 opacity-60 filter grayscale">
+                                                    <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover" alt="Proof thumbnail">
+                                                    <div class="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                                        <span class="text-[7px] font-black uppercase text-red-700 bg-white/95 px-1 py-0.5 rounded shadow-sm tracking-wide">TO DELETE</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Undo Deletion Button -->
+                                                <button type="button" 
+                                                        wire:click="undoDeleteProof({{ $index }})" 
+                                                        class="text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg border border-indigo-100 transition-colors cursor-pointer flex-shrink-0"
+                                                        title="Undo Delete">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                                                    </svg>
+                                                </button>
+
+                                                <!-- Re-upload Button -->
+                                                <label for="proof-input-{{ $index }}" 
+                                                       class="text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg border border-indigo-100 transition-colors cursor-pointer flex-shrink-0 flex items-center justify-center"
+                                                       title="Re-upload Proof">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                                    </svg>
+                                                </label>
+                                            @else
+                                                <!-- Thumbnail Preview -->
+                                                <div class="relative group/thumb rounded-xl overflow-hidden border border-slate-200 shadow-sm w-12 h-12 flex-shrink-0 bg-slate-50 cursor-pointer"
+                                                     x-on:click="$dispatch('open-lightbox', { url: '{{ asset('storage/' . $log['proof_path']) }}' })">
+                                                    <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-110" alt="Proof thumbnail">
+                                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Delete Proof Button -->
+                                                <button type="button" 
+                                                        wire:click="deleteProof({{ $index }})" 
+                                                        class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-lg border border-red-100 transition-colors cursor-pointer flex-shrink-0"
+                                                        title="Delete proof">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                    </svg>
+                                                </button>
+                                            @endif
                                         @else
                                             <!-- Upload Button -->
                                             <label for="proof-input-{{ $index }}" 
-                                                   class="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-655 hover:text-slate-800 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer w-full text-center">
+                                                   class="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 hover:text-slate-800 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer w-full text-center">
                                                 <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                                 </svg>
                                                 Attach Proof
                                             </label>
-                                            <input type="file" 
-                                                   id="proof-input-{{ $index }}" 
-                                                   wire:model="newProofs.{{ $index }}" 
-                                                   class="hidden" 
-                                                   accept="image/*" />
                                         @endif
+                                        
+                                        <input type="file" 
+                                               id="proof-input-{{ $index }}" 
+                                               wire:model="newProofs.{{ $index }}" 
+                                               class="hidden" 
+                                               accept="image/*" />
                                     </div>
                                     
                                     <div wire:loading wire:target="newProofs.{{ $index }}" class="text-[10px] text-indigo-650 font-bold mt-1 flex items-center gap-1">
@@ -770,49 +780,7 @@ new class extends Component
                             <div class="space-y-1.5">
                                 <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Proof Attachment</label>
                                 <div class="flex items-center gap-3">
-                                    @if (!empty($log['proof_path']))
-                                        @if (isset($pendingDeletions[$index]))
-                                            <!-- Pending Deletion Thumbnail with Red desaturated overlay -->
-                                            <div class="relative group/thumb rounded-xl overflow-hidden border border-red-300 shadow-sm w-12 h-12 flex-shrink-0 bg-red-50 opacity-60 filter grayscale">
-                                                <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover" alt="Proof thumbnail">
-                                                <div class="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-                                                    <span class="text-[7px] font-black uppercase text-red-700 bg-white/95 px-1 py-0.5 rounded shadow-sm tracking-wide">TO DELETE</span>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Undo Deletion Button -->
-                                            <button type="button" 
-                                                    wire:click="undoDeleteProof({{ $index }})" 
-                                                    class="text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl border border-indigo-100 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1.5">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                                                </svg>
-                                                Undo Delete
-                                            </button>
-                                        @else
-                                            <!-- Thumbnail Preview -->
-                                            <div class="relative group/thumb rounded-xl overflow-hidden border border-slate-200 shadow-sm w-12 h-12 flex-shrink-0 bg-slate-50 cursor-pointer"
-                                                 x-on:click="$dispatch('open-lightbox', { url: '{{ asset('storage/' . $log['proof_path']) }}' })">
-                                                <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-110" alt="Proof thumbnail">
-                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Delete Proof Button -->
-                                            <button type="button" 
-                                                    wire:click="deleteProof({{ $index }})" 
-                                                    class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-xl border border-red-100 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1.5">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                                </svg>
-                                                Delete Proof
-                                            </button>
-                                        @endif
-                                    @elseif (isset($newProofs[$index]))
+                                    @if (isset($newProofs[$index]))
                                         <!-- Temporary Upload Preview / Pending Save Status -->
                                         <div class="relative group/thumb rounded-xl overflow-hidden border border-amber-300 shadow-sm w-12 h-12 flex-shrink-0 bg-amber-50">
                                             @if (method_exists($newProofs[$index], 'temporaryUrl'))
@@ -838,23 +806,74 @@ new class extends Component
                                             </svg>
                                             Cancel Upload
                                         </button>
+                                    @elseif (!empty($log['proof_path']))
+                                        @if (isset($pendingDeletions[$index]))
+                                            <!-- Pending Deletion Thumbnail with Red desaturated overlay -->
+                                            <div class="relative group/thumb rounded-xl overflow-hidden border border-red-300 shadow-sm w-12 h-12 flex-shrink-0 bg-red-50 opacity-60 filter grayscale">
+                                                <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover" alt="Proof thumbnail">
+                                                <div class="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                                    <span class="text-[7px] font-black uppercase text-red-700 bg-white/95 px-1 py-0.5 rounded shadow-sm tracking-wide">TO DELETE</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Undo Deletion Button -->
+                                            <button type="button" 
+                                                    wire:click="undoDeleteProof({{ $index }})" 
+                                                    class="text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl border border-indigo-100 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1.5">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                                                </svg>
+                                                Undo Delete
+                                            </button>
+
+                                            <!-- Re-upload Button (Mobile) -->
+                                            <label for="proof-input-mobile-{{ $index }}" 
+                                                   class="text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl border border-indigo-100 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1.5">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                                </svg>
+                                                Re-upload
+                                            </label>
+                                        @else
+                                            <!-- Thumbnail Preview -->
+                                            <div class="relative group/thumb rounded-xl overflow-hidden border border-slate-200 shadow-sm w-12 h-12 flex-shrink-0 bg-slate-50 cursor-pointer"
+                                                 x-on:click="$dispatch('open-lightbox', { url: '{{ asset('storage/' . $log['proof_path']) }}' })">
+                                                <img src="{{ asset('storage/' . $log['proof_path']) }}" class="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-110" alt="Proof thumbnail">
+                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Delete Proof Button -->
+                                            <button type="button" 
+                                                    wire:click="deleteProof({{ $index }})" 
+                                                    class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-xl border border-red-100 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1.5">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                                Delete Proof
+                                            </button>
+                                        @endif
                                     @else
                                         <!-- Upload Button -->
                                         <label for="proof-input-mobile-{{ $index }}" 
-                                               class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-655 hover:text-slate-800 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer w-full text-center">
+                                               class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 hover:text-slate-800 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer w-full text-center">
                                             <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                             </svg>
                                             Attach Proof Image
                                         </label>
-                                        <input type="file" 
-                                               id="proof-input-mobile-{{ $index }}" 
-                                               wire:model="newProofs.{{ $index }}" 
-                                               class="hidden" 
-                                               accept="image/*" />
                                     @endif
+                                    
+                                    <input type="file" 
+                                           id="proof-input-mobile-{{ $index }}" 
+                                           wire:model="newProofs.{{ $index }}" 
+                                           class="hidden" 
+                                           accept="image/*" />
                                 </div>
-                                
                                 <div wire:loading wire:target="newProofs.{{ $index }}" class="text-[10px] text-indigo-650 font-bold mt-1 flex items-center gap-1">
                                     <svg class="animate-spin h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
