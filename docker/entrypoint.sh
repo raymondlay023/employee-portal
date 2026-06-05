@@ -43,6 +43,9 @@ php artisan storage:link --force
 if [ "$1" = "php-fpm" ]; then
     echo "Running database migrations..."
     php artisan migrate --force
+
+    echo "Running database seeders..."
+    php artisan db:seed --force
 fi
 
 # Execute the container command (e.g. php-fpm or queue worker)
