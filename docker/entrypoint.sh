@@ -35,6 +35,13 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# Ensure the physical target directories actually exist before linking
+echo "Creating missing storage directories..."
+mkdir -p /var/www/html/storage/app/public
+mkdir -p /var/www/html/storage/framework/cache
+mkdir -p /var/www/html/storage/framework/sessions
+mkdir -p /var/www/html/storage/framework/views
+
 # Create storage symlink if not already present
 echo "Ensuring storage symlink exists..."
 # php artisan storage:link --force
