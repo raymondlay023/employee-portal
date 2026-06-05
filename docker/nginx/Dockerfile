@@ -11,6 +11,6 @@ FROM nginx:stable-alpine
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=node_builder /app/public /var/www/html/public
 
-# Ensure the storage symlink is correctly set up for serving user uploads
-RUN rm -rf /var/www/html/public/storage \
-    && ln -sf ../storage/app/public /var/www/html/public/storage
+# # Ensure the storage symlink is correctly set up for serving user uploads
+# RUN rm -rf /var/www/html/public/storage \
+#     && ln -sf ../storage/app/public /var/www/html/public/storage

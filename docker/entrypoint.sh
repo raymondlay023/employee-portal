@@ -37,7 +37,9 @@ php artisan view:cache
 
 # Create storage symlink if not already present
 echo "Ensuring storage symlink exists..."
-php artisan storage:link --force
+# php artisan storage:link --force
+rm -rf /var/www/html/public/storage
+ln -s ../storage/app/public /var/www/html/public/storage
 
 # Only run migrations in the main app container to avoid race conditions
 if [ "$1" = "php-fpm" ]; then
