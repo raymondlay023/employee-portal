@@ -38,9 +38,15 @@ php artisan view:cache
 # Ensure the physical target directories actually exist before linking
 echo "Creating missing storage directories..."
 mkdir -p /var/www/html/storage/app/public
+mkdir -p /var/www/html/storage/app/private/livewire-tmp
 mkdir -p /var/www/html/storage/framework/cache
 mkdir -p /var/www/html/storage/framework/sessions
 mkdir -p /var/www/html/storage/framework/views
+
+# Fix permissions so the PHP user owns everything natively at runtime
+echo "Setting storage permissions..."
+chown -R www-data:www-data /var/www/html/storage
+chmod -R 775 /var/www/html/storage
 
 # Create storage symlink if not already present
 echo "Ensuring storage symlink exists..."
