@@ -50,17 +50,17 @@ class JPayrollServiceTest extends TestCase
             'https://api.jpayroll.test/API_View_Attendance.php' => Http::response([
                 'status' => 200,
                 'data' => [
-                    ['NIK' => '07038', 'Date' => '01/05/2025', 'Status' => 'Present'],
-                    ['NIK' => '07039', 'Date' => '01/05/2025', 'Status' => 'Absent'],
+                    ['NIK' => '07073', 'Name' => 'RAYMOND LAY', 'ShiftDate' => '01/05/2026', 'ABS' => '0', 'LT' => '0', 'CT' => '0', 'OP' => '0', 'HOS' => '0', 'WA' => '0', 'HOSWA' => '0'],
+                    ['NIK' => '07074', 'Name' => 'JANE DOE',    'ShiftDate' => '01/05/2026', 'ABS' => '1', 'LT' => '0', 'CT' => '0', 'OP' => '0', 'HOS' => '0', 'WA' => '0', 'HOSWA' => '0'],
                 ]
             ], 200)
         ]);
 
         $service = new JPayrollService();
-        $attendance = $service->fetchAttendance('01/05/2025', '06/05/2025');
+        $attendance = $service->fetchAttendance('01/05/2026', '06/05/2026');
 
         $this->assertCount(2, $attendance);
-        $this->assertEquals('Present', $attendance[0]['Status']);
+        $this->assertEquals('0', $attendance[0]['ABS']);
 
         Http::assertSent(function ($request) {
             return $request->url() === 'https://api.jpayroll.test/API_View_Attendance.php'
@@ -78,24 +78,24 @@ class JPayrollServiceTest extends TestCase
             'https://api.jpayroll.test/API_View_Attendance.php' => Http::response([
                 'status' => 200,
                 'data' => [
-                    ['NIK' => '07038', 'Date' => '01/05/2025', 'Status' => 'Present'],
+                    ['NIK' => '07073', 'Name' => 'RAYMOND LAY', 'ShiftDate' => '01/05/2026', 'ABS' => '0', 'LT' => '0', 'CT' => '0', 'OP' => '0', 'HOS' => '0', 'WA' => '0', 'HOSWA' => '0'],
                 ]
             ], 200)
         ]);
 
         $service = new JPayrollService();
-        $attendance = $service->fetchAttendance('01/05/2025', '06/05/2025', '07038');
+        $attendance = $service->fetchAttendance('01/05/2026', '06/05/2026', '07073');
 
         $this->assertCount(1, $attendance);
-        $this->assertEquals('07038', $attendance[0]['NIK']);
+        $this->assertEquals('07073', $attendance[0]['NIK']);
 
         Http::assertSent(function ($request) {
             return $request->url() === 'https://api.jpayroll.test/API_View_Attendance.php'
                 && $request->header('Authorization')[0] === 'test-api-key'
                 && $request['CompanyArea'] === '10000'
-                && $request['Date1'] === '01/05/2025'
-                && $request['Date2'] === '06/05/2025'
-                && $request['NIK'] === '07038';
+                && $request['Date1'] === '01/05/2026'
+                && $request['Date2'] === '06/05/2026'
+                && $request['NIK'] === '07073';
         });
     }
 
