@@ -50,6 +50,27 @@ class AttendanceController extends Controller
             }
         }
 
+        // ── Calculate Summary (Only if a specific employee is targeted) ───────
+        $summary = null;
+        $isSingleEmployeeTargeted = (!$user->can('manage attendance') && $employee) 
+                                 || ($user->can('manage attendance') && !empty($validated['employee_id']));
+                                 
+        if ($isSingleEmployeeTargeted) {
+            $summaryQuery = clone $jpayrollQuery;
+            // Remove orderBy for the aggregate query
+            $summaryQuery->getQuery()->orders = null; 
+            
+            $summary = $summaryQuery->selectRaw('
+                COUNT(*) as total_days,
+                SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
+                SUM(CASE WHEN alpha <= 0 AND (hos > 0 OR wa > 0 OR hoswa > 0) THEN 1 ELSE 0 END) as sick_days,
+                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
+                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
+                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin <= 0 AND telat <= 0 AND op > 0 THEN 1 ELSE 0 END) as permitted_days,
+                SUM(CASE WHEN alpha = 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin = 0 AND telat = 0 AND op = 0 THEN 1 ELSE 0 END) as present_days
+            ')->first();
+        }
+
         // Apply advanced status filters
         if (!empty($validated['status']) && $validated['status'] !== 'all') {
             $status = $validated['status'];
@@ -110,6 +131,7 @@ class AttendanceController extends Controller
             'lastSync',
             'employees',
             'syncLogs',
+            'summary',
         ));
     }
 

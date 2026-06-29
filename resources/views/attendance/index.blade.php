@@ -148,6 +148,63 @@
             </div>
         @endif
 
+        {{-- ── SUMMARY REPORT CARDS ────────────────────────────────────────── --}}
+        @if(isset($summary))
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="p-1.5 rounded-lg bg-slate-50 text-slate-400">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Days</span>
+                    </div>
+                    <span class="text-2xl font-black text-slate-800">{{ (int) $summary->total_days }}</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-emerald-400 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 opacity-5">
+                        <svg class="w-24 h-24 text-emerald-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2 relative z-10">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">Present</span>
+                    </div>
+                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->present_days }}</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-red-400 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 opacity-5">
+                        <svg class="w-24 h-24 text-red-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2 relative z-10">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                        <span class="text-[10px] font-extrabold text-red-600 uppercase tracking-wider">Absent</span>
+                    </div>
+                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->absent_days }}</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-amber-400 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 opacity-5">
+                        <svg class="w-24 h-24 text-amber-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2 relative z-10">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider">Late</span>
+                    </div>
+                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->late_days }}</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-indigo-400 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 opacity-5">
+                        <svg class="w-24 h-24 text-indigo-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2 relative z-10">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider">Leave / Sick</span>
+                    </div>
+                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) ($summary->leave_days + $summary->sick_days + $summary->permitted_days) }}</span>
+                </div>
+            </div>
+        @endif
+
         {{-- ── SECTION 1: JPayroll Attendance Summary ──────────────────────── --}}
         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
 
