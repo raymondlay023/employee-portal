@@ -125,18 +125,30 @@ class AttendanceController extends Controller
             return back()->with('error', 'Employee profile not found.');
         }
 
-        // Prevent double clock-in without clock-out
-        $open = AttendanceLog::where('employee_id', $employee->id)->whereNull('clock_out_at')->first();
-        if ($open) {
-            return back()->with('error', 'You are already clocked in.');
-        }
+        return Cache::lock('attendance_clock_' . $employee->id, 5)->get(function () use ($employee) {
+            // Check for any unclosed sessions
+            $openSessions = AttendanceLog::where('employee_id', $employee->id)->whereNull('clock_out_at')->get();
 
-        AttendanceLog::create([
-            'employee_id' => $employee->id,
-            'clock_in_at' => now(),
-        ]);
+            foreach ($openSessions as $session) {
+                // If the session is from a previous day, auto-close it 8 hours after clock in
+                if (!$session->clock_in_at->isToday()) {
+                    $session->update([
+                        'clock_out_at' => $session->clock_in_at->copy()->addHours(8),
+                        'note' => ltrim($session->note . ' (Auto-closed by system)')
+                    ]);
+                } else {
+                    // Session is from today, they are already clocked in
+                    return back()->with('error', 'You are already clocked in.');
+                }
+            }
 
-        return back()->with('success', 'Clocked in at ' . now()->format('H:i:s'));
+            AttendanceLog::create([
+                'employee_id' => $employee->id,
+                'clock_in_at' => now(),
+            ]);
+
+            return back()->with('success', 'Clocked in at ' . now()->format('H:i:s'));
+        });
     }
 
     /**
@@ -151,14 +163,20 @@ class AttendanceController extends Controller
             return back()->with('error', 'Employee profile not found.');
         }
 
-        $open = AttendanceLog::where('employee_id', $employee->id)->whereNull('clock_out_at')->first();
-        if (! $open) {
-            return back()->with('error', 'No active clock-in found.');
-        }
+        return Cache::lock('attendance_clock_' . $employee->id, 5)->get(function () use ($employee) {
+            $open = AttendanceLog::where('employee_id', $employee->id)
+                ->whereNull('clock_out_at')
+                ->whereDate('clock_in_at', today())
+                ->first();
 
-        $open->update(['clock_out_at' => now()]);
+            if (! $open) {
+                return back()->with('error', 'No active clock-in found for today.');
+            }
 
-        return back()->with('success', 'Clocked out at ' . now()->format('H:i:s'));
+            $open->update(['clock_out_at' => now()]);
+
+            return back()->with('success', 'Clocked out at ' . now()->format('H:i:s'));
+        });
     }
 
     /**
@@ -184,13 +202,9 @@ class AttendanceController extends Controller
             '--triggered-by' => Auth::id(),
         ]);
 
-        // Run synchronously for immediate feedback (acceptable for manual triggers)
-        $exitCode = Artisan::call('jpayroll:sync-attendance', $options);
+        // Push to background queue instead of running synchronously
+        Artisan::queue('jpayroll:sync-attendance', $options);
 
-        if ($exitCode === 0) {
-            return back()->with('success', 'JPayroll attendance sync completed successfully.');
-        }
-
-        return back()->with('error', 'JPayroll sync encountered an error. Please check the logs.');
+        return back()->with('success', 'JPayroll attendance sync queued successfully. Please check the logs in a few moments.');
     }
 }

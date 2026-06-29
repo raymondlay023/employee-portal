@@ -22,4 +22,17 @@ class AttendanceLog extends Model
     {
         return $this->belongsTo(Employee::class);
     }
+
+    public function getDurationAttribute()
+    {
+        if (!$this->clock_in_at || !$this->clock_out_at) {
+            return '—';
+        }
+
+        $mins = $this->clock_in_at->diffInMinutes($this->clock_out_at);
+        $h = intdiv($mins, 60);
+        $m = $mins % 60;
+        
+        return $h > 0 ? "{$h}h {$m}m" : "{$m}m";
+    }
 }

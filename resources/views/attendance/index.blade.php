@@ -378,15 +378,6 @@
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @forelse($manualLogs as $log)
-                                @php
-                                    $duration = '—';
-                                    if ($log->clock_in_at && $log->clock_out_at) {
-                                        $mins = $log->clock_in_at->diffInMinutes($log->clock_out_at);
-                                        $h = intdiv($mins, 60);
-                                        $m = $mins % 60;
-                                        $duration = $h > 0 ? "{$h}h {$m}m" : "{$m}m";
-                                    }
-                                @endphp
                                 <tr class="hover:bg-slate-50/40 transition-colors">
                                     <td class="px-5 py-3 text-xs font-bold text-slate-800">
                                         {{ $log->clock_in_at?->format('d M Y') ?? '—' }}
@@ -406,7 +397,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-3 text-xs text-slate-500 font-medium">{{ $duration }}</td>
+                                    <td class="px-5 py-3 text-xs text-slate-500 font-medium">{{ $log->duration }}</td>
                                     <td class="px-5 py-3 text-xs text-slate-400">{{ $log->note ?? '—' }}</td>
                                 </tr>
                             @empty
@@ -524,4 +515,40 @@
         @endcan
 
     </div>
+
+    @push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <style>
+        .ts-control {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.625rem 0.75rem;
+            font-size: 0.75rem;
+            background-color: #f8fafc;
+        }
+        .ts-control > input {
+            font-size: 0.75rem;
+        }
+    </style>
+    @endpush
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (document.getElementById('employee_id')) {
+                new TomSelect('#employee_id', {
+                    create: false,
+                    sortField: { field: "text", direction: "asc" }
+                });
+            }
+            if (document.getElementById('sync_nik')) {
+                new TomSelect('#sync_nik', {
+                    create: false,
+                    sortField: { field: "text", direction: "asc" }
+                });
+            }
+        });
+    </script>
+    @endpush
 </x-app-layout>
