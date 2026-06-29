@@ -11,7 +11,7 @@
                 <div x-data="{ showModal: false, syncing: false }" class="flex items-center gap-3">
                     @if($lastSync)
                         <span class="text-[10px] text-slate-500 font-medium hidden sm:block">
-                            Last sync: {{ \Carbon\Carbon::parse($lastSync)->timezone(config('app.timezone'))->format('d M Y, H:i') }}
+                            Last sync: {{ \Carbon\Carbon::parse($lastSync)->timezone('Asia/Jakarta')->format('d M Y, H:i') }}
                         </span>
                     @else
                         <span class="text-[10px] text-slate-400 font-medium hidden sm:block">Never synced</span>
@@ -437,16 +437,16 @@
                             @forelse($manualLogs as $log)
                                 <tr class="hover:bg-slate-50/40 transition-colors">
                                     <td class="px-5 py-3 text-xs font-bold text-slate-800">
-                                        {{ $log->clock_in_at?->format('d M Y') ?? '—' }}
+                                        {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('d M Y') : '—' }}
                                     </td>
                                     <td class="px-5 py-3">
                                         <span class="text-xs font-semibold text-emerald-700">
-                                            {{ $log->clock_in_at?->format('H:i:s') ?? '—' }}
+                                            {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('H:i:s') : '—' }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-3">
                                         @if($log->clock_out_at)
-                                            <span class="text-xs font-semibold text-slate-700">{{ $log->clock_out_at->format('H:i:s') }}</span>
+                                            <span class="text-xs font-semibold text-slate-700">{{ $log->clock_out_at->timezone('Asia/Jakarta')->format('H:i:s') }}</span>
                                         @else
                                             <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -526,7 +526,7 @@
                                 @endphp
                                 <tr class="hover:bg-slate-50/40 transition-colors">
                                     <td class="px-5 py-3 text-xs font-semibold text-slate-700">
-                                        {{ $log->started_at->timezone(config('app.timezone'))->format('d M Y, H:i:s') }}
+                                        {{ $log->started_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }}
                                         @if($log->ended_at)
                                             <span class="block text-[9px] text-slate-400 font-medium">Duration: {{ $log->started_at->diffInSeconds($log->ended_at) }}s</span>
                                         @endif

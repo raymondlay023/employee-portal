@@ -169,7 +169,7 @@ class AttendanceController extends Controller
                 'clock_in_at' => now(),
             ]);
 
-            return back()->with('success', 'Clocked in at ' . now()->format('H:i:s'));
+            return back()->with('success', 'Clocked in at ' . now()->timezone('Asia/Jakarta')->format('H:i:s'));
         });
     }
 
@@ -197,7 +197,7 @@ class AttendanceController extends Controller
 
             $open->update(['clock_out_at' => now()]);
 
-            return back()->with('success', 'Clocked out at ' . now()->format('H:i:s'));
+            return back()->with('success', 'Clocked out at ' . now()->timezone('Asia/Jakarta')->format('H:i:s'));
         });
     }
 

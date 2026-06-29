@@ -93,7 +93,12 @@
                             
                             <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
                                 @if ($todayLog)
-                                    Active shift started at {{ \Carbon\Carbon::parse($todayLog->clock_in_at)->format('H:i') }}
+                                    <div class="flex items-center gap-2 mt-4 text-emerald-700 bg-emerald-50 rounded-xl px-4 py-3">
+                                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                        <span class="text-xs font-bold">
+                                            Active shift started at {{ \Carbon\Carbon::parse($todayLog->clock_in_at)->timezone('Asia/Jakarta')->format('H:i') }}
+                                        </span>
+                                    </div>
                                 @else
                                     Ready to record your daily attendance
                                 @endif
@@ -111,7 +116,7 @@
                         <!-- Spacious Digital Clock & Forms -->
                         <div class="flex flex-col items-center md:items-end justify-center gap-3 flex-shrink-0 bg-slate-50/60 p-5 rounded-2xl border border-slate-100/50 w-full md:w-auto">
                             <span class="text-2xl font-black text-slate-800 tracking-wider font-mono" id="clock-display" wire:ignore>
-                                {{ now()->format('H:i:s') }}
+                                {{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}
                             </span>
                             
                             @if ($todayLog)
