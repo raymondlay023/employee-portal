@@ -134,16 +134,17 @@
                     Add Next Hour
                 </button>
 
-                @if(count($logs) > 1)
+                @if(!empty($logs) && (count($logs) > 1 || !empty($logs[0]['id'])))
                     <button 
                         type="button"
-                        wire:click="removeLastSlot"
+                        wire:confirm="Are you sure you want to completely clear all logs for this day? This cannot be undone."
+                        wire:click="clearAllLogs"
                         class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 border border-red-100 hover:bg-red-100 text-red-600 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer border-0"
                     >
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                         </svg>
-                        Remove Last Slot
+                        Reset Day
                     </button>
                 @endif
             </div>
@@ -160,6 +161,7 @@
                             <th class="py-4 px-6 w-80">Activity Name</th>
                             <th class="py-4 px-6">Detailed Remarks</th>
                             <th class="py-4 px-6 w-48">Proof Attachment</th>
+                            <th class="py-4 px-4 w-16"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -351,6 +353,21 @@
                                         </span>
                                     @enderror
                                 </td>
+
+                                <!-- Delete Row Action -->
+                                <td class="py-4 px-4 align-top text-right">
+                                    <button 
+                                        type="button" 
+                                        wire:click="removeSlot({{ $index }})"
+                                        wire:confirm="Are you sure you want to delete this log slot?"
+                                        class="p-2 mt-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border-0 cursor-pointer"
+                                        title="Delete slot"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -374,10 +391,24 @@
                                     {{ !empty($log['start_time']) ? substr($log['start_time'], 0, 5) : '--:--' }} - {{ !empty($log['end_time']) ? substr($log['end_time'], 0, 5) : '--:--' }} | {{ $log['activity'] ?: 'New Slot' }}
                                 </span>
                             </div>
-                            <!-- Arrow toggle indicator -->
-                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': expanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                            </svg>
+                            <div class="flex items-center gap-3">
+                                <!-- Delete button on mobile -->
+                                <button 
+                                    type="button" 
+                                    wire:click="removeSlot({{ $index }})"
+                                    wire:confirm="Are you sure you want to delete this log slot?"
+                                    class="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors border-0"
+                                    x-on:click.stop
+                                >
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                                <!-- Arrow toggle indicator -->
+                                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': expanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </div>
                         </div>
 
                         <!-- Card Body (Collapsed/Expanded content) -->

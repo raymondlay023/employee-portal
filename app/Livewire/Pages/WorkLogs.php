@@ -111,9 +111,20 @@ class WorkLogs extends Component
     public function removeLastSlot(): void
     {
         if (count($this->logs) > 1) {
-            $lastLog = array_pop($this->logs);
-            if ($lastLog['id']) {
-                $dbLog = DailyWorkLog::find($lastLog['id']);
+            $lastIndex = count($this->logs) - 1;
+            $this->removeSlot($lastIndex);
+        }
+    }
+
+    /**
+     * Remove a specific hour slot.
+     */
+    public function removeSlot(int $index): void
+    {
+        if (isset($this->logs[$index])) {
+            $logData = $this->logs[$index];
+            if (!empty($logData['id'])) {
+                $dbLog = DailyWorkLog::find($logData['id']);
                 if ($dbLog) {
                     if ($dbLog->proof_path) {
                         \Storage::disk('public')->delete($dbLog->proof_path);
@@ -122,14 +133,61 @@ class WorkLogs extends Component
                 }
             }
             
-            // Clean up temporary uploads tracking for the removed slot index
-            $index = count($this->logs);
-            if (isset($this->newProofs[$index])) {
-                unset($this->newProofs[$index]);
+            unset($this->logs[$index]);
+            $this->logs = array_values($this->logs);
+            
+            // Clear temporary arrays to prevent index misalignment
+            $this->newProofs = [];
+            $this->pendingDeletions = [];
+
+            if (empty($this->logs)) {
+                $this->logs = [
+                    [
+                        'id' => null,
+                        'user_id' => auth()->id(),
+                        'date' => $this->date,
+                        'start_time' => '',
+                        'end_time' => '',
+                        'activity' => '',
+                        'remarks' => '',
+                        'proof_path' => null,
+                    ]
+                ];
             }
 
-            $this->dispatch('toast', ['message' => 'Last time slot removed.', 'type' => 'success']);
+            $this->dispatch('toast', ['message' => 'Time slot removed.', 'type' => 'success']);
         }
+    }
+
+    /**
+     * Clear all logs for the current day.
+     */
+    public function clearAllLogs(): void
+    {
+        $dbLogs = DailyWorkLog::where('user_id', auth()->id())->where('date', $this->date)->get();
+        foreach ($dbLogs as $dbLog) {
+            if ($dbLog->proof_path) {
+                \Storage::disk('public')->delete($dbLog->proof_path);
+            }
+            $dbLog->delete();
+        }
+
+        $this->logs = [
+            [
+                'id' => null,
+                'user_id' => auth()->id(),
+                'date' => $this->date,
+                'start_time' => '',
+                'end_time' => '',
+                'activity' => '',
+                'remarks' => '',
+                'proof_path' => null,
+            ]
+        ];
+        $this->newProofs = [];
+        $this->pendingDeletions = [];
+
+        $this->dispatch('toast', ['message' => 'All logs for this day have been cleared.', 'type' => 'success']);
     }
 
     /**
