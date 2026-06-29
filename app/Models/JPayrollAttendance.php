@@ -17,10 +17,7 @@ class JPayrollAttendance extends Model
         'alpha',
         'telat',
         'izin',
-        'op',
-        'hos',
-        'wa',
-        'hoswa',
+        'sakit',
     ];
 
     protected $casts = [
@@ -28,10 +25,7 @@ class JPayrollAttendance extends Model
         'alpha'      => 'integer',
         'telat'      => 'integer',
         'izin'       => 'integer',
-        'op'         => 'integer',
-        'hos'        => 'integer',
-        'wa'         => 'integer',
-        'hoswa'      => 'integer',
+        'sakit'      => 'integer',
     ];
 
     // -------------------------------------------------------------------------
@@ -66,13 +60,9 @@ class JPayrollAttendance extends Model
      */
     public function isPresent(): bool
     {
-        return $this->alpha === 0
-            && $this->telat === 0
-            && $this->izin === 0
-            && $this->op === 0
-            && $this->hos === 0
-            && $this->wa === 0
-            && $this->hoswa === 0;
+        return $this->alpha === 0 
+            && $this->izin === 0 
+            && $this->sakit === 0;
     }
 
     /**
@@ -81,10 +71,10 @@ class JPayrollAttendance extends Model
     public function statusLabel(): string
     {
         if ($this->alpha > 0)  return 'Absent';
-        if ($this->hos > 0 || $this->wa > 0 || $this->hoswa > 0) return 'Sick / WA';
+        if ($this->sakit > 0)  return 'Sick';
         if ($this->izin > 0)   return 'Leave';
         if ($this->telat > 0)  return 'Late';
-        if ($this->op > 0)     return 'Permitted';
+        
         return 'Present';
     }
 }

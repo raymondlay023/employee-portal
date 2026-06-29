@@ -43,11 +43,10 @@ class AttendanceReport extends Component
                 employee_id,
                 COUNT(*) as total_days,
                 SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
-                SUM(CASE WHEN alpha <= 0 AND (hos > 0 OR wa > 0 OR hoswa > 0) THEN 1 ELSE 0 END) as sick_days,
-                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
-                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
-                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin <= 0 AND telat <= 0 AND op > 0 THEN 1 ELSE 0 END) as permitted_days,
-                SUM(CASE WHEN alpha = 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin = 0 AND telat = 0 AND op = 0 THEN 1 ELSE 0 END) as present_days
+                SUM(CASE WHEN alpha <= 0 AND sakit > 0 THEN 1 ELSE 0 END) as sick_days,
+                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
+                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
+                SUM(CASE WHEN alpha = 0 AND sakit = 0 AND izin = 0 THEN 1 ELSE 0 END) as present_days
             ')
             ->groupBy('employee_id')
             ->get();

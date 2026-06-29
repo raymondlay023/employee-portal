@@ -355,8 +355,8 @@
                                     </span>
                                 </td>
                                 <td class="px-5 py-3 text-center">
-                                    <span class="text-xs font-bold {{ $log->op > 0 ? 'text-slate-600' : 'text-slate-300' }}">
-                                        {{ $log->op + $log->hos + $log->hoswa + $log->wa }}
+                                    <span class="text-xs font-bold {{ $log->sakit > 0 ? 'text-orange-600' : 'text-slate-300' }}">
+                                        {{ $log->sakit }}
                                     </span>
                                 </td>
                             </tr>

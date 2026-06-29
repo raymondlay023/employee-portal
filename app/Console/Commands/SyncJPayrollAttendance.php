@@ -119,10 +119,7 @@ class SyncJPayrollAttendance extends Command
                         'alpha'  => (int) ($row['ABS']   ?? 0),
                         'telat'  => (int) ($row['LT']    ?? 0),
                         'izin'   => (int) ($row['CT']    ?? 0),
-                        'op'     => (int) ($row['OP']    ?? 0),
-                        'hos'    => (int) ($row['HOS']   ?? 0),
-                        'wa'     => (int) ($row['WA']    ?? 0),
-                        'hoswa'  => (int) ($row['HOSWA'] ?? 0),
+                        'sakit'  => (int) ($row['HOS'] ?? 0) + (int) ($row['WA'] ?? 0) + (int) ($row['HOSWA'] ?? 0),
                     ]
                 );
 

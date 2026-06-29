@@ -86,14 +86,6 @@
                                         @endif
                                     </div>
                                 </th>
-                                <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('permitted_days')">
-                                    <div class="flex items-center justify-center gap-1.5">
-                                        Permitted
-                                        @if($sortField === 'permitted_days')
-                                            <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
-                                        @endif
-                                    </div>
-                                </th>
                                 <th class="py-4 px-6 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('total_days')">
                                     <div class="flex items-center justify-center gap-1.5">
                                         Total Days
@@ -145,11 +137,6 @@
                                             {{ (int) $row->leave_days }}
                                         </span>
                                     </td>
-                                    <td class="py-4 px-4 text-center">
-                                        <span class="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 {{ $row->permitted_days > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded-lg border border-transparent">
-                                            {{ (int) $row->permitted_days }}
-                                        </span>
-                                    </td>
                                     <td class="py-4 px-6 text-center">
                                         <span class="inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 bg-slate-100 text-slate-700 font-bold text-xs rounded-lg shadow-inner">
                                             {{ (int) $row->total_days }}
@@ -166,7 +153,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="py-16 text-center">
+                                    <td colspan="8" class="py-16 text-center">
                                         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
                                             <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

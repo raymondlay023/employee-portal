@@ -63,11 +63,10 @@ class AttendanceController extends Controller
             $summary = $summaryQuery->selectRaw('
                 COUNT(*) as total_days,
                 SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
-                SUM(CASE WHEN alpha <= 0 AND (hos > 0 OR wa > 0 OR hoswa > 0) THEN 1 ELSE 0 END) as sick_days,
-                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
-                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
-                SUM(CASE WHEN alpha <= 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin <= 0 AND telat <= 0 AND op > 0 THEN 1 ELSE 0 END) as permitted_days,
-                SUM(CASE WHEN alpha = 0 AND hos = 0 AND wa = 0 AND hoswa = 0 AND izin = 0 AND telat = 0 AND op = 0 THEN 1 ELSE 0 END) as present_days
+                SUM(CASE WHEN alpha <= 0 AND sakit > 0 THEN 1 ELSE 0 END) as sick_days,
+                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
+                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
+                SUM(CASE WHEN alpha = 0 AND sakit = 0 AND izin = 0 THEN 1 ELSE 0 END) as present_days
             ')->first();
         }
 
@@ -76,12 +75,8 @@ class AttendanceController extends Controller
             $status = $validated['status'];
             if ($status === 'present') {
                 $jpayrollQuery->where('alpha', 0)
-                    ->where('telat', 0)
                     ->where('izin', 0)
-                    ->where('op', 0)
-                    ->where('hos', 0)
-                    ->where('wa', 0)
-                    ->where('hoswa', 0);
+                    ->where('sakit', 0);
             } elseif ($status === 'absent') {
                 $jpayrollQuery->where('alpha', '>', 0);
             } elseif ($status === 'late') {
@@ -89,11 +84,7 @@ class AttendanceController extends Controller
             } elseif ($status === 'leave') {
                 $jpayrollQuery->where('izin', '>', 0);
             } elseif ($status === 'sick') {
-                $jpayrollQuery->where(function ($q) {
-                    $q->where('hos', '>', 0)
-                      ->orWhere('wa', '>', 0)
-                      ->orWhere('hoswa', '>', 0);
-                });
+                $jpayrollQuery->where('sakit', '>', 0);
             }
         }
 
