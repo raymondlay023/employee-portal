@@ -33,8 +33,8 @@ class AttendanceReport extends Component
 
     public function render(): View
     {
-        $startDate = now()->setYear($this->year)->setMonth($this->month)->startOfMonth()->toDateString();
-        $endDate = now()->setYear($this->year)->setMonth($this->month)->endOfMonth()->toDateString();
+        $startDate = now()->setYear((int)$this->year)->setMonth((int)$this->month)->startOfMonth()->toDateString();
+        $endDate = now()->setYear((int)$this->year)->setMonth((int)$this->month)->endOfMonth()->toDateString();
 
         // Single powerful query to aggregate all employee data for the selected month
         $reportData = JPayrollAttendance::with('employee')
