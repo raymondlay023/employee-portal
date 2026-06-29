@@ -14,49 +14,40 @@ class SyncJpayroll extends Component
     public $date_from;
     public $date_to;
     public $nik;
-
+    
+    public $syncRequestedAt = null;
     public $showModal = false;
-
-    protected $rules = [
-        'date_from' => 'nullable|date',
-        'date_to'   => 'nullable|date|after_or_equal:date_from',
-        'nik'       => 'nullable|string|max:20',
-    ];
 
     public function mount()
     {
-        $this->date_from = now()->format('Y-m-d');
-        $this->date_to = now()->format('Y-m-d');
+        $this->date_from = now()->subDays(7)->format('Y-m-d');
+        $this->date_to   = now()->format('Y-m-d');
     }
-
-    public $justQueued = false;
 
     public function sync()
     {
-        $this->validate();
+        $this->validate([
+            'date_from' => 'required|date',
+            'date_to'   => 'required|date|after_or_equal:date_from',
+            'nik'       => 'nullable|string',
+        ]);
 
-        // 1. Guardrail: limit to 31 days
-        $start = $this->date_from ? Carbon::parse($this->date_from) : null;
-        $end = $this->date_to ? Carbon::parse($this->date_to) : null;
+        $start = Carbon::parse($this->date_from);
+        $end   = Carbon::parse($this->date_to);
 
-        if ($start && $end && $start->diffInDays($end) > 31) {
+        if ($start->diffInDays($end) > 31) {
             $this->addError('date_to', 'Date range cannot exceed 31 days to prevent API overload.');
             return;
         }
 
-        $date1 = $start ? $start->format('d/m/Y') : null;
-        $date2 = $end ? $end->format('d/m/Y') : null;
-
         $options = array_filter([
-            '--date1'        => $date1,
-            '--date2'        => $date2,
+            '--date1'        => $start->format('d/m/Y'),
+            '--date2'        => $end->format('d/m/Y'),
             '--nik'          => $this->nik ?: null,
             '--trigger'      => 'manual',
             '--triggered-by' => Auth::id(),
         ]);
 
-        // 2. Synchronous fallback for small requests
-        // If range <= 3 days, run synchronously
         $runSync = false;
         if ($start && $end && $start->diffInDays($end) <= 3) {
             $runSync = true;
@@ -65,10 +56,11 @@ class SyncJpayroll extends Component
         if ($runSync) {
             Artisan::call('jpayroll:sync-attendance', $options);
             session()->flash('sync_success', 'JPayroll attendance synced successfully!');
+            $this->redirect(route('attendance.index'));
         } else {
             Artisan::queue('jpayroll:sync-attendance', $options);
             session()->flash('sync_success', 'JPayroll attendance sync queued successfully. Please watch the logs.');
-            $this->justQueued = true;
+            $this->syncRequestedAt = now()->toDateTimeString();
         }
 
         $this->showModal = false;
@@ -84,6 +76,14 @@ class SyncJpayroll extends Component
             
         $isRunning = $latestLog && $latestLog->status === 'running';
         
+        if ($this->syncRequestedAt) {
+            if ($latestLog && $latestLog->created_at >= $this->syncRequestedAt) {
+                if ($latestLog->status !== 'running') {
+                    $this->redirect(route('attendance.index'));
+                }
+            }
+        }
+        
         $lastSync = ApiSyncLog::where('api_name', 'jpayroll_attendance')
             ->where('status', 'success')
             ->max('started_at');
@@ -92,6 +92,7 @@ class SyncJpayroll extends Component
             'employees' => $employees,
             'latestLog' => $latestLog,
             'isRunning' => $isRunning,
+            'justQueued' => $this->syncRequestedAt !== null && !$isRunning,
             'lastSync'  => $lastSync,
         ]);
     }

@@ -17,6 +17,10 @@
                 </div>
             @endif
 
+            @can('sync attendance')
+                <livewire:employee.sync-jpayroll />
+            @endcan
+
             <!-- Filters & Search -->
             <div class="card mb-6">
                 <div class="p-4 bg-gray-50 border-b border-gray-100">
