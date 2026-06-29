@@ -102,16 +102,8 @@ class AttendanceController extends Controller
         $lastSync = Cache::get('jpayroll_attendance_last_sync');
 
         $employees = collect();
-        $syncLogs  = collect();
         if ($user->can('manage attendance') || $user->can('sync attendance')) {
             $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
-        }
-        if ($user->can('sync attendance')) {
-            $syncLogs  = ApiSyncLog::with('triggeredBy')
-                ->where('api_name', 'jpayroll_attendance')
-                ->orderBy('started_at', 'desc')
-                ->take(10)
-                ->get();
         }
 
         return view('attendance.index', compact(
@@ -121,7 +113,6 @@ class AttendanceController extends Controller
             'dateTo',
             'lastSync',
             'employees',
-            'syncLogs',
             'summary',
         ));
     }
@@ -192,32 +183,4 @@ class AttendanceController extends Controller
         });
     }
 
-    /**
-     * Trigger a JPayroll attendance sync manually (HR / Admin only).
-     * Guarded by the 'sync attendance' permission via route middleware.
-     */
-    public function syncFromJPayroll(Request $request)
-    {
-        $validated = $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
-            'nik'       => ['nullable', 'string', 'max:20'],
-        ]);
-
-        $date1 = isset($validated['date_from']) ? \Carbon\Carbon::parse($validated['date_from'])->format('d/m/Y') : null;
-        $date2 = isset($validated['date_to']) ? \Carbon\Carbon::parse($validated['date_to'])->format('d/m/Y') : null;
-
-        $options = array_filter([
-            '--date1'        => $date1,
-            '--date2'        => $date2,
-            '--nik'          => $validated['nik'] ?: null,
-            '--trigger'      => 'manual',
-            '--triggered-by' => Auth::id(),
-        ]);
-
-        // Push to background queue instead of running synchronously
-        Artisan::queue('jpayroll:sync-attendance', $options);
-
-        return back()->with('success', 'JPayroll attendance sync queued successfully. Please check the logs in a few moments.');
-    }
 }

@@ -20,9 +20,6 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clock-in');
     Route::post('attendance/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clock-out');
-    Route::post('attendance/sync-jpayroll', [AttendanceController::class, 'syncFromJPayroll'])
-        ->name('attendance.sync-jpayroll')
-        ->middleware('can:sync attendance');
 
     Route::get('hr/attendance-report', \App\Livewire\Hr\AttendanceReport::class)
         ->name('hr.attendance-report')
