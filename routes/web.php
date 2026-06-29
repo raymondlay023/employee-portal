@@ -24,6 +24,10 @@ Route::middleware(['auth','verified'])->group(function () {
         ->name('attendance.sync-jpayroll')
         ->middleware('can:sync attendance');
 
+    Route::get('hr/attendance-report', \App\Livewire\Hr\AttendanceReport::class)
+        ->name('hr.attendance-report')
+        ->middleware('can:manage attendance');
+
     // Leave requests
     Route::resource('leave-requests', LeaveRequestController::class);
 });

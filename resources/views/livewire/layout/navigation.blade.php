@@ -64,6 +64,16 @@ new class extends Component
                                 Attendance
                             </a>
                         @endcan
+                        
+                        @can('manage attendance')
+                            <a href="{{ route('hr.attendance-report') }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs('hr.attendance-report') ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors">
+                                <svg class="{{ request()->routeIs('hr.attendance-report') ? 'text-brand-700' : 'text-gray-400 group-hover:text-gray-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                                </svg>
+                                HR Attendance Report
+                            </a>
+                        @endcan
     
                         @can('view leaves')
                             <a href="{{ route('leave-requests.index') }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs('leave-requests.*') ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors">
@@ -145,6 +155,16 @@ new class extends Component
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Attendance
+                        </a>
+                    @endcan
+                    
+                    @can('manage attendance')
+                        <a href="{{ route('hr.attendance-report') }}" wire:navigate class="{{ request()->routeIs('hr.attendance-report') ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
+                            <svg class="{{ request()->routeIs('hr.attendance-report') ? 'text-brand-700' : 'text-gray-400 group-hover:text-gray-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                            </svg>
+                            HR Attendance Report
                         </a>
                     @endcan
     
