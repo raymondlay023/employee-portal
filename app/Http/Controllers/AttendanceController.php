@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use App\Models\Employee;
 use App\Models\AttendanceLog;
 use App\Models\JPayrollAttendance;
+use App\Models\ApiSyncLog;
 
 class AttendanceController extends Controller
 {
@@ -20,10 +21,12 @@ class AttendanceController extends Controller
         $user     = Auth::user();
         $employee = $user->employee;
 
-        // Validate optional date range filter
+        // Validate optional filter parameters
         $validated = $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
+            'date_from'   => ['nullable', 'date'],
+            'date_to'     => ['nullable', 'date', 'after_or_equal:date_from'],
+            'employee_id' => ['nullable', 'exists:employees,id'],
+            'status'      => ['nullable', 'in:all,present,absent,late,leave,sick'],
         ]);
 
         $dateFrom = $validated['date_from'] ?? now()->startOfMonth()->toDateString();
@@ -34,9 +37,43 @@ class AttendanceController extends Controller
             ->whereBetween('shift_date', [$dateFrom, $dateTo])
             ->orderBy('shift_date', 'desc');
 
-        // Employees only see their own records; HR/Admin see all
-        if ($employee && !$user->can('manage attendance')) {
-            $jpayrollQuery->where('employee_id', $employee->id);
+        // Employees only see their own records; HR/Admin see all or filtered
+        if ($user->can('manage attendance')) {
+            if (!empty($validated['employee_id'])) {
+                $jpayrollQuery->where('employee_id', $validated['employee_id']);
+            }
+        } else {
+            if ($employee) {
+                $jpayrollQuery->where('employee_id', $employee->id);
+            } else {
+                $jpayrollQuery->whereRaw('1 = 0');
+            }
+        }
+
+        // Apply advanced status filters
+        if (!empty($validated['status']) && $validated['status'] !== 'all') {
+            $status = $validated['status'];
+            if ($status === 'present') {
+                $jpayrollQuery->where('alpha', 0)
+                    ->where('telat', 0)
+                    ->where('izin', 0)
+                    ->where('op', 0)
+                    ->where('hos', 0)
+                    ->where('wa', 0)
+                    ->where('hoswa', 0);
+            } elseif ($status === 'absent') {
+                $jpayrollQuery->where('alpha', '>', 0);
+            } elseif ($status === 'late') {
+                $jpayrollQuery->where('telat', '>', 0);
+            } elseif ($status === 'leave') {
+                $jpayrollQuery->where('izin', '>', 0);
+            } elseif ($status === 'sick') {
+                $jpayrollQuery->where(function ($q) {
+                    $q->where('hos', '>', 0)
+                      ->orWhere('wa', '>', 0)
+                      ->orWhere('hoswa', '>', 0);
+                });
+            }
         }
 
         $jpayrollLogs = $jpayrollQuery->paginate(20, ['*'], 'jp_page');
@@ -52,12 +89,27 @@ class AttendanceController extends Controller
         // Last JPayroll sync timestamp
         $lastSync = Cache::get('jpayroll_attendance_last_sync');
 
+        $employees = collect();
+        $syncLogs  = collect();
+        if ($user->can('manage attendance') || $user->can('sync attendance')) {
+            $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
+        }
+        if ($user->can('sync attendance')) {
+            $syncLogs  = ApiSyncLog::with('triggeredBy')
+                ->where('api_name', 'jpayroll_attendance')
+                ->orderBy('started_at', 'desc')
+                ->take(10)
+                ->get();
+        }
+
         return view('attendance.index', compact(
             'jpayrollLogs',
             'manualLogs',
             'dateFrom',
             'dateTo',
             'lastSync',
+            'employees',
+            'syncLogs',
         ));
     }
 
@@ -116,15 +168,20 @@ class AttendanceController extends Controller
     public function syncFromJPayroll(Request $request)
     {
         $validated = $request->validate([
-            'date1' => ['nullable', 'date_format:d/m/Y'],
-            'date2' => ['nullable', 'date_format:d/m/Y'],
-            'nik'   => ['nullable', 'string', 'max:20'],
+            'date_from' => ['nullable', 'date'],
+            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
+            'nik'       => ['nullable', 'string', 'max:20'],
         ]);
 
+        $date1 = isset($validated['date_from']) ? \Carbon\Carbon::parse($validated['date_from'])->format('d/m/Y') : null;
+        $date2 = isset($validated['date_to']) ? \Carbon\Carbon::parse($validated['date_to'])->format('d/m/Y') : null;
+
         $options = array_filter([
-            '--date1' => $validated['date1'] ?? null,
-            '--date2' => $validated['date2'] ?? null,
-            '--nik'   => $validated['nik']   ?? null,
+            '--date1'        => $date1,
+            '--date2'        => $date2,
+            '--nik'          => $validated['nik'] ?: null,
+            '--trigger'      => 'manual',
+            '--triggered-by' => Auth::id(),
         ]);
 
         // Run synchronously for immediate feedback (acceptable for manual triggers)

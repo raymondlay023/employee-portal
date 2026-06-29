@@ -9,4 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Sync JPayroll attendance every day at 06:00 (covers yesterday + today by default)
-Schedule::command('jpayroll:sync-attendance')->dailyAt('06:00');
+Schedule::command('jpayroll:sync-attendance', ['--trigger' => 'scheduled'])->dailyAt('06:00');

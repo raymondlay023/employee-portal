@@ -8,7 +8,7 @@
 
             {{-- Last sync indicator + manual sync trigger (HR / Admin only) --}}
             @can('sync attendance')
-                <div class="flex items-center gap-3">
+                <div x-data="{ showModal: false, syncing: false }" class="flex items-center gap-3">
                     @if($lastSync)
                         <span class="text-[10px] text-slate-500 font-medium hidden sm:block">
                             Last sync: {{ \Carbon\Carbon::parse($lastSync)->timezone(config('app.timezone'))->format('d M Y, H:i') }}
@@ -17,18 +17,111 @@
                         <span class="text-[10px] text-slate-400 font-medium hidden sm:block">Never synced</span>
                     @endif
 
-                    <form method="POST" action="{{ route('attendance.sync-jpayroll') }}" id="sync-form">
-                        @csrf
-                        <button type="submit"
-                            id="sync-btn"
-                            class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0"
-                            onclick="event.preventDefault(); this.disabled=true; this.textContent='Syncing…'; this.form.submit();">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
-                            </svg>
-                            Sync from JPayroll
-                        </button>
-                    </form>
+                    <button type="button"
+                        id="sync-btn"
+                        @click="showModal = true"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                        </svg>
+                        Sync from JPayroll
+                    </button>
+
+                    <!-- Alpine JS Modal -->
+                    <div x-show="showModal"
+                        class="fixed inset-0 z-50 overflow-y-auto"
+                        style="display: none;"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-200"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0">
+                        
+                        <!-- Backdrop -->
+                        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+
+                        <!-- Modal Content Container -->
+                        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                            <div x-show="showModal"
+                                @click.away="if (!syncing) showModal = false"
+                                class="relative transform overflow-hidden rounded-3xl bg-white px-6 py-6 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg space-y-4 border border-slate-100"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                                
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <h3 class="text-base font-extrabold text-slate-900">Configure JPayroll Sync</h3>
+                                    <button type="button" @click="showModal = false" :disabled="syncing" class="text-slate-400 hover:text-slate-600 focus:outline-none disabled:opacity-50">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <form method="POST" action="{{ route('attendance.sync-jpayroll') }}" id="sync-form" class="space-y-4">
+                                    @csrf
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div class="flex flex-col gap-1.5">
+                                            <label for="sync_date_from" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date From</label>
+                                            <input type="date" id="sync_date_from" name="date_from"
+                                                value="{{ now()->subDays(7)->toDateString() }}"
+                                                :disabled="syncing"
+                                                class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50 disabled:opacity-60">
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+                                            <label for="sync_date_to" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date To</label>
+                                            <input type="date" id="sync_date_to" name="date_to"
+                                                value="{{ now()->toDateString() }}"
+                                                :disabled="syncing"
+                                                class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50 disabled:opacity-60">
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col gap-1.5">
+                                        <label for="sync_nik" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Employee / NIK (Optional)</label>
+                                        <select id="sync_nik" name="nik" :disabled="syncing"
+                                            class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50 disabled:opacity-60">
+                                            <option value="">All Employees</option>
+                                            @foreach($employees as $emp)
+                                                <option value="{{ $emp->employee_id }}">
+                                                    {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_id }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                                        <button type="button" @click="showModal = false" :disabled="syncing"
+                                            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors disabled:opacity-50">
+                                            Cancel
+                                        </button>
+                                        <button type="submit" :disabled="syncing"
+                                            @click="syncing = true; $el.form.submit();"
+                                            class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-60 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0 inline-flex items-center gap-1.5">
+                                            <span x-show="!syncing" class="inline-flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                                                </svg>
+                                                Start Sync
+                                            </span>
+                                            <span x-show="syncing" class="inline-flex items-center gap-1.5">
+                                                <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Syncing…
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endcan
         </div>
@@ -72,29 +165,71 @@
                     </div>
                 </div>
 
-                {{-- Date range filter form --}}
+                {{-- Advanced filter form --}}
                 <form method="GET" action="{{ route('attendance.index') }}"
-                    class="flex flex-wrap items-center gap-2" id="date-filter-form">
-                    <div class="flex items-center gap-1.5">
-                        <label for="date_from" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">From</label>
+                    class="grid grid-cols-1 sm:grid-cols-2 {{ Auth::user()->can('manage attendance') ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }} gap-3 w-full" id="date-filter-form">
+                    
+                    <div class="flex flex-col gap-1.5">
+                        <label for="date_from" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">From</label>
                         <input type="date" id="date_from" name="date_from"
                             value="{{ $dateFrom }}"
-                            class="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
+                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <label for="date_to" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">To</label>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label for="date_to" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">To</label>
                         <input type="date" id="date_to" name="date_to"
                             value="{{ $dateTo }}"
-                            class="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
+                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
                     </div>
-                    <button type="submit"
-                        class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer border-0">
-                        Filter
-                    </button>
-                    <a href="{{ route('attendance.index') }}"
-                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-lg transition-colors">
-                        Reset
-                    </a>
+
+                    @can('manage attendance')
+                        <div class="flex flex-col gap-1.5">
+                            <label for="employee_id" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Employee</label>
+                            <select id="employee_id" name="employee_id"
+                                class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
+                                <option value="">All Employees</option>
+                                <optgroup label="Active Employees">
+                                    @foreach($employees->where('status', 'active') as $emp)
+                                        <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
+                                            {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_id }})
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="Inactive Employees">
+                                    @foreach($employees->where('status', '!=', 'active') as $emp)
+                                        <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
+                                            {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_id }}) ({{ ucfirst($emp->status) }})
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
+                    @endcan
+
+                    <div class="flex flex-col gap-1.5">
+                        <label for="status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
+                        <select id="status" name="status"
+                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
+                            <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>All Statuses</option>
+                            <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>Present</option>
+                            <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>Absent</option>
+                            <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>Late</option>
+                            <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>Leave</option>
+                            <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>Sick</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-5">
+                        <button type="submit"
+                            class="flex-1 px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0 text-center">
+                            Filter
+                        </button>
+                        <a href="{{ route('attendance.index') }}"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all text-center">
+                            Reset
+                        </a>
+                    </div>
                 </form>
             </div>
 
@@ -111,9 +246,7 @@
                             <th class="px-5 py-3 text-center text-[10px] font-extrabold text-red-400 uppercase tracking-wider" title="Absent without leave">Alpha</th>
                             <th class="px-5 py-3 text-center text-[10px] font-extrabold text-amber-400 uppercase tracking-wider" title="Late arrival">Late</th>
                             <th class="px-5 py-3 text-center text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider" title="Approved leave / Cuti">Leave</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider" title="Other permitted">OP</th>
                             <th class="px-5 py-3 text-center text-[10px] font-extrabold text-orange-400 uppercase tracking-wider" title="Sick leave">Sick</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-rose-400 uppercase tracking-wider" title="Work accident">WA</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -121,13 +254,12 @@
                             @php
                                 $statusLabel = $log->statusLabel();
                                 $statusClass = match($statusLabel) {
-                                    'Present'    => 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                                    'Absent'     => 'bg-red-50 text-red-700 border-red-100',
-                                    'Late'       => 'bg-amber-50 text-amber-700 border-amber-100',
-                                    'Leave'      => 'bg-indigo-50 text-indigo-700 border-indigo-100',
-                                    'Sick / WA'  => 'bg-orange-50 text-orange-700 border-orange-100',
-                                    'Permitted'  => 'bg-slate-50 text-slate-600 border-slate-200',
-                                    default      => 'bg-slate-50 text-slate-500 border-slate-100',
+                                    'Present' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                    'Absent' => 'bg-red-50 text-red-700 border-red-100',
+                                    'Late' => 'bg-amber-50 text-amber-700 border-amber-100',
+                                    'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                    'Sick' => 'bg-orange-50 text-orange-700 border-orange-100',
+                                    default => 'bg-slate-50 text-slate-500 border-slate-100',
                                 };
                             @endphp
                             <tr class="hover:bg-slate-50/40 transition-colors group">
@@ -167,23 +299,13 @@
                                 </td>
                                 <td class="px-5 py-3 text-center">
                                     <span class="text-xs font-bold {{ $log->op > 0 ? 'text-slate-600' : 'text-slate-300' }}">
-                                        {{ $log->op }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="text-xs font-bold {{ ($log->hos > 0 || $log->hoswa > 0) ? 'text-orange-600' : 'text-slate-300' }}">
-                                        {{ $log->hos + $log->hoswa }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="text-xs font-bold {{ $log->wa > 0 ? 'text-rose-600' : 'text-slate-300' }}">
-                                        {{ $log->wa }}
+                                        {{ $log->op + $log->hos + $log->hoswa + $log->wa }}
                                     </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-5 py-12 text-center">
+                                <td colspan="{{ Auth::user()->can('manage attendance') ? 7 : 6 }}" class="px-5 py-12 text-center">
                                     <div class="flex flex-col items-center gap-2 text-slate-400">
                                         <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
@@ -303,6 +425,101 @@
                         {{ $manualLogs->links() }}
                     </div>
                 @endif
+            </div>
+        @endcan
+
+        {{-- ── SECTION 3: JPayroll Sync History ────────────────────── --}}
+        @can('sync attendance')
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-600">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-extrabold text-slate-900">Sync Execution Logs</h3>
+                            <p class="text-[10px] text-slate-400 font-medium">History of recent synchronizations</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100">
+                        <thead>
+                            <tr class="bg-slate-50/60">
+                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Started At</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Trigger</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Date Range / NIK</th>
+                                <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
+                                <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Records (F / P / S)</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Details / Errors</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @forelse($syncLogs as $log)
+                                @php
+                                    $statusClass = match($log->status) {
+                                        'success' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                        'failed'  => 'bg-red-50 text-red-700 border-red-100',
+                                        'running' => 'bg-amber-50 text-amber-700 border-amber-100 animate-pulse',
+                                        default   => 'bg-slate-50 text-slate-500 border-slate-100',
+                                    };
+                                    $triggerText = match($log->trigger_type) {
+                                        'manual'    => ($log->triggeredBy ? $log->triggeredBy->name : 'Manual'),
+                                        'scheduled' => 'System Schedule',
+                                        'cli'       => 'Developer CLI',
+                                        default     => ucfirst($log->trigger_type),
+                                    };
+                                    $params = $log->parameters;
+                                    $dateRange = ($params['date_from'] ?? '—') . ' to ' . ($params['date_to'] ?? '—');
+                                    $nikText = isset($params['nik']) ? " (NIK: {$params['nik']})" : ' (All)';
+                                @endphp
+                                <tr class="hover:bg-slate-50/40 transition-colors">
+                                    <td class="px-5 py-3 text-xs font-semibold text-slate-700">
+                                        {{ $log->started_at->timezone(config('app.timezone'))->format('d M Y, H:i:s') }}
+                                        @if($log->ended_at)
+                                            <span class="block text-[9px] text-slate-400 font-medium">Duration: {{ $log->started_at->diffInSeconds($log->ended_at) }}s</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-xs text-slate-600 font-medium">
+                                        {{ $triggerText }}
+                                    </td>
+                                    <td class="px-5 py-3 text-xs text-slate-600 font-mono">
+                                        <span>{{ $dateRange }}</span>
+                                        <span class="text-slate-400">{{ $nikText }}</span>
+                                    </td>
+                                    <td class="px-5 py-3 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
+                                            {{ ucfirst($log->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-center text-xs font-semibold text-slate-700">
+                                        @if($log->status === 'success')
+                                            <span class="text-blue-600" title="Fetched">{{ $log->records_fetched }}</span>
+                                            <span class="text-slate-300">/</span>
+                                            <span class="text-emerald-600" title="Processed">{{ $log->records_processed }}</span>
+                                            <span class="text-slate-300">/</span>
+                                            <span class="text-amber-600" title="Skipped/Failed">{{ $log->records_failed }}</span>
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-xs text-slate-500 max-w-xs truncate" title="{{ $log->error_message }}">
+                                        {{ $log->error_message ?? 'Completed successfully.' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-5 py-10 text-center">
+                                        <p class="text-sm font-semibold text-slate-400">No sync execution logs found.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         @endcan
 
