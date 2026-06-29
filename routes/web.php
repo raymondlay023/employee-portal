@@ -16,6 +16,10 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::resource('employees', EmployeeController::class);
 
+    Route::get('system/api-logs', \App\Livewire\System\ApiLogs::class)
+        ->name('system.api-logs')
+        ->middleware('can:sync attendance');
+
     // Attendance
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clock-in');

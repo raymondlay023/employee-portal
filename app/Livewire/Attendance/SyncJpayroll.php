@@ -75,17 +75,14 @@ class SyncJpayroll extends Component
     }
 
     public function render()
-
     {
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
         
-        $syncLogs = ApiSyncLog::with('triggeredBy')
-            ->where('api_name', 'jpayroll_attendance')
+        $latestLog = ApiSyncLog::where('api_name', 'jpayroll_attendance')
             ->orderBy('started_at', 'desc')
-            ->take(10)
-            ->get();
+            ->first();
             
-        $isRunning = $syncLogs->where('status', 'running')->count() > 0;
+        $isRunning = $latestLog && $latestLog->status === 'running';
         
         $lastSync = ApiSyncLog::where('api_name', 'jpayroll_attendance')
             ->where('status', 'success')
@@ -93,7 +90,7 @@ class SyncJpayroll extends Component
 
         return view('livewire.attendance.sync-jpayroll', [
             'employees' => $employees,
-            'syncLogs'  => $syncLogs,
+            'latestLog' => $latestLog,
             'isRunning' => $isRunning,
             'lastSync'  => $lastSync,
         ]);
