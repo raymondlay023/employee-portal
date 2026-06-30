@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">Attendance</h2>
+                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">Attendance - {{ $targetEmployee->first_name }} {{ $targetEmployee->last_name }}</h2>
                 <p class="text-xs text-slate-400 font-medium mt-0.5">Daily logs &amp; JPayroll synced data</p>
             </div>
 
@@ -35,7 +35,7 @@
 
         {{-- ── SUMMARY REPORT CARDS ────────────────────────────────────────── --}}
         @if(isset($summary))
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center">
                     <div class="flex items-center gap-2 mb-2">
                         <div class="p-1.5 rounded-lg bg-slate-50 text-slate-400">
@@ -77,15 +77,25 @@
                     </div>
                     <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->late_days }}</span>
                 </div>
-                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-indigo-400 relative overflow-hidden">
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-purple-400 relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 opacity-5">
-                        <svg class="w-24 h-24 text-indigo-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-24 h-24 text-purple-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
                     </div>
                     <div class="flex items-center gap-2 mb-2 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                        <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider">Leave / Sick</span>
+                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span class="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider">Sick</span>
                     </div>
-                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) ($summary->leave_days + $summary->sick_days + $summary->permitted_days) }}</span>
+                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->sick_days }}</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-blue-400 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 opacity-5">
+                        <svg class="w-24 h-24 text-blue-900" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2 relative z-10">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span class="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">Leave</span>
+                    </div>
+                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) ($summary->leave_days + ($summary->permitted_days ?? 0)) }}</span>
                 </div>
             </div>
         @endif
@@ -126,27 +136,7 @@
                     </div>
 
                     @can('manage attendance')
-                        <div class="flex flex-col gap-1.5">
-                            <label for="employee_id" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Employee</label>
-                            <select id="employee_id" name="employee_id"
-                                class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
-                                <option value="">All Employees</option>
-                                <optgroup label="Active Employees">
-                                    @foreach($employees->where('status', 'active') as $emp)
-                                        <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
-                                            {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_id }})
-                                        </option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="Inactive Employees">
-                                    @foreach($employees->where('status', '!=', 'active') as $emp)
-                                        <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
-                                            {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_id }}) ({{ ucfirst($emp->status) }})
-                                        </option>
-                                    @endforeach
-                                </optgroup>
-                            </select>
-                        </div>
+                        <input type="hidden" name="employee_id" value="{{ $targetEmployee->id }}">
                     @endcan
 
                     <div class="flex flex-col gap-1.5">
@@ -180,15 +170,12 @@
                 <table class="min-w-full divide-y divide-slate-100">
                     <thead>
                         <tr class="bg-slate-50/60">
-                            @can('manage attendance')
-                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Employee</th>
-                            @endcan
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Date</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-red-400 uppercase tracking-wider" title="Absent without leave">Alpha</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-amber-400 uppercase tracking-wider" title="Late arrival">Late</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider" title="Approved leave / Cuti">Leave</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-orange-400 uppercase tracking-wider" title="Sick leave">Sick</th>
+                            <th class="px-5 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">Absent</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">Late</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">Sick</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved leave / Cuti">Leave</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -205,49 +192,41 @@
                                 };
                             @endphp
                             <tr class="hover:bg-slate-50/40 transition-colors group">
-                                @can('manage attendance')
-                                    <td class="px-5 py-3">
-                                        <span class="text-xs font-semibold text-slate-700">
-                                            {{ $log->employee->first_name ?? '—' }} {{ $log->employee->last_name ?? '' }}
-                                        </span>
-                                        <span class="text-[10px] text-slate-400 font-mono ml-1">{{ $log->employee->employee_id ?? '' }}</span>
-                                    </td>
-                                @endcan
-                                <td class="px-5 py-3">
+                                <td class="px-5 py-4">
                                     <div class="flex flex-col">
                                         <span class="text-xs font-bold text-slate-800">{{ $log->shift_date->format('d M Y') }}</span>
                                         <span class="text-[10px] text-slate-400">{{ $log->shift_date->format('l') }}</span>
                                     </div>
                                 </td>
-                                <td class="px-5 py-3 text-center">
+                                <td class="px-5 py-4 text-center">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="text-xs font-bold {{ $log->alpha > 0 ? 'text-red-600' : 'text-slate-300' }}">
+                                <td class="px-5 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->alpha > 0 ? 'bg-red-50 text-red-700 border-red-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
                                         {{ $log->alpha }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="text-xs font-bold {{ $log->telat > 0 ? 'text-amber-600' : 'text-slate-300' }}">
+                                <td class="px-5 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->telat > 0 ? 'bg-amber-50 text-amber-700 border-amber-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
                                         {{ $log->telat }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="text-xs font-bold {{ $log->izin > 0 ? 'text-indigo-600' : 'text-slate-300' }}">
-                                        {{ $log->izin }}
+                                <td class="px-5 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->sakit > 0 ? 'bg-purple-50 text-purple-700 border-purple-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
+                                        {{ $log->sakit }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="text-xs font-bold {{ $log->sakit > 0 ? 'text-orange-600' : 'text-slate-300' }}">
-                                        {{ $log->sakit }}
+                                <td class="px-5 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->izin > 0 ? 'bg-blue-50 text-blue-700 border-blue-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
+                                        {{ $log->izin }}
                                     </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ Auth::user()->can('manage attendance') ? 7 : 6 }}" class="px-5 py-12 text-center">
+                                <td colspan="6" class="px-5 py-12 text-center">
                                     <div class="flex flex-col items-center gap-2 text-slate-400">
                                         <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
@@ -397,12 +376,6 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            if (document.getElementById('employee_id')) {
-                new TomSelect('#employee_id', {
-                    create: false,
-                    sortField: { field: "text", direction: "asc" }
-                });
-            }
             if (document.getElementById('sync_nik')) {
                 new TomSelect('#sync_nik', {
                     create: false,

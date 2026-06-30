@@ -15,6 +15,8 @@ class AttendanceReport extends Component
     public $month;
     public $year;
     public $department_id = '';
+    public $search = '';
+    public $activeOnly = true;
     public $sortField = 'first_name';
     public $sortDirection = 'asc';
 
@@ -39,6 +41,16 @@ class AttendanceReport extends Component
     }
 
     public function updatingDepartmentId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingActiveOnly(): void
     {
         $this->resetPage();
     }
@@ -119,6 +131,21 @@ class AttendanceReport extends Component
 
         if (!empty($this->department_id)) {
             $query->where('employees.department_id', $this->department_id);
+        }
+
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('employees.first_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('employees.last_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('employees.employee_id', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        if ($this->activeOnly) {
+            $query->where(function ($q) {
+                $q->whereNull('employees.end_date')
+                  ->orWhere('employees.end_date', '>=', now()->toDateString());
+            });
         }
 
         $reportData = $query->orderBy($orderColumn, $orderDirection)

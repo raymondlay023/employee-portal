@@ -37,38 +37,32 @@ class AttendanceController extends Controller
             ->whereBetween('shift_date', [$dateFrom, $dateTo])
             ->orderBy('shift_date', 'desc');
 
-        // Employees only see their own records; HR/Admin see all or filtered
-        if ($user->can('manage attendance')) {
-            if (!empty($validated['employee_id'])) {
-                $jpayrollQuery->where('employee_id', $validated['employee_id']);
-            }
+        // Enforce employee targeting: If HR provides ID, use it. Otherwise, default to their own personal attendance.
+        if ($user->can('manage attendance') && !empty($validated['employee_id'])) {
+            $targetEmployeeId = $validated['employee_id'];
         } else {
-            if ($employee) {
-                $jpayrollQuery->where('employee_id', $employee->id);
-            } else {
-                $jpayrollQuery->whereRaw('1 = 0');
+            if (!$employee) {
+                abort(403, 'Employee profile not linked to your account. Please contact an administrator.');
             }
+            $targetEmployeeId = $employee->id;
         }
 
-        // ── Calculate Summary (Only if a specific employee is targeted) ───────
-        $summary = null;
-        $isSingleEmployeeTargeted = (!$user->can('manage attendance') && $employee) 
-                                 || ($user->can('manage attendance') && !empty($validated['employee_id']));
-                                 
-        if ($isSingleEmployeeTargeted) {
-            $summaryQuery = clone $jpayrollQuery;
-            // Remove orderBy for the aggregate query
-            $summaryQuery->getQuery()->orders = null; 
-            
-            $summary = $summaryQuery->selectRaw('
-                COUNT(*) as total_days,
-                SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
-                SUM(CASE WHEN alpha <= 0 AND sakit > 0 THEN 1 ELSE 0 END) as sick_days,
-                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
-                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
-                SUM(CASE WHEN alpha = 0 AND sakit = 0 AND izin = 0 THEN 1 ELSE 0 END) as present_days
-            ')->first();
-        }
+        $targetEmployee = Employee::findOrFail($targetEmployeeId);
+        $jpayrollQuery->where('employee_id', $targetEmployeeId);
+
+        // ── Calculate Summary (Always single employee targeted now) ───────
+        $summaryQuery = clone $jpayrollQuery;
+        // Remove orderBy for the aggregate query
+        $summaryQuery->getQuery()->orders = null; 
+        
+        $summary = $summaryQuery->selectRaw('
+            COUNT(*) as total_days,
+            SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
+            SUM(CASE WHEN alpha <= 0 AND sakit > 0 THEN 1 ELSE 0 END) as sick_days,
+            SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
+            SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
+            SUM(CASE WHEN alpha = 0 AND sakit = 0 AND izin = 0 THEN 1 ELSE 0 END) as present_days
+        ')->first();
 
         // Apply advanced status filters
         if (!empty($validated['status']) && $validated['status'] !== 'all') {
@@ -101,18 +95,13 @@ class AttendanceController extends Controller
         // Last JPayroll sync timestamp
         $lastSync = Cache::get('jpayroll_attendance_last_sync');
 
-        $employees = collect();
-        if ($user->can('manage attendance') || $user->can('sync attendance')) {
-            $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
-        }
-
         return view('attendance.index', compact(
             'jpayrollLogs',
             'manualLogs',
             'dateFrom',
             'dateTo',
             'lastSync',
-            'employees',
+            'targetEmployee',
             'summary',
         ));
     }
