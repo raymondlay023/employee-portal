@@ -7,6 +7,7 @@ use App\Models\AttendanceLog;
 use App\Models\LeaveRequest;
 use App\Models\DailyWorkLog;
 use App\Models\Employee;
+use App\Models\JPayrollAttendance;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
@@ -63,18 +64,29 @@ class Overview extends Component
         // Admin stats
         $activeEmployeesCount = $isAdminOrHR ? Employee::active()->count() ?? 0 : 0;
         
-        $activeLeavesTodayCount = $isAdminOrHR ? LeaveRequest::where('start_date', '<=', now()->toDateString())
-            ->where('end_date', '>=', now()->toDateString())
-            ->where('status', 'approved')
-            ->count() : 0;
+        $pendingLeavesCount = $isAdminOrHR ? LeaveRequest::where('status', 'pending')->count() : 0;
             
-        $presentTodayCount = $isAdminOrHR ? AttendanceLog::whereDate('clock_in_at', now()->toDateString())->count() : 0;
+        $presentTodayCount = 0;
+        if ($isAdminOrHR) {
+            $todayStr = now()->toDateString();
+            $manualPresent = AttendanceLog::whereDate('clock_in_at', $todayStr)
+                ->pluck('employee_id')
+                ->toArray();
+            $jpayrollPresent = JPayrollAttendance::where('shift_date', $todayStr)
+                ->where('alpha', 0)
+                ->where('sakit', 0)
+                ->where('izin', 0)
+                ->pluck('employee_id')
+                ->toArray();
+            
+            $presentTodayCount = count(array_unique(array_merge($manualPresent, $jpayrollPresent)));
+        }
 
         return view('livewire.dashboard.overview', compact(
             'user', 'employee', 'todayLog', 'pendingLeaves', 'isAdminOrHR',
             'isDefaultPassword', 'isFallbackEmail', 'needsSecurityUpdate',
             'todayWorkLogs', 'todayTotalHours', 'todayPercentage', 'todayIsComplete', 'todayFormattedHours',
-            'activeEmployeesCount', 'activeLeavesTodayCount', 'presentTodayCount'
+            'activeEmployeesCount', 'pendingLeavesCount', 'presentTodayCount'
         ));
     }
 }

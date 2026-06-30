@@ -311,16 +311,16 @@
 
     <!-- 3. Company Management Overview (Conditional for Admins/HR/Managers) -->
     @if($isAdminOrHR)
-        <div class="space-y-4 pt-4 border-t border-slate-100">
+        <div class="space-y-4 pt-6 border-t border-slate-100">
             <div class="flex items-center justify-between">
                 <h4 class="text-base font-bold text-slate-800 tracking-tight">Company Management Overview</h4>
                 <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">Admin Controls</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Stat Card 1 -->
-                <div class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-100 hover:shadow-sm transition-shadow duration-300">
-                    <div class="p-3 rounded-2xl bg-brand-50 text-brand-600 border border-brand-100 flex-shrink-0">
+                <!-- Stat Card 1: Active Employees -->
+                <a href="{{ route('employees.index') }}" class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-200/60 hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 transform group">
+                    <div class="p-3 rounded-2xl bg-brand-50 text-brand-600 border border-brand-100 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
@@ -329,26 +329,26 @@
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Employees</p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">{{ $activeEmployeesCount }}</p>
                     </div>
-                </div>
+                </a>
 
-                <!-- Stat Card 2 -->
-                <div class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-100 hover:shadow-sm transition-shadow duration-300">
-                    <div class="p-3 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex-shrink-0">
+                <!-- Stat Card 2: Pending Leaves -->
+                <a href="{{ route('leave-requests.index') }}?status=pending" class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-200/60 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 transform group">
+                    <div class="p-3 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Leaves (Today)</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pending Leaves</p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">
-                            {{ $activeLeavesTodayCount }}
+                            {{ $pendingLeavesCount }}
                         </p>
                     </div>
-                </div>
+                </a>
 
-                <!-- Stat Card 3 -->
-                <div class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-100 hover:shadow-sm transition-shadow duration-300">
-                    <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex-shrink-0">
+                <!-- Stat Card 3: Present Today -->
+                <a href="{{ route('hr.attendance-report') }}" class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-200/60 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 transform group">
+                    <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -359,7 +359,7 @@
                             {{ $presentTodayCount }}
                         </p>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     @endif

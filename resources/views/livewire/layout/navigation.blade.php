@@ -5,52 +5,66 @@ use Livewire\Volt\Component;
 
 new class extends Component
 {
-    public array $navLinks = [
+    public array $personalLinks = [
         [
             'label' => 'Dashboard',
             'route' => 'dashboard',
+            'params' => [],
             'pattern' => 'dashboard',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />',
-            'permission' => null,
         ],
         [
-            'label' => 'Employees',
+            'label' => 'My Attendance',
+            'route' => 'attendance.index',
+            'params' => [],
+            'pattern' => 'attendance.*',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />',
+        ],
+        [
+            'label' => 'My Leaves',
+            'route' => 'leave-requests.index',
+            'params' => ['scope' => 'personal'],
+            'pattern' => 'leave-requests.*',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />',
+        ],
+        [
+            'label' => 'Daily Work Logs',
+            'route' => 'daily-work-logs.index',
+            'params' => [],
+            'pattern' => 'daily-work-logs.*',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />',
+        ],
+    ];
+
+    public array $managementLinks = [
+        [
+            'label' => 'Employee Directory',
             'route' => 'employees.index',
+            'params' => [],
             'pattern' => 'employees.*',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />',
             'permission' => 'view employees',
         ],
         [
-            'label' => 'Attendance',
-            'route' => 'attendance.index',
-            'pattern' => 'attendance.*',
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />',
-            'permission' => 'view attendance',
-        ],
-        [
-            'label' => 'HR Attendance Report',
+            'label' => 'Attendance Report',
             'route' => 'hr.attendance-report',
+            'params' => [],
             'pattern' => 'hr.attendance-report',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />',
             'permission' => 'manage attendance',
         ],
         [
-            'label' => 'Leave Requests',
+            'label' => 'Leave Approvals',
             'route' => 'leave-requests.index',
+            'params' => ['scope' => 'company'],
             'pattern' => 'leave-requests.*',
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />',
-            'permission' => 'view leaves',
-        ],
-        [
-            'label' => 'Daily Work Logs',
-            'route' => 'daily-work-logs.index',
-            'pattern' => 'daily-work-logs.*',
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />',
-            'permission' => 'view daily logs',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />',
+            'permission' => 'manage leaves',
         ],
         [
             'label' => 'API Logs',
             'route' => 'system.api-logs',
+            'params' => [],
             'pattern' => 'system.api-logs',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />',
             'permission' => 'sync attendance',
@@ -93,16 +107,41 @@ new class extends Component
                 <div class="mt-8 h-0 flex-1 overflow-y-auto">
                     <nav class="space-y-1 px-2">
                         <!-- Mobile Links -->
-                        @foreach($navLinks as $link)
-                            @if(!$link['permission'] || auth()->user()->can($link['permission']))
-                                <a href="{{ route($link['route']) }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs($link['pattern']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors">
-                                    <svg class="{{ request()->routeIs($link['pattern']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        {!! $link['icon'] !!}
-                                    </svg>
-                                    {{ $link['label'] }}
-                                </a>
+                        @php
+                            $hasManagementAccess = auth()->user()->can('view employees') || auth()->user()->can('manage attendance') || auth()->user()->can('sync attendance') || auth()->user()->can('manage leaves');
+                        @endphp
+
+                        <div class="space-y-6">
+                            <!-- Personal Portal Section -->
+                            <div class="space-y-1">
+                                <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-2">My Portal</div>
+                                @foreach($personalLinks as $link)
+                                    <a href="{{ route($link['route'], $link['params']) }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors">
+                                        <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            {!! $link['icon'] !!}
+                                        </svg>
+                                        {{ $link['label'] }}
+                                    </a>
+                                @endforeach
+                            </div>
+
+                            <!-- Management Section -->
+                            @if($hasManagementAccess)
+                                <div class="space-y-1 pt-4 border-t border-slate-100">
+                                    <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-2">HR Management</div>
+                                    @foreach($managementLinks as $link)
+                                        @if(!$link['permission'] || auth()->user()->can($link['permission']))
+                                            <a href="{{ route($link['route'], $link['params']) }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors">
+                                                <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    {!! $link['icon'] !!}
+                                                </svg>
+                                                {{ $link['label'] }}
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                </div>
                             @endif
-                        @endforeach
+                        </div>
                     </nav>
                 </div>
                 
@@ -146,16 +185,41 @@ new class extends Component
             <div class="mt-8 flex flex-grow flex-col">
                 <nav class="flex-1 space-y-2 px-4 bg-white">
                     <!-- Desktop Links -->
-                    @foreach($navLinks as $link)
-                        @if(!$link['permission'] || auth()->user()->can($link['permission']))
-                            <a href="{{ route($link['route']) }}" wire:navigate class="{{ request()->routeIs($link['pattern']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
-                                <svg class="{{ request()->routeIs($link['pattern']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    {!! $link['icon'] !!}
-                                </svg>
-                                {{ $link['label'] }}
-                            </a>
+                    @php
+                        $hasManagementAccess = auth()->user()->can('view employees') || auth()->user()->can('manage attendance') || auth()->user()->can('sync attendance') || auth()->user()->can('manage leaves');
+                    @endphp
+
+                    <div class="space-y-6">
+                        <!-- Personal Portal Section -->
+                        <div class="space-y-1">
+                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">My Portal</div>
+                            @foreach($personalLinks as $link)
+                                <a href="{{ route($link['route'], $link['params']) }}" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
+                                    <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        {!! $link['icon'] !!}
+                                    </svg>
+                                    {{ $link['label'] }}
+                                </a>
+                            @endforeach
+                        </div>
+
+                        <!-- Management Section -->
+                        @if($hasManagementAccess)
+                            <div class="space-y-1 pt-4 border-t border-slate-100">
+                                <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">HR Management</div>
+                                @foreach($managementLinks as $link)
+                                    @if(!$link['permission'] || auth()->user()->can($link['permission']))
+                                        <a href="{{ route($link['route'], $link['params']) }}" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
+                                            <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                {!! $link['icon'] !!}
+                                            </svg>
+                                            {{ $link['label'] }}
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
                         @endif
-                    @endforeach
+                    </div>
                 </nav>
             </div>
             

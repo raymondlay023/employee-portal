@@ -30,6 +30,8 @@ Route::middleware(['auth','verified'])->group(function () {
         ->middleware('can:manage attendance');
 
     // Leave requests
+    Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('leave-requests.approve');
+    Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])->name('leave-requests.reject');
     Route::resource('leave-requests', LeaveRequestController::class);
 });
 

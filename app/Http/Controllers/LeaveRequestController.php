@@ -8,12 +8,60 @@ use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $leaveRequests = LeaveRequest::where('user_id', $user->id)->latest()->paginate(15);
+        $isAdminOrHR = $user->hasRole('Admin') || $user->hasRole('HR') || $user->hasRole('Manager');
 
-        return view('leave.index', compact('leaveRequests'));
+        $query = LeaveRequest::query()->with('user.employee');
+
+        if ($isAdminOrHR) {
+            if ($request->get('scope') === 'personal') {
+                $query->where('user_id', $user->id);
+            } elseif ($request->filled('status') && $request->status !== 'all') {
+                $query->where('status', $request->status);
+            }
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $leaveRequests = $query->latest()->paginate(15)->withQueryString();
+
+        return view('leave.index', compact('leaveRequests', 'isAdminOrHR'));
+    }
+
+    public function approve(LeaveRequest $leaveRequest)
+    {
+        $this->authorizeManageLeaves();
+
+        if ($leaveRequest->status !== 'pending') {
+            return back()->with('error', 'Only pending leave requests can be approved.');
+        }
+
+        $leaveRequest->update(['status' => 'approved']);
+
+        return back()->with('success', 'Leave request approved successfully.');
+    }
+
+    public function reject(LeaveRequest $leaveRequest)
+    {
+        $this->authorizeManageLeaves();
+
+        if ($leaveRequest->status !== 'pending') {
+            return back()->with('error', 'Only pending leave requests can be rejected.');
+        }
+
+        $leaveRequest->update(['status' => 'rejected']);
+
+        return back()->with('success', 'Leave request rejected.');
+    }
+
+    private function authorizeManageLeaves()
+    {
+        $user = Auth::user();
+        if (!$user->hasRole('Admin') && !$user->hasRole('HR') && !$user->hasRole('Manager')) {
+            abort(403, 'Unauthorized action.');
+        }
     }
 
     public function create()
