@@ -115,7 +115,11 @@
 
                         <!-- Spacious Digital Clock & Forms -->
                         <div class="flex flex-col items-center md:items-end justify-center gap-3 flex-shrink-0 bg-slate-50/60 p-5 rounded-2xl border border-slate-100/50 w-full md:w-auto">
-                            <span class="text-2xl font-black text-slate-800 tracking-wider font-mono" id="clock-display" wire:ignore>
+                            <span class="text-2xl font-black text-slate-800 tracking-wider font-mono" 
+                                  x-data="{ time: '{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}' }" 
+                                  x-init="setInterval(() => time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }), 1000)" 
+                                  x-text="time" 
+                                  wire:ignore>
                                 {{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}
                             </span>
                             

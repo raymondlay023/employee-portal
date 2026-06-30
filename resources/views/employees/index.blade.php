@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-2xl text-gray-900 tracking-tight">
+            <h2 class="font-semibold text-2xl text-slate-900 tracking-tight">
                 {{ __('Employees Directory') }}
             </h2>
         </div>
@@ -23,11 +23,11 @@
 
             <!-- Filters & Search -->
             <div class="card mb-6">
-                <div class="p-4 bg-gray-50 border-b border-gray-100">
+                <div class="p-4 bg-slate-50 border-b border-slate-100">
                     <form method="GET" class="flex flex-col sm:flex-row gap-4 items-center">
                         <div class="relative w-full sm:w-1/3">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </div>
                             <input type="text" name="search" placeholder="Search employees..." value="{{ request('search') }}" class="input pl-10" />
                         </div>
@@ -43,7 +43,7 @@
                             </select>
                         </div>
                         
-                        <button type="submit" class="btn bg-white text-gray-700 border-gray-300 hover:bg-gray-50 shadow-sm w-full sm:w-auto">
+                        <button type="submit" class="btn bg-white text-slate-700 border-slate-300 hover:bg-slate-50 shadow-sm w-full sm:w-auto">
                             Filter Results
                         </button>
                     </form>
@@ -51,54 +51,54 @@
 
                 <!-- Data Table -->
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-slate-100">
+                        <thead class="bg-slate-50/60">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Employee</th>
+                                <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Department</th>
+                                <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Role</th>
+                                <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Joined</th>
+                                <th scope="col" class="px-6 py-3 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="divide-y divide-slate-50">
                             @forelse($employees as $emp)
-                            <tr class="hover:bg-gray-50 transition-colors duration-200">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <div class="h-10 w-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm">
-                                                {{ substr($emp->first_name, 0, 1) }}{{ substr($emp->last_name, 0, 1) }}
+                                <tr class="hover:bg-slate-50/40 transition-colors duration-200">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                <div class="h-10 w-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm">
+                                                    {{ substr($emp->first_name, 0, 1) }}{{ substr($emp->last_name, 0, 1) }}
+                                                </div>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-semibold text-slate-800">{{ $emp->first_name }} {{ $emp->last_name }}</div>
+                                                <div class="text-[10px] text-slate-400 font-mono">{{ $emp->employee_id }}</div>
                                             </div>
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">{{ $emp->first_name }} {{ $emp->last_name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $emp->employee_id }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        {{ $emp->department?->name ?? 'N/A' }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $emp->designation?->title ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $emp->joined_at?->format('M j, Y') ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{{ route('employees.show', $emp) }}" class="text-brand-600 hover:text-brand-900">View</a>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            {{ $emp->department?->name ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                        {{ $emp->designation?->title ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                        {{ $emp->joined_at?->format('M j, Y') ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <a href="{{ route('employees.show', $emp) }}" class="text-brand-600 hover:text-brand-900 font-bold">View</a>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                                    <p class="mt-4 text-sm font-medium">No employees found.</p>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                                        <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                        <p class="mt-4 text-sm font-medium">No employees found.</p>
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>

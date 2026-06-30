@@ -20,8 +20,8 @@
             <div class="hidden lg:flex lg:w-1/2 relative bg-brand-900 overflow-hidden items-center justify-center shadow-2xl z-10">
                 <!-- Abstract Background Shapes -->
                 <div class="absolute inset-0 bg-gradient-to-br from-brand-800 to-brand-950"></div>
-                <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-brand-600 opacity-20 blur-3xl animate-pulse"></div>
-                <div class="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-brand-400 opacity-20 blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+                <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-brand-600 opacity-20 blur-3xl"></div>
+                <div class="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-brand-400 opacity-20 blur-3xl" style="animation-delay: 2s;"></div>
                 
                 <div class="relative z-10 p-12 text-center text-white">
                     <div class="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 inline-block mb-8 shadow-xl">
