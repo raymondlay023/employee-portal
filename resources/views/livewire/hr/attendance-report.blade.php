@@ -1,12 +1,22 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-bold text-xl text-brand-700 leading-tight">
-            {{ __('HR Attendance Report') }}
-        </h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">
+                    {{ __('Attendance Report') }}
+                </h2>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">
+                    {{ __('Company-wide monthly attendance aggregates from JPayroll') }}
+                </p>
+            </div>
+        </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @can('sync attendance')
+                <livewire:attendance.sync-jpayroll />
+            @endcan
 
             <!-- Controls Header -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -2,23 +2,33 @@
     <!-- Filters & Search -->
     <div class="card mb-6">
         <div class="p-4 bg-slate-50 border-b border-slate-100">
-            <div class="flex flex-col sm:flex-row gap-4 items-center">
-                <div class="relative w-full sm:w-1/3">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                <div class="flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto">
+                    <div class="relative w-full sm:w-64">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search employees..." class="input pl-10" />
                     </div>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search employees..." class="input pl-10" />
+                    
+                    <div class="w-full sm:w-48">
+                        <select wire:model.live="department" class="input">
+                            <option value="">All Departments</option>
+                            @if(isset($departments))
+                                @foreach($departments as $d)
+                                    <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
                 </div>
-                
-                <div class="w-full sm:w-1/4">
-                    <select wire:model.live="department" class="input">
-                        <option value="">All Departments</option>
-                        @if(isset($departments))
-                            @foreach($departments as $d)
-                                <option value="{{ $d->id }}">{{ $d->name }}</option>
-                            @endforeach
-                        @endif
-                    </select>
+
+                <!-- Active Toggle Filter -->
+                <div class="w-full lg:w-auto flex justify-end">
+                    <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
+                        <input type="checkbox" wire:model.live="activeOnly" class="rounded text-brand-600 focus:ring-brand-500 border-slate-300 w-4 h-4 cursor-pointer">
+                        <span class="text-xs font-bold text-slate-700">Active Employees Only</span>
+                    </label>
                 </div>
             </div>
         </div>
@@ -52,7 +62,12 @@
                                         </div>
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-semibold text-slate-800">{{ $emp->first_name }} {{ $emp->last_name }}</div>
+                                        <div class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                                            {{ $emp->first_name }} {{ $emp->last_name }}
+                                            @if($emp->status !== 'active' || $emp->end_date)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-red-50 text-red-750 border border-red-100 uppercase tracking-wider">Inactive</span>
+                                            @endif
+                                        </div>
                                         <div class="text-[10px] text-slate-400 font-mono">{{ $emp->employee_id }}</div>
                                     </div>
                                 </div>

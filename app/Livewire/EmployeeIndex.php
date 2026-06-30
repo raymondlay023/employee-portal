@@ -13,10 +13,12 @@ class EmployeeIndex extends Component
 
     public $search = '';
     public $department = '';
+    public $activeOnly = true;
 
     protected $queryString = [
         'search' => ['except' => ''],
         'department' => ['except' => ''],
+        'activeOnly' => ['except' => true],
     ];
 
     public function updatingSearch()
@@ -29,9 +31,18 @@ class EmployeeIndex extends Component
         $this->resetPage();
     }
 
+    public function updatingActiveOnly()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
-        $query = Employee::active()->with(['department', 'designation']);
+        $query = Employee::with(['department', 'designation']);
+
+        if ($this->activeOnly) {
+            $query->active();
+        }
 
         if (!empty($this->search)) {
             $q = $this->search;

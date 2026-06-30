@@ -348,41 +348,35 @@
                 @endif
             </div>
         @endcan
-
-        {{-- ── SECTION 3: JPayroll Sync History ────────────────────── --}}
-        @can('sync attendance')
-            <livewire:attendance.sync-jpayroll />
-        @endcan
-
     </div>
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-    <style>
-        .ts-control {
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 0.625rem 0.75rem;
-            font-size: 0.75rem;
-            background-color: #f8fafc;
-        }
-        .ts-control > input {
-            font-size: 0.75rem;
-        }
-    </style>
+        <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+        <style>
+            .ts-control {
+                border: 1px solid #e2e8f0;
+                border-radius: 0.75rem;
+                padding: 0.625rem 0.75rem;
+                font-size: 0.75rem;
+                background-color: #f8fafc;
+            }
+            .ts-control > input {
+                font-size: 0.75rem;
+            }
+        </style>
     @endpush
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            if (document.getElementById('sync_nik')) {
-                new TomSelect('#sync_nik', {
-                    create: false,
-                    sortField: { field: "text", direction: "asc" }
-                });
-            }
-        });
-    </script>
+        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                if (document.getElementById('sync_nik')) {
+                    new TomSelect('#sync_nik', {
+                        create: false,
+                        sortField: { field: "text", direction: "asc" }
+                    });
+                }
+            });
+        </script>
     @endpush
 </x-app-layout>
