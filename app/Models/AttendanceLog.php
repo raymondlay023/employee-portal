@@ -16,7 +16,10 @@ class AttendanceLog extends Model
         'note',
     ];
 
-    protected $dates = ['clock_in_at','clock_out_at'];
+    protected $casts = [
+        'clock_in_at' => 'datetime',
+        'clock_out_at' => 'datetime',
+    ];
 
     public function employee()
     {
