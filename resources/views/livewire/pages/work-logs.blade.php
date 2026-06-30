@@ -476,7 +476,7 @@
                                     x-init="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"
                                     x-on:input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"
                                     placeholder="What are you working on in this current time?"
-                                    class="w-full text-sm text-slate-600 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors py-2 px-3 resize-y {{ $errors->has('logs.' . $index . '.remarks') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}"
+                                    class="w-full text-sm text-slate-600 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors py-2 px-3 resize-y min-h-[80px] {{ $errors->has('logs.' . $index . '.remarks') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}"
                                 ></textarea>
                                 @error('logs.' . $index . '.remarks')
                                     <span class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
