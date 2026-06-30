@@ -113,7 +113,7 @@
                                         <select id="sync_nik" wire:model="nik" class="w-full text-sm">
                                             <option value="">All Employees</option>
                                             @foreach($employees as $emp)
-                                                <option value="{{ $emp->nik }}">{{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->nik }})</option>
+                                                <option value="{{ $emp->employee_id }}">{{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_id }})</option>
                                             @endforeach
                                         </select>
                                     </div>
