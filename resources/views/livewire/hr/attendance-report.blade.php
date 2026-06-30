@@ -31,7 +31,13 @@
             </div>
 
             <!-- Main Data Table -->
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
+                <div wire:loading class="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                    <svg class="animate-spin h-8 w-8 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
@@ -103,7 +109,7 @@
                                     <td class="py-4 px-6">
                                         <div class="flex items-center gap-3">
                                             <div class="h-10 w-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex flex-shrink-0 items-center justify-center text-brand-700 font-extrabold text-sm border border-brand-200/50 shadow-inner">
-                                                {{ substr($row->employee->first_name ?? '?', 0, 1) }}{{ substr($row->employee->last_name ?? '', 0, 1) }}
+                                                {{ $row->employee->initials ?? '?' }}
                                             </div>
                                             <div>
                                                 <p class="text-sm font-bold text-slate-800 tracking-tight">{{ $row->employee->first_name ?? 'Unknown' }} {{ $row->employee->last_name ?? '' }}</p>
@@ -168,6 +174,13 @@
                     </table>
                 </div>
             </div>
+
+            {{-- Pagination --}}
+            @if ($reportData->hasPages())
+                <div class="mt-4">
+                    {{ $reportData->links() }}
+                </div>
+            @endif
 
         </div>
     </div>

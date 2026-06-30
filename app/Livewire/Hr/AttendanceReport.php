@@ -5,64 +5,88 @@ namespace App\Livewire\Hr;
 use App\Models\JPayrollAttendance;
 use Illuminate\View\View;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class AttendanceReport extends Component
 {
+    use WithPagination;
+
     public $month;
     public $year;
-    
-    // Sort variables
-    public $sortField = 'first_name'; // We will sort the collection after querying
+    public $sortField = 'first_name';
     public $sortDirection = 'asc';
 
-    public function mount()
+    /**
+     * Whitelist of columns permitted for sorting.
+     * Prevents SQL injection via unsanitised public Livewire properties.
+     */
+    private const ALLOWED_SORT_FIELDS = [
+        'first_name'   => 'employees.first_name',
+        'present_days' => 'present_days',
+        'absent_days'  => 'absent_days',
+        'late_days'    => 'late_days',
+        'sick_days'    => 'sick_days',
+        'leave_days'   => 'leave_days',
+        'total_days'   => 'total_days',
+    ];
+
+    public function mount(): void
     {
         $this->month = now()->month;
-        $this->year = now()->year;
+        $this->year  = now()->year;
     }
 
-    public function sortBy($field)
+    public function sortBy(string $field): void
     {
+        // Reject any field not in the whitelist silently
+        if (!array_key_exists($field, self::ALLOWED_SORT_FIELDS)) {
+            return;
+        }
+
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
+            $this->sortField     = $field;
             $this->sortDirection = 'asc';
-            $this->sortField = $field;
         }
+
+        $this->resetPage();
     }
 
     public function render(): View
     {
-        $startDate = now()->setYear((int)$this->year)->setMonth((int)$this->month)->startOfMonth()->toDateString();
-        $endDate = now()->setYear((int)$this->year)->setMonth((int)$this->month)->endOfMonth()->toDateString();
+        $startDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->startOfMonth()->toDateString();
+        $endDate   = now()->setYear((int) $this->year)->setMonth((int) $this->month)->endOfMonth()->toDateString();
 
-        // Single powerful query to aggregate all employee data for the selected month
+        // Resolve the safe, whitelisted SQL column name for ordering
+        $orderColumn = self::ALLOWED_SORT_FIELDS[$this->sortField] ?? 'employees.first_name';
+
+        // Sanitise sort direction to prevent any possibility of injection
+        $orderDirection = $this->sortDirection === 'desc' ? 'desc' : 'asc';
+
+        // Aggregate query: LEFT JOIN preserves orphaned jpayroll records whose
+        // employee rows may have been soft/hard deleted, preventing silent data loss.
         $reportData = JPayrollAttendance::with('employee')
-            ->whereBetween('shift_date', [$startDate, $endDate])
+            ->leftJoin('employees', 'jpayroll_attendances.employee_id', '=', 'employees.id')
+            ->whereBetween('jpayroll_attendances.shift_date', [$startDate, $endDate])
             ->selectRaw('
-                employee_id,
-                COUNT(*) as total_days,
-                SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
-                SUM(CASE WHEN alpha <= 0 AND sakit > 0 THEN 1 ELSE 0 END) as sick_days,
-                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
-                SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
-                SUM(CASE WHEN alpha = 0 AND sakit = 0 AND izin = 0 THEN 1 ELSE 0 END) as present_days
+                jpayroll_attendances.employee_id,
+                employees.first_name,
+                COUNT(jpayroll_attendances.id) as total_days,
+                SUM(CASE WHEN jpayroll_attendances.alpha > 0 THEN 1 ELSE 0 END) as absent_days,
+                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit > 0 THEN 1 ELSE 0 END) as sick_days,
+                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as leave_days,
+                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin <= 0 AND jpayroll_attendances.telat > 0 THEN 1 ELSE 0 END) as late_days,
+                SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 THEN 1 ELSE 0 END) as present_days
             ')
-            ->groupBy('employee_id')
-            ->get();
-
-        // Sort the collection based on the selected field
-        $reportData = $reportData->sortBy([
-            [
-                $this->sortField === 'first_name' ? fn ($item) => optional($item->employee)->first_name : $this->sortField, 
-                $this->sortDirection
-            ]
-        ])->values();
+            ->groupBy('jpayroll_attendances.employee_id', 'employees.first_name')
+            ->orderBy($orderColumn, $orderDirection)
+            ->paginate(50);
 
         return view('livewire.hr.attendance-report', [
             'reportData' => $reportData,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-        ])->layout('layouts.app'); // Use the default authenticated app layout
+            'startDate'  => $startDate,
+            'endDate'    => $endDate,
+        ])->layout('layouts.app');
     }
 }
