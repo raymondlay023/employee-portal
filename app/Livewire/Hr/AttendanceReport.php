@@ -3,6 +3,7 @@
 namespace App\Livewire\Hr;
 
 use App\Models\JPayrollAttendance;
+use App\Models\Department;
 use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,6 +14,7 @@ class AttendanceReport extends Component
 
     public $month;
     public $year;
+    public $department_id = '';
     public $sortField = 'first_name';
     public $sortDirection = 'asc';
 
@@ -36,6 +38,11 @@ class AttendanceReport extends Component
         $this->year  = now()->year;
     }
 
+    public function updatingDepartmentId(): void
+    {
+        $this->resetPage();
+    }
+
     public function sortBy(string $field): void
     {
         // Reject any field not in the whitelist silently
@@ -55,6 +62,37 @@ class AttendanceReport extends Component
 
     public function render(): View
     {
+        $availableYears = JPayrollAttendance::selectRaw('YEAR(shift_date) as year')
+            ->distinct()
+            ->orderByDesc('year')
+            ->pluck('year')
+            ->toArray();
+
+        if (empty($availableYears)) {
+            $availableYears = [now()->year];
+        }
+
+        // If the current selected year is not in the available years (e.g. initial load before any data exists)
+        if (!in_array((int) $this->year, $availableYears)) {
+            $this->year = $availableYears[0];
+        }
+
+        $availableMonths = JPayrollAttendance::whereYear('shift_date', $this->year)
+            ->selectRaw('MONTH(shift_date) as month')
+            ->distinct()
+            ->orderBy('month')
+            ->pluck('month')
+            ->toArray();
+
+        if (empty($availableMonths)) {
+            $availableMonths = [now()->month];
+        }
+
+        // If the current selected month doesn't exist in the new year, fallback to the first available month
+        if (!in_array((int) $this->month, $availableMonths)) {
+            $this->month = $availableMonths[0];
+        }
+
         $startDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->startOfMonth()->toDateString();
         $endDate   = now()->setYear((int) $this->year)->setMonth((int) $this->month)->endOfMonth()->toDateString();
 
@@ -64,9 +102,7 @@ class AttendanceReport extends Component
         // Sanitise sort direction to prevent any possibility of injection
         $orderDirection = $this->sortDirection === 'desc' ? 'desc' : 'asc';
 
-        // Aggregate query: LEFT JOIN preserves orphaned jpayroll records whose
-        // employee rows may have been soft/hard deleted, preventing silent data loss.
-        $reportData = JPayrollAttendance::with('employee')
+        $query = JPayrollAttendance::with('employee')
             ->leftJoin('employees', 'jpayroll_attendances.employee_id', '=', 'employees.id')
             ->whereBetween('jpayroll_attendances.shift_date', [$startDate, $endDate])
             ->selectRaw('
@@ -79,12 +115,20 @@ class AttendanceReport extends Component
                 SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin <= 0 AND jpayroll_attendances.telat > 0 THEN 1 ELSE 0 END) as late_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 THEN 1 ELSE 0 END) as present_days
             ')
-            ->groupBy('jpayroll_attendances.employee_id', 'employees.first_name')
-            ->orderBy($orderColumn, $orderDirection)
+            ->groupBy('jpayroll_attendances.employee_id', 'employees.first_name');
+
+        if (!empty($this->department_id)) {
+            $query->where('employees.department_id', $this->department_id);
+        }
+
+        $reportData = $query->orderBy($orderColumn, $orderDirection)
             ->paginate(50);
 
         return view('livewire.hr.attendance-report', [
             'reportData' => $reportData,
+            'departments' => Department::orderBy('name')->get(),
+            'availableYears' => $availableYears,
+            'availableMonths' => $availableMonths,
             'startDate'  => $startDate,
             'endDate'    => $endDate,
         ])->layout('layouts.app');

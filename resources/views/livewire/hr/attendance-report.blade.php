@@ -17,15 +17,23 @@
                 
                 <div class="flex items-center gap-3">
                     <select wire:model.live="month" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
-                        @for($m=1; $m<=12; $m++)
+                        @foreach($availableMonths as $m)
                             <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
-                        @endfor
+                        @endforeach
                     </select>
 
                     <select wire:model.live="year" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
-                        @for($y=date('Y')-2; $y<=date('Y')+1; $y++)
+                        @foreach($availableYears as $y)
                             <option value="{{ $y }}">{{ $y }}</option>
-                        @endfor
+                        @endforeach
+                    </select>
+                    <select wire:model.live="department_id" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
+                        <option value="">All Departments</option>
+                        @if(isset($departments))
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                            @endforeach
+                        @endif
                     </select>
                 </div>
             </div>
@@ -112,7 +120,15 @@
                                                 {{ $row->employee->initials ?? '?' }}
                                             </div>
                                             <div>
-                                                <p class="text-sm font-bold text-slate-800 tracking-tight">{{ $row->employee->first_name ?? 'Unknown' }} {{ $row->employee->last_name ?? '' }}</p>
+                                                <div class="flex items-center gap-2">
+                                                    <p class="text-sm font-bold text-slate-800 tracking-tight">{{ $row->employee->first_name ?? 'Unknown' }} {{ $row->employee->last_name ?? '' }}</p>
+                                                    @if($row->absent_days >= 2 || $row->late_days >= 3)
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-red-100 text-red-700 border border-red-200" title="High absenteeism or lates">
+                                                            <span class="w-1 h-1 bg-red-500 rounded-full mr-1"></span>
+                                                            Flagged
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <p class="text-[10px] text-slate-500 font-semibold">{{ $row->employee->employee_id ?? 'No ID' }}</p>
                                             </div>
                                         </div>
