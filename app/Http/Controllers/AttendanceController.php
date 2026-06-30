@@ -122,6 +122,10 @@ class AttendanceController extends Controller
      */
     public function clockIn(Request $request)
     {
+        if (!config('app.enable_manual_attendance')) {
+            return redirect()->back()->with('error', 'Manual attendance is temporarily disabled.');
+        }
+
         $user     = Auth::user();
         $employee = $user->employee;
 
@@ -160,6 +164,10 @@ class AttendanceController extends Controller
      */
     public function clockOut(Request $request)
     {
+        if (!config('app.enable_manual_attendance')) {
+            return redirect()->back()->with('error', 'Manual attendance is temporarily disabled.');
+        }
+
         $user     = Auth::user();
         $employee = $user->employee;
 

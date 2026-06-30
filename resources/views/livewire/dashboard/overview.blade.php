@@ -123,20 +123,26 @@
                                 {{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}
                             </span>
                             
-                            @if ($todayLog)
-                                <form action="{{ route('attendance.clock-out') }}" method="POST" class="w-full">
-                                    @csrf
-                                    <button type="submit" class="w-full px-6 py-2.5 bg-red-650 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shadow-red-500/10 hover:shadow-red-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
-                                        Clock Out Now
-                                    </button>
-                                </form>
+                            @if(config('app.enable_manual_attendance'))
+                                @if ($todayLog)
+                                    <form action="{{ route('attendance.clock-out') }}" method="POST" class="w-full">
+                                        @csrf
+                                        <button type="submit" class="w-full px-6 py-2.5 bg-red-650 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shadow-red-500/10 hover:shadow-red-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
+                                            Clock Out Now
+                                        </button>
+                                    </form>
+                                @else
+                                    <form action="{{ route('attendance.clock-in') }}" method="POST" class="w-full">
+                                        @csrf
+                                        <button type="submit" class="w-full px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
+                                            Clock In Now
+                                        </button>
+                                    </form>
+                                @endif
                             @else
-                                <form action="{{ route('attendance.clock-in') }}" method="POST" class="w-full">
-                                    @csrf
-                                    <button type="submit" class="w-full px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
-                                        Clock In Now
-                                    </button>
-                                </form>
+                                <div class="w-full px-4 py-2.5 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-xl border border-slate-200 text-center uppercase tracking-wider">
+                                    Manual Entry Disabled
+                                </div>
                             @endif
                         </div>
                     </div>

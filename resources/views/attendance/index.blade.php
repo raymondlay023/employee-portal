@@ -289,22 +289,31 @@
                     </div>
 
                     {{-- Clock In / Out actions --}}
-                    <div class="flex gap-2 flex-shrink-0">
-                        <form method="POST" action="{{ route('attendance.clock-in') }}">
-                            @csrf
-                            <button type="submit"
-                                class="px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0">
-                                Clock In
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ route('attendance.clock-out') }}">
-                            @csrf
-                            <button type="submit"
-                                class="px-4 py-2 bg-red-500 hover:bg-red-600 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0">
-                                Clock Out
-                            </button>
-                        </form>
-                    </div>
+                    @if(config('app.enable_manual_attendance'))
+                        <div class="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0 lg:ml-auto">
+                            @if (!$todayLog)
+                                <form action="{{ route('attendance.clock-in') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 transform transition-all">
+                                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                        </svg>
+                                        Clock In
+                                    </button>
+                                </form>
+                            @else
+                                <form action="{{ route('attendance.clock-out') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 transform transition-all">
+                                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        Clock Out
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div class="overflow-x-auto">
