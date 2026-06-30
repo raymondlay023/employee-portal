@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'enable_manual_attendance' => env('ENABLE_MANUAL_ATTENDANCE', true),
+
 ];
