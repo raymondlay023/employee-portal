@@ -66,8 +66,8 @@ class JPayrollServiceTest extends TestCase
             return $request->url() === 'https://api.jpayroll.test/API_View_Attendance.php'
                 && $request->header('Authorization')[0] === 'test-api-key'
                 && $request['CompanyArea'] === '10000'
-                && $request['Date1'] === '01/05/2025'
-                && $request['Date2'] === '06/05/2025'
+                && $request['Date1'] === '01/05/2026'
+                && $request['Date2'] === '06/05/2026'
                 && !isset($request['NIK']);
         });
     }

@@ -174,10 +174,7 @@ class SyncJPayrollAttendanceTest extends TestCase
             'alpha'      => 1,
             'telat'      => 2,
             'izin'       => 3,
-            'op'         => 0,
-            'hos'        => 1,
-            'wa'         => 0,
-            'hoswa'      => 1,
+            'sakit'      => 2, // HOS (1) + WA (0) + HOSWA (1)
         ]);
     }
 

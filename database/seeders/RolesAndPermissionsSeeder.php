@@ -6,6 +6,8 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
+use App\Authorization\Roles;
+use App\Authorization\Permissions;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -16,14 +18,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 2. Define all core permissions
         $permissions = [
-            'view employees',
-            'manage employees',
-            'view attendance',
-            'manage attendance',
-            'sync attendance',
-            'view leaves',
-            'manage leaves',
-            'view daily logs',
+            Permissions::ACCESS_HR_PORTAL,
+            Permissions::MANAGE_EMPLOYEES,
+            Permissions::VIEW_ANY_ATTENDANCE,
+            Permissions::MANAGE_ATTENDANCE,
+            Permissions::MANAGE_LEAVES,
         ];
 
         // Use findOrCreate so this seeder can be run repeatedly without crashing
@@ -33,31 +32,22 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 3. Define Roles and their specific permissions mapping
         $rolePermissions = [
-            'Admin' => Permission::all(), // Gets everything automatically
+            Roles::ADMIN => [], // Admin gets everything automatically via Gate::before in AppServiceProvider
             
-            'HR' => [
-                'view employees',
-                'manage employees',
-                'view attendance',
-                'manage attendance',
-                'sync attendance',
-                'view leaves',
-                'manage leaves',
-                'view daily logs',
+            Roles::HR => [
+                Permissions::ACCESS_HR_PORTAL,
+                Permissions::MANAGE_EMPLOYEES,
+                Permissions::VIEW_ANY_ATTENDANCE,
+                Permissions::MANAGE_ATTENDANCE,
+                Permissions::MANAGE_LEAVES,
             ],
             
-            'Manager' => [
-                'view daily logs',
-                'view employees',
-                'view attendance',
-                'view leaves',
-                'manage leaves',
+            Roles::MANAGER => [
+                Permissions::ACCESS_HR_PORTAL,
+                Permissions::MANAGE_LEAVES,
             ],
             
-            'Employee' => [
-                'view daily logs',
-                'view attendance'
-            ],
+            Roles::EMPLOYEE => [], // Employees have no special administrative permissions
         ];
 
         // 4. Process and sync permissions to roles safely

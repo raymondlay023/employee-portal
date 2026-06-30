@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\LeaveRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Authorization\Permissions;
 
 class LeaveRequestController extends Controller
 {
     public function index(Request $request)
     {
         $user = Auth::user();
-        $isAdminOrHR = $user->hasRole('Admin') || $user->hasRole('HR') || $user->hasRole('Manager');
+        $isAdminOrHR = $user->can(Permissions::MANAGE_LEAVES);
 
         $query = LeaveRequest::query()->with('user.employee');
 
@@ -59,7 +60,7 @@ class LeaveRequestController extends Controller
     private function authorizeManageLeaves()
     {
         $user = Auth::user();
-        if (!$user->hasRole('Admin') && !$user->hasRole('HR') && !$user->hasRole('Manager')) {
+        if (!$user->can(Permissions::MANAGE_LEAVES)) {
             abort(403, 'Unauthorized action.');
         }
     }

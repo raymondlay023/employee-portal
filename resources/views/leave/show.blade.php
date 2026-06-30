@@ -25,7 +25,7 @@
             'rejected' => 'bg-red-50 text-red-700 border-red-200/60',
             default => 'bg-amber-50 text-amber-700 border-amber-200/60',
         };
-        $isAdminOrHR = auth()->user()->hasRole('Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager');
+        $isAdminOrHR = auth()->user()->can(\App\Authorization\Permissions::MANAGE_LEAVES);
     @endphp
 
     <div class="max-w-2xl mx-auto">

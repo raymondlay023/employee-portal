@@ -2,6 +2,7 @@
 
 use App\Livewire\Actions\Logout;
 use Livewire\Volt\Component;
+use App\Authorization\Permissions;
 
 new class extends Component
 {
@@ -43,7 +44,7 @@ new class extends Component
             'params' => [],
             'pattern' => 'employees.*',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />',
-            'permission' => 'view employees',
+            'permission' => Permissions::MANAGE_EMPLOYEES,
         ],
         [
             'label' => 'Attendance Report',
@@ -51,7 +52,7 @@ new class extends Component
             'params' => [],
             'pattern' => 'hr.attendance-report',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />',
-            'permission' => 'manage attendance',
+            'permission' => Permissions::VIEW_ANY_ATTENDANCE,
         ],
         [
             'label' => 'Leave Approvals',
@@ -59,7 +60,7 @@ new class extends Component
             'params' => ['scope' => 'company'],
             'pattern' => 'leave-requests.*',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />',
-            'permission' => 'manage leaves',
+            'permission' => Permissions::MANAGE_LEAVES,
         ],
         [
             'label' => 'API Logs',
@@ -67,7 +68,7 @@ new class extends Component
             'params' => [],
             'pattern' => 'system.api-logs',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />',
-            'permission' => 'sync attendance',
+            'permission' => Permissions::MANAGE_ATTENDANCE,
         ],
     ];
 
@@ -108,7 +109,7 @@ new class extends Component
                     <nav class="space-y-1 px-2">
                         <!-- Mobile Links -->
                         @php
-                            $hasManagementAccess = auth()->user()->can('view employees') || auth()->user()->can('manage attendance') || auth()->user()->can('sync attendance') || auth()->user()->can('manage leaves');
+                            $hasManagementAccess = auth()->user()->can(\App\Authorization\Permissions::ACCESS_HR_PORTAL);
                         @endphp
 
                         <div class="space-y-6">
@@ -186,7 +187,7 @@ new class extends Component
                 <nav class="flex-1 space-y-2 px-4 bg-white">
                     <!-- Desktop Links -->
                     @php
-                        $hasManagementAccess = auth()->user()->can('view employees') || auth()->user()->can('manage attendance') || auth()->user()->can('sync attendance') || auth()->user()->can('manage leaves');
+                        $hasManagementAccess = auth()->user()->can(\App\Authorization\Permissions::ACCESS_HR_PORTAL);
                     @endphp
 
                     <div class="space-y-6">

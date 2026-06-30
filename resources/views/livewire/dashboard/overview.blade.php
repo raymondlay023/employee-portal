@@ -310,7 +310,7 @@
     </div>
 
     <!-- 3. Company Management Overview (Conditional for Admins/HR/Managers) -->
-    @if($isAdminOrHR)
+    @if($isManagerial)
         <div class="space-y-4 pt-6 border-t border-slate-100">
             <div class="flex items-center justify-between">
                 <h4 class="text-base font-bold text-slate-800 tracking-tight">Company Management Overview</h4>

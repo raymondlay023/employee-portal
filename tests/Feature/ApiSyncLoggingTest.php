@@ -63,13 +63,13 @@ class ApiSyncLoggingTest extends TestCase
             ], 200),
         ]);
 
-        $response = $this->actingAs($user)->post(route('attendance.sync-jpayroll'), [
-            'date_from' => '2026-05-01',
-            'date_to'   => '2026-05-01',
-            'nik'       => '07073',
-        ]);
-
-        $response->assertRedirect();
+        \Livewire\Livewire::actingAs($user)
+            ->test(\App\Livewire\Attendance\SyncJpayroll::class)
+            ->set('date_from', '2026-05-01')
+            ->set('date_to', '2026-05-01')
+            ->set('nik', '07073')
+            ->call('sync')
+            ->assertRedirect(route('attendance.index'));
         
         $this->assertDatabaseHas('api_sync_logs', [
             'api_name'             => 'jpayroll_attendance',

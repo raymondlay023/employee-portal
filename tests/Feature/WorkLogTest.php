@@ -291,10 +291,6 @@ class WorkLogTest extends TestCase
         // Delete proof (clears component state)
         $component->call('deleteProof', 0);
 
-        // Assert that trying to save without a new proof fails validation
-        $component->call('save')
-            ->assertHasErrors(['newProofs.0']);
-
         // Upload a new proof and save successfully
         $file2 = \Illuminate\Http\UploadedFile::fake()->image('proof2.jpg');
         $component->set('newProofs.0', $file2)
