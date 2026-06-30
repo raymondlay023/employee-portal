@@ -12,7 +12,6 @@ services:
     env_file:
       - .env
     volumes:
-      - asset_data:/var/www/html/public
       - storage_app:/var/www/html/storage/app
       - storage_logs:/var/www/html/storage/logs
     depends_on:
@@ -42,7 +41,6 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - asset_data:/var/www/html/public:ro
       - storage_app:/var/www/html/storage/app:ro
     depends_on:
       - app
@@ -69,7 +67,6 @@ services:
       - redis_data:/data
 
 volumes:
-  asset_data:
   db_data:
   redis_data:
   storage_app:
