@@ -54,4 +54,11 @@ class Employee extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function getInitialsAttribute()
+    {
+        $first = substr($this->first_name ?? '', 0, 1);
+        $last = $this->last_name ? substr($this->last_name, 0, 1) : '';
+        return strtoupper($first . $last);
+    }
 }
