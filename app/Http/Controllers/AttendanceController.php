@@ -38,7 +38,7 @@ class AttendanceController extends Controller
             ->orderBy('shift_date', 'desc');
 
         // Enforce employee targeting: If HR provides ID, use it. Otherwise, default to their own personal attendance.
-        if ($user->can('manage attendance') && !empty($validated['employee_id'])) {
+        if ($user->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE) && !empty($validated['employee_id'])) {
             $targetEmployeeId = $validated['employee_id'];
         } else {
             if (!$employee) {

@@ -25,6 +25,9 @@ class RolesAndPermissionsSeeder extends Seeder
             Permissions::MANAGE_LEAVES,
         ];
 
+        // Prune old obsolete permissions that are no longer defined
+        Permission::whereNotIn('name', $permissions)->delete();
+
         // Use findOrCreate so this seeder can be run repeatedly without crashing
         foreach ($permissions as $permission) {
             Permission::findOrCreate($permission);

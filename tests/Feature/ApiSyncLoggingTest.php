@@ -29,7 +29,7 @@ class ApiSyncLoggingTest extends TestCase
     private function createAdminUser(): User
     {
         $role = Role::findOrCreate('Admin');
-        $permission = Permission::findOrCreate('sync attendance');
+        $permission = Permission::findOrCreate(\App\Authorization\Permissions::MANAGE_ATTENDANCE);
         $role->givePermissionTo($permission);
 
         $user = User::factory()->create();

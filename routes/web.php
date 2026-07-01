@@ -18,7 +18,7 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::get('system/api-logs', \App\Livewire\System\ApiLogs::class)
         ->name('system.api-logs')
-        ->middleware('can:sync attendance');
+        ->middleware('can:' . \App\Authorization\Permissions::MANAGE_ATTENDANCE);
 
     // Attendance
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
@@ -27,7 +27,7 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::get('hr/attendance-report', \App\Livewire\Hr\AttendanceReport::class)
         ->name('hr.attendance-report')
-        ->middleware('can:manage attendance');
+        ->middleware('can:' . \App\Authorization\Permissions::MANAGE_ATTENDANCE);
 
     // Leave requests
     Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('leave-requests.approve');

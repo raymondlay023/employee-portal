@@ -6,7 +6,7 @@
                 <p class="text-xs text-slate-400 font-medium mt-0.5">Daily logs &amp; JPayroll synced data</p>
             </div>
 
-            @can('sync attendance')
+            @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
                 <!-- Space for layout consistency -->
             @endcan
         </div>
@@ -119,7 +119,7 @@
 
                 {{-- Advanced filter form --}}
                 <form method="GET" action="{{ route('attendance.index') }}"
-                    class="grid grid-cols-1 sm:grid-cols-2 {{ Auth::user()->can('manage attendance') ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }} gap-3 w-full" id="date-filter-form">
+                    class="grid grid-cols-1 sm:grid-cols-2 {{ Auth::user()->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE) ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }} gap-3 w-full" id="date-filter-form">
                     
                     <div class="flex flex-col gap-1.5">
                         <label for="date_from" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">From</label>
@@ -135,7 +135,7 @@
                             class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
                     </div>
 
-                    @can('manage attendance')
+                    @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
                         <input type="hidden" name="employee_id" value="{{ $targetEmployee->id }}">
                     @endcan
 
@@ -232,9 +232,9 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
                                         </svg>
                                         <p class="text-sm font-semibold text-slate-500">No attendance records for this date range</p>
-                                        @can('sync attendance')
+                                         @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
                                             <p class="text-xs text-slate-400">Click <strong>Sync from JPayroll</strong> to fetch data.</p>
-                                        @endcan
+                                         @endcan
                                     </div>
                                 </td>
                             </tr>
