@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Authorization\Permissions;
+use App\Models\AttendanceLog;
+use App\Models\Employee;
+use App\Models\JPayrollAttendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Artisan;
-use App\Models\Employee;
-use App\Models\AttendanceLog;
-use App\Models\JPayrollAttendance;
-use App\Models\ApiSyncLog;
 
 class AttendanceController extends Controller
 {
@@ -18,30 +17,47 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
-        $user     = Auth::user();
+        $user = Auth::user();
         $employee = $user->employee;
 
         // Validate optional filter parameters
         $validated = $request->validate([
-            'date_from'   => ['nullable', 'date'],
-            'date_to'     => ['nullable', 'date', 'after_or_equal:date_from'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'employee_id' => ['nullable', 'exists:employees,id'],
-            'status'      => ['nullable', 'in:all,present,absent,late,leave,sick'],
+            'status' => ['nullable', 'in:all,present,absent,late,leave,sick'],
         ]);
 
         $dateFrom = $validated['date_from'] ?? now()->startOfMonth()->toDateString();
-        $dateTo   = $validated['date_to']   ?? now()->toDateString();
+        $dateTo = $validated['date_to'] ?? now()->toDateString();
 
         // ── JPayroll attendance records ───────────────────────────────────────
         $jpayrollQuery = JPayrollAttendance::with('employee')
             ->whereBetween('shift_date', [$dateFrom, $dateTo])
             ->orderBy('shift_date', 'desc');
 
-        // Enforce employee targeting: If HR provides ID, use it. Otherwise, default to their own personal attendance.
-        if ($user->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE) && !empty($validated['employee_id'])) {
-            $targetEmployeeId = $validated['employee_id'];
-        } else {
-            if (!$employee) {
+        $targetEmployeeId = null;
+
+        if (! empty($validated['employee_id'])) {
+            $requestedEmployeeId = $validated['employee_id'];
+
+            if ($user->can(Permissions::MANAGE_ATTENDANCE)) {
+                $targetEmployeeId = $requestedEmployeeId;
+            } elseif ($user->hasRole('Manager')) {
+                // Check if the requested employee belongs to the manager's department
+                $requestedEmployee = Employee::find($requestedEmployeeId);
+                if ($requestedEmployee && $requestedEmployee->department_id === $employee?->department_id) {
+                    $targetEmployeeId = $requestedEmployeeId;
+                } else {
+                    abort(403, 'You are only authorized to view attendance logs for employees in your department.');
+                }
+            } else {
+                abort(403, 'Unauthorized action.');
+            }
+        }
+
+        if ($targetEmployeeId === null) {
+            if (! $employee) {
                 abort(403, 'Employee profile not linked to your account. Please contact an administrator.');
             }
             $targetEmployeeId = $employee->id;
@@ -53,8 +69,8 @@ class AttendanceController extends Controller
         // ── Calculate Summary (Always single employee targeted now) ───────
         $summaryQuery = clone $jpayrollQuery;
         // Remove orderBy for the aggregate query
-        $summaryQuery->getQuery()->orders = null; 
-        
+        $summaryQuery->getQuery()->orders = null;
+
         $summary = $summaryQuery->selectRaw('
             COUNT(*) as total_days,
             SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
@@ -65,7 +81,7 @@ class AttendanceController extends Controller
         ')->first();
 
         // Apply advanced status filters
-        if (!empty($validated['status']) && $validated['status'] !== 'all') {
+        if (! empty($validated['status']) && $validated['status'] !== 'all') {
             $status = $validated['status'];
             if ($status === 'present') {
                 $jpayrollQuery->where('alpha', 0)
@@ -111,27 +127,27 @@ class AttendanceController extends Controller
      */
     public function clockIn(Request $request)
     {
-        if (!config('app.enable_manual_attendance')) {
+        if (! config('app.enable_manual_attendance')) {
             return redirect()->back()->with('error', 'Manual attendance is temporarily disabled.');
         }
 
-        $user     = Auth::user();
+        $user = Auth::user();
         $employee = $user->employee;
 
         if (! $employee) {
             return back()->with('error', 'Employee profile not found.');
         }
 
-        return Cache::lock('attendance_clock_' . $employee->id, 5)->get(function () use ($employee) {
+        return Cache::lock('attendance_clock_'.$employee->id, 5)->get(function () use ($employee) {
             // Check for any unclosed sessions
             $openSessions = AttendanceLog::where('employee_id', $employee->id)->whereNull('clock_out_at')->get();
 
             foreach ($openSessions as $session) {
                 // If the session is from a previous day, auto-close it 8 hours after clock in
-                if (!$session->clock_in_at->isToday()) {
+                if (! $session->clock_in_at->isToday()) {
                     $session->update([
                         'clock_out_at' => $session->clock_in_at->copy()->addHours(8),
-                        'note' => ltrim($session->note . ' (Auto-closed by system)')
+                        'note' => ltrim($session->note.' (Auto-closed by system)'),
                     ]);
                 } else {
                     // Session is from today, they are already clocked in
@@ -144,7 +160,7 @@ class AttendanceController extends Controller
                 'clock_in_at' => now(),
             ]);
 
-            return back()->with('success', 'Clocked in at ' . now()->timezone('Asia/Jakarta')->format('H:i:s'));
+            return back()->with('success', 'Clocked in at '.now()->timezone('Asia/Jakarta')->format('H:i:s'));
         });
     }
 
@@ -153,18 +169,18 @@ class AttendanceController extends Controller
      */
     public function clockOut(Request $request)
     {
-        if (!config('app.enable_manual_attendance')) {
+        if (! config('app.enable_manual_attendance')) {
             return redirect()->back()->with('error', 'Manual attendance is temporarily disabled.');
         }
 
-        $user     = Auth::user();
+        $user = Auth::user();
         $employee = $user->employee;
 
         if (! $employee) {
             return back()->with('error', 'Employee profile not found.');
         }
 
-        return Cache::lock('attendance_clock_' . $employee->id, 5)->get(function () use ($employee) {
+        return Cache::lock('attendance_clock_'.$employee->id, 5)->get(function () use ($employee) {
             $open = AttendanceLog::where('employee_id', $employee->id)
                 ->whereNull('clock_out_at')
                 ->whereDate('clock_in_at', today())
@@ -176,8 +192,7 @@ class AttendanceController extends Controller
 
             $open->update(['clock_out_at' => now()]);
 
-            return back()->with('success', 'Clocked out at ' . now()->timezone('Asia/Jakarta')->format('H:i:s'));
+            return back()->with('success', 'Clocked out at '.now()->timezone('Asia/Jakarta')->format('H:i:s'));
         });
     }
-
 }

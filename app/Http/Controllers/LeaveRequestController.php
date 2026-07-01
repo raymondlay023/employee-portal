@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\LeaveRequest;
-use Illuminate\Support\Facades\Auth;
 use App\Authorization\Permissions;
+use App\Models\ApiSyncLog;
+use App\Models\LeaveRequest;
+use App\Models\User;
+use App\Services\JPayrollService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LeaveRequestController extends Controller
 {
@@ -19,8 +23,18 @@ class LeaveRequestController extends Controller
         if ($isAdminOrHR) {
             if ($request->get('scope') === 'personal') {
                 $query->where('user_id', $user->id);
-            } elseif ($request->filled('status') && $request->status !== 'all') {
-                $query->where('status', $request->status);
+            } else {
+                // If Manager (not HR or Admin), scope to department
+                if (! $user->hasRole('HR') && ! $user->hasRole('Admin')) {
+                    $deptId = $user->employee?->department_id;
+                    $query->whereHas('user.employee', function ($q) use ($deptId) {
+                        $q->where('department_id', $deptId);
+                    });
+                }
+
+                if ($request->filled('status') && $request->status !== 'all') {
+                    $query->where('status', $request->status);
+                }
             }
         } else {
             $query->where('user_id', $user->id);
@@ -34,7 +48,7 @@ class LeaveRequestController extends Controller
         $lastSyncedAt = null;
 
         // Fetch annual leave details from JPayroll API when viewing personal leaves
-        if ($employeeId && (!$isAdminOrHR || $request->get('scope') === 'personal')) {
+        if ($employeeId && (! $isAdminOrHR || $request->get('scope') === 'personal')) {
             try {
                 $year = now()->format('Y');
                 $forceRefresh = $request->has('refresh_leave');
@@ -50,7 +64,7 @@ class LeaveRequestController extends Controller
                         return $lr->start_date->diffInDays($lr->end_date) + 1;
                     });
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to fetch annual leave details', ['message' => $e->getMessage()]);
+                Log::warning('Failed to fetch annual leave details', ['message' => $e->getMessage()]);
             }
         }
 
@@ -59,7 +73,7 @@ class LeaveRequestController extends Controller
 
     public function approve(LeaveRequest $leaveRequest)
     {
-        $this->authorizeManageLeaves();
+        $this->authorizeManageLeaves($leaveRequest);
 
         if ($leaveRequest->status !== 'pending') {
             return back()->with('error', 'Only pending leave requests can be approved.');
@@ -72,7 +86,7 @@ class LeaveRequestController extends Controller
 
     public function reject(LeaveRequest $leaveRequest)
     {
-        $this->authorizeManageLeaves();
+        $this->authorizeManageLeaves($leaveRequest);
 
         if ($leaveRequest->status !== 'pending') {
             return back()->with('error', 'Only pending leave requests can be rejected.');
@@ -83,11 +97,20 @@ class LeaveRequestController extends Controller
         return back()->with('success', 'Leave request rejected.');
     }
 
-    private function authorizeManageLeaves()
+    private function authorizeManageLeaves(?LeaveRequest $leaveRequest = null)
     {
         $user = Auth::user();
-        if (!$user->can(Permissions::MANAGE_LEAVES)) {
+        if (! $user->can(Permissions::MANAGE_LEAVES)) {
             abort(403, 'Unauthorized action.');
+        }
+
+        if ($leaveRequest && ! $user->hasRole('HR') && ! $user->hasRole('Admin')) {
+            $managerDept = $user->employee?->department_id;
+            $applicantDept = $leaveRequest->user->employee?->department_id;
+
+            if (! $managerDept || $managerDept !== $applicantDept) {
+                abort(403, 'You can only manage leave requests for employees in your department.');
+            }
         }
     }
 
@@ -114,7 +137,7 @@ class LeaveRequestController extends Controller
                         return $lr->start_date->diffInDays($lr->end_date) + 1;
                     });
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to fetch annual leave details', ['message' => $e->getMessage()]);
+                Log::warning('Failed to fetch annual leave details', ['message' => $e->getMessage()]);
             }
         }
 
@@ -144,6 +167,16 @@ class LeaveRequestController extends Controller
         $isAdminOrHR = $user->can(Permissions::MANAGE_LEAVES);
         $annualLeave = null;
 
+        // Scope validation for non-HR/Admin viewing others' leaves
+        if (! $user->hasRole('HR') && ! $user->hasRole('Admin') && $leaveRequest->user_id !== $user->id) {
+            $managerDept = $user->employee?->department_id;
+            $applicantDept = $leaveRequest->user->employee?->department_id;
+
+            if (! $user->hasRole('Manager') || ! $managerDept || $managerDept !== $applicantDept) {
+                abort(403, 'You are not authorized to view this leave request.');
+            }
+        }
+
         $employeeId = $leaveRequest->user->employee?->employee_id;
 
         if ($employeeId && ($isAdminOrHR || $leaveRequest->user_id === $user->id)) {
@@ -151,7 +184,7 @@ class LeaveRequestController extends Controller
                 $year = $leaveRequest->start_date->format('Y');
                 $annualLeave = $this->getCachedAnnualLeave($year, $employeeId, $user);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to fetch annual leave details in show view', ['message' => $e->getMessage()]);
+                Log::warning('Failed to fetch annual leave details in show view', ['message' => $e->getMessage()]);
             }
         }
 
@@ -160,6 +193,11 @@ class LeaveRequestController extends Controller
 
     public function edit(LeaveRequest $leaveRequest)
     {
+        $user = Auth::user();
+        if ($leaveRequest->user_id !== $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // only allow editing pending requests
         if ($leaveRequest->status !== 'pending') {
             abort(403);
@@ -170,6 +208,11 @@ class LeaveRequestController extends Controller
 
     public function update(Request $request, LeaveRequest $leaveRequest)
     {
+        $user = Auth::user();
+        if ($leaveRequest->user_id !== $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         if ($leaveRequest->status !== 'pending') {
             abort(403);
         }
@@ -188,6 +231,11 @@ class LeaveRequestController extends Controller
 
     public function destroy(LeaveRequest $leaveRequest)
     {
+        $user = Auth::user();
+        if ($leaveRequest->user_id !== $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         if ($leaveRequest->status !== 'pending') {
             abort(403);
         }
@@ -200,17 +248,17 @@ class LeaveRequestController extends Controller
     /**
      * Retrieve and cache annual leave balance from JPayroll API with dynamic failure throttling.
      */
-    private function getCachedAnnualLeave(string $year, string $employeeId, \App\Models\User $user, bool $forceRefresh = false): ?array
+    private function getCachedAnnualLeave(string $year, string $employeeId, User $user, bool $forceRefresh = false): ?array
     {
         $cacheKey = "jpayroll_annual_leave_{$employeeId}_{$year}";
-        
+
         if ($forceRefresh) {
             cache()->forget($cacheKey);
             cache()->forget("jpayroll_annual_leave_last_sync_{$employeeId}_{$year}");
         }
 
         $cached = cache()->get($cacheKey);
-        
+
         if ($cached === 'failed') {
             return null;
         }
@@ -220,48 +268,51 @@ class LeaveRequestController extends Controller
         }
 
         // Create API sync log
-        $syncLog = \App\Models\ApiSyncLog::create([
-            'api_name'             => 'jpayroll_annual_leave',
-            'trigger_type'         => 'manual',
+        $syncLog = ApiSyncLog::create([
+            'api_name' => 'jpayroll_annual_leave',
+            'trigger_type' => 'manual',
             'triggered_by_user_id' => $user->id,
-            'parameters'           => [
-                'year'        => $year,
+            'parameters' => [
+                'year' => $year,
                 'employee_id' => $employeeId,
             ],
-            'status'               => 'running',
-            'started_at'           => now(),
+            'status' => 'running',
+            'started_at' => now(),
         ]);
 
         try {
-            $jpayroll = app(\App\Services\JPayrollService::class);
+            $jpayroll = app(JPayrollService::class);
             $data = $jpayroll->fetchAnnualLeave($year, $employeeId);
 
             if ($data) {
                 $syncLog->update([
-                    'status'            => 'success',
-                    'ended_at'          => now(),
-                    'records_fetched'   => 1,
+                    'status' => 'success',
+                    'ended_at' => now(),
+                    'records_fetched' => 1,
                     'records_processed' => 1,
                 ]);
                 cache()->put($cacheKey, $data, 1800);
                 cache()->put("jpayroll_annual_leave_last_sync_{$employeeId}_{$year}", now(), 1800);
+
                 return $data;
             }
 
             $syncLog->update([
-                'status'        => 'failed',
-                'ended_at'      => now(),
+                'status' => 'failed',
+                'ended_at' => now(),
                 'error_message' => 'API returned empty data or error status',
             ]);
             cache()->put($cacheKey, 'failed', 60);
+
             return null;
         } catch (\Exception $e) {
             $syncLog->update([
-                'status'        => 'failed',
-                'ended_at'      => now(),
+                'status' => 'failed',
+                'ended_at' => now(),
                 'error_message' => $e->getMessage(),
             ]);
             cache()->put($cacheKey, 'failed', 60);
+
             return null;
         }
     }

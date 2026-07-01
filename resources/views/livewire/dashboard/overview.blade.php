@@ -57,6 +57,28 @@
         </div>
     @endif
 
+    <!-- Profile Incomplete warning banner for unassigned managers -->
+    @if ($isManagerWithoutDept)
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-50 to-orange-50/60 border border-red-200 p-6 shadow-sm transition-all duration-300 hover:shadow-md">
+            <div class="absolute -right-10 -top-10 w-36 h-36 bg-red-200/40 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex items-start gap-4">
+                    <div class="p-3 rounded-2xl bg-red-500 text-white shadow-md shadow-red-500/20 animate-pulse flex-shrink-0">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="text-sm font-extrabold text-red-900 tracking-tight">Profile Incomplete</h4>
+                        <p class="text-xs text-red-800 leading-relaxed font-semibold">
+                            Your manager profile is not currently linked to any department. Please contact HR to assign your department.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- 1. Premium Welcome Hero Banner -->
     <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 to-brand-900 text-white shadow-xl border-0 p-8 md:p-10 group transition-all duration-300 hover:shadow-2xl">
         <!-- Glassmorphic light background effect -->
@@ -311,11 +333,15 @@
     </div>
 
     <!-- 3. Company Management Overview (Conditional for Admins/HR/Managers) -->
-    @if($isManagerial)
+    @if($isManagerial && !$isManagerWithoutDept)
         <div class="space-y-4 pt-6 border-t border-slate-100">
             <div class="flex items-center justify-between">
-                <h4 class="text-base font-bold text-slate-800 tracking-tight">Company Management Overview</h4>
-                <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">Admin Controls</span>
+                <h4 class="text-base font-bold text-slate-800 tracking-tight">
+                    {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Company Management Overview' : 'Department Management Overview' }}
+                </h4>
+                <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">
+                    {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Admin Controls' : 'Manager Controls' }}
+                </span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -327,7 +353,9 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Employees</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Active Employees' : 'Department Employees' }}
+                        </p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">{{ $activeEmployeesCount }}</p>
                     </div>
                 </a>
@@ -340,7 +368,9 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pending Leaves</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Pending Leaves' : 'Dept Pending Leaves' }}
+                        </p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">
                             {{ $pendingLeavesCount }}
                         </p>
@@ -355,7 +385,9 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Present Today</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Present Today' : 'Dept Present Today' }}
+                        </p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">
                             {{ $presentTodayCount }}
                         </p>

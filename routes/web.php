@@ -1,13 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\EmployeeController;
+use App\Authorization\Permissions;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveRequestController;
+use App\Livewire\Hr\AttendanceReport;
+use App\Livewire\System\ApiLogs;
+use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 
-Route::middleware(['auth','verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
     Route::view('profile', 'profile')->middleware(['auth'])->name('profile');
@@ -16,18 +19,18 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::resource('employees', EmployeeController::class);
 
-    Route::get('system/api-logs', \App\Livewire\System\ApiLogs::class)
+    Route::get('system/api-logs', ApiLogs::class)
         ->name('system.api-logs')
-        ->middleware('can:' . \App\Authorization\Permissions::MANAGE_ATTENDANCE);
+        ->middleware('can:'.Permissions::VIEW_API_LOGS);
 
     // Attendance
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clock-in');
     Route::post('attendance/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clock-out');
 
-    Route::get('hr/attendance-report', \App\Livewire\Hr\AttendanceReport::class)
+    Route::get('hr/attendance-report', AttendanceReport::class)
         ->name('hr.attendance-report')
-        ->middleware('can:' . \App\Authorization\Permissions::MANAGE_ATTENDANCE);
+        ->middleware('can:'.Permissions::MANAGE_ATTENDANCE);
 
     // Leave requests
     Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('leave-requests.approve');
