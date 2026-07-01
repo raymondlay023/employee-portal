@@ -116,4 +116,59 @@ class JPayrollServiceTest extends TestCase
 
         $this->assertEmpty($attendance);
     }
+
+    public function test_fetch_annual_leave_success(): void
+    {
+        Http::fake([
+            'https://api.jpayroll.test/API_View_AnnualLeave.php' => Http::response([
+                'data' => [
+                    [
+                        'NIK' => '07073',
+                        'Year' => '2026',
+                        'StartDate' => '01/01/2026',
+                        'EndDate' => '31/12/2026',
+                        'Balance' => '12',
+                        'Posted' => '6',
+                        'Remain' => '6'
+                    ]
+                ],
+                'total' => '1'
+            ], 200)
+        ]);
+
+        $service = new JPayrollService();
+        $leave = $service->fetchAnnualLeave('2026', '07073');
+
+        $this->assertNotNull($leave);
+        $this->assertEquals('07073', $leave['NIK']);
+        $this->assertEquals('12', $leave['Balance']);
+        $this->assertEquals('6', $leave['Posted']);
+        $this->assertEquals('6', $leave['Remain']);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://api.jpayroll.test/API_View_AnnualLeave.php'
+                && $request->header('Authorization')[0] === 'test-api-key'
+                && $request['CompanyArea'] === '10000'
+                && $request['Year'] === '2026'
+                && $request['NIK'] === '07073';
+        });
+    }
+
+    public function test_fetch_annual_leave_handles_failure(): void
+    {
+        Http::fake([
+            'https://api.jpayroll.test/API_View_AnnualLeave.php' => Http::response('Internal Server Error', 500)
+        ]);
+
+        Log::shouldReceive('error')
+            ->once()
+            ->with('JPayroll API (Annual Leave) HTTP error', \Mockery::on(function ($data) {
+                return $data['status'] === 500 && $data['body'] === 'Internal Server Error';
+            }));
+
+        $service = new JPayrollService();
+        $leave = $service->fetchAnnualLeave('2026', '07073');
+
+        $this->assertNull($leave);
+    }
 }

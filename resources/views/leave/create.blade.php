@@ -10,6 +10,55 @@
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-6 sm:p-8 border-b border-slate-100">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6">Leave Details</h3>
+
+                <!-- Live Annual Leave Balance from JPayroll -->
+                @if($employeeId)
+                    @if($annualLeave)
+                        @php
+                            $quota = $annualLeave['Balance'] ?? 0;
+                            $taken = $annualLeave['Posted'] ?? 0;
+                            $pending = $pendingLeaveDays ?? 0;
+                            $remaining = $annualLeave['Remain'] ?? 0;
+                        @endphp
+                        <div class="mb-6 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl flex items-center justify-between shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2.5 bg-brand-100/80 text-brand-700 rounded-xl">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-extrabold text-brand-800 uppercase tracking-wider">Available Annual Leave Balance</p>
+                                    <p class="text-xs font-semibold text-slate-500 mt-0.5">
+                                        Quota: {{ $quota }}d | Used: {{ $taken }}d | Pending: {{ $pending }}d
+                                        @if($lastSyncedAt)
+                                            <span class="text-[9px] font-medium text-slate-400 block sm:inline sm:ml-2">(Synced {{ $lastSyncedAt->diffForHumans() }})</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-flex items-center justify-center px-3 py-1.5 bg-brand-600 text-white font-black text-xs rounded-xl shadow-sm">
+                                    {{ $remaining }} days left
+                                </span>
+                            </div>
+                        </div>
+                    @else
+                        <div class="mb-6 p-4 bg-amber-50/40 border border-amber-100 rounded-2xl flex items-center gap-3">
+                            <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <p class="text-[10px] text-amber-700 font-bold uppercase tracking-wider leading-relaxed">JPayroll balance unreachable. Submitting requests may be subject to manual validation by HR.</p>
+                        </div>
+                    @endif
+                @else
+                    <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
+                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-relaxed">Configure your Employee ID (NIK) in your profile to see live remaining leave days.</p>
+                    </div>
+                @endif
                 
                 <form method="POST" action="{{ route('leave-requests.store') }}" class="space-y-6">
                     @csrf

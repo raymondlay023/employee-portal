@@ -51,18 +51,27 @@
                 @if($isAdminOrHR)
                     <div class="space-y-2 pb-6 border-b border-slate-100">
                         <h4 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Applicant</h4>
-                        <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex flex-shrink-0 items-center justify-center text-brand-700 font-extrabold text-sm border border-brand-200/50 shadow-inner">
-                                {{ $leaveRequest->user->employee->initials ?? '?' }}
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex flex-shrink-0 items-center justify-center text-brand-700 font-extrabold text-sm border border-brand-200/50 shadow-inner">
+                                    {{ $leaveRequest->user->employee->initials ?? '?' }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800 tracking-tight">
+                                        {{ $leaveRequest->user->employee->first_name ?? $leaveRequest->user->name }} {{ $leaveRequest->user->employee->last_name ?? '' }}
+                                    </p>
+                                    <p class="text-xs text-slate-500 font-semibold mt-0.5">
+                                        {{ $leaveRequest->user->employee->employee_id ?? 'No NIK' }} &bull; {{ $leaveRequest->user->employee->department->name ?? 'No Department' }}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-800 tracking-tight">
-                                    {{ $leaveRequest->user->employee->first_name ?? $leaveRequest->user->name }} {{ $leaveRequest->user->employee->last_name ?? '' }}
-                                </p>
-                                <p class="text-xs text-slate-500 font-semibold mt-0.5">
-                                    {{ $leaveRequest->user->employee->employee_id ?? 'No NIK' }} &bull; {{ $leaveRequest->user->employee->department->name ?? 'No Department' }}
-                                </p>
-                            </div>
+                            
+                            @if(isset($annualLeave))
+                                <div class="bg-brand-50 border border-brand-100 rounded-2xl px-4 py-2.5 text-right flex-shrink-0">
+                                    <p class="text-[9px] font-extrabold text-brand-800 uppercase tracking-wider">Available Balance</p>
+                                    <p class="text-sm font-black text-brand-700 mt-0.5">{{ $annualLeave['Remain'] ?? 0 }} <span class="text-[10px] font-bold text-brand-500/80">days</span></p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif

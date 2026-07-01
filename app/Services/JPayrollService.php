@@ -101,5 +101,49 @@ class JPayrollService
             return [];
         }
     }
+
+    /**
+     * Fetch annual leave details from JPayroll API
+     *
+     * @param string $year
+     * @param string $nik
+     * @return array|null
+     */
+    public function fetchAnnualLeave(string $year, string $nik): ?array
+    {
+        try {
+            $response = Http::timeout(60)->withHeaders([
+                'Authorization' => $this->apiKey,
+            ])->post("{$this->baseUrl}/API_View_AnnualLeave.php", [
+                'CompanyArea' => $this->companyArea,
+                'Year' => $year,
+                'NIK' => $nik,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                if (isset($data['data'])) {
+                    $records = $data['data'];
+                    if (is_array($records) && count($records) > 0) {
+                        return $records[0];
+                    }
+                    return is_array($records) ? null : $records;
+                }
+
+                return $data;
+            }
+
+            Log::error('JPayroll API (Annual Leave) HTTP error', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('JPayroll API (Annual Leave) Exception', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
 }
 

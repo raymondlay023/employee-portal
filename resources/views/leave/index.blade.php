@@ -40,6 +40,121 @@
             </div>
         @endif
 
+        <!-- Annual Leave Balance Cards (Personal Scope Only) -->
+        @if(request('scope') === 'personal' || !$isAdminOrHR)
+            @if($employeeId)
+                @if($annualLeave)
+                    @php
+                        $quota = $annualLeave['Balance'] ?? 0;
+                        $taken = $annualLeave['Posted'] ?? 0;
+                        $pending = $pendingLeaveDays ?? 0;
+                        $remaining = $annualLeave['Remain'] ?? 0;
+                        $year = $annualLeave['Year'] ?? now()->format('Y');
+                    @endphp
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Annual Leave Summary (Year: {{ $year }})</span>
+                                @if($lastSyncedAt)
+                                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Synced {{ $lastSyncedAt->diffForHumans() }}</span>
+                                @endif
+                            </div>
+                            <a href="{{ request()->fullUrlWithQuery(['refresh_leave' => 1]) }}" class="inline-flex items-center gap-1.5 text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer">
+                                <svg class="w-3.5 h-3.5 hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                Sync with JPayroll
+                            </a>
+                        </div>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Quota -->
+                            <div class="bg-gradient-to-br from-white to-slate-50/50 p-5 rounded-3xl border border-slate-200/80 shadow-soft flex items-center gap-4 hover:shadow-md transition-shadow">
+                                <div class="p-3.5 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 flex-shrink-0">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Leave Quota</p>
+                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ $quota }} <span class="text-xs font-semibold text-slate-400">days</span></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Taken -->
+                            <div class="bg-gradient-to-br from-white to-slate-50/50 p-5 rounded-3xl border border-slate-200/80 shadow-soft flex items-center gap-4 hover:shadow-md transition-shadow">
+                                <div class="p-3.5 bg-purple-50 text-purple-600 rounded-2xl border border-purple-100 flex-shrink-0">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Leave Taken</p>
+                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ $taken }} <span class="text-xs font-semibold text-slate-400">days</span></p>
+                                </div>
+                            </div>
+
+                            <!-- Pending -->
+                            <div class="bg-gradient-to-br from-white to-slate-50/50 p-5 rounded-3xl border border-slate-200/80 shadow-soft flex items-center gap-4 hover:shadow-md transition-shadow">
+                                <div class="p-3.5 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 flex-shrink-0">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Pending Approval</p>
+                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ $pending }} <span class="text-xs font-semibold text-slate-400">days</span></p>
+                                </div>
+                            </div>
+
+                            <!-- Remaining / Available -->
+                            <div class="bg-gradient-to-br from-brand-500 to-brand-600 p-5 rounded-3xl border border-brand-600 shadow-soft flex items-center gap-4 hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div class="absolute -right-3 -top-3 w-16 h-16 bg-white/10 rounded-full blur-xl group-hover:scale-125 transition-transform"></div>
+                                <div class="p-3.5 bg-white/15 text-white rounded-2xl border border-white/20 flex-shrink-0 z-10">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.43m-8.904-.666L2.25 12l13.904-6.222 4.43 8.904" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0 z-10 text-white">
+                                    <p class="text-[10px] font-extrabold text-white/70 uppercase tracking-wider">Available Balance</p>
+                                    <p class="text-xl font-black mt-0.5">{{ $remaining }} <span class="text-xs font-semibold text-white/80">days</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <!-- JPayroll Connection Error Fallback -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <div>
+                                <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider">JPayroll Sync Unreachable</h4>
+                                <p class="text-[10px] text-amber-700/90 font-semibold mt-0.5">We could not fetch your real-time annual leave balance. Please try syncing again.</p>
+                            </div>
+                        </div>
+                        <a href="{{ request()->fullUrlWithQuery(['refresh_leave' => 1]) }}" class="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-colors cursor-pointer self-start sm:self-auto">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            Retry Sync
+                        </a>
+                    </div>
+                @endif
+            @else
+                <!-- NIK Configuration Fallback -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+                    <svg class="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Leave Balance Offline</h4>
+                        <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Please ensure your Employee ID (NIK) is properly configured in your profile to sync with JPayroll.</p>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         <!-- Filters (Admin/HR Only - Company Scope Only) -->
         @if($isAdminOrHR && request('scope', 'company') !== 'personal')
             <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-150 shadow-sm">
