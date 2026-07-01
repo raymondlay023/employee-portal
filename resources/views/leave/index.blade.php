@@ -3,10 +3,10 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">
-                    {{ request('scope') === 'personal' || !$isAdminOrHR ? 'My Leave Requests' : 'Leave Approvals' }}
+                    {{ request('scope') === 'personal' || !$isAdminOrHR ? __('My Leave Requests') : __('Leave Approvals') }}
                 </h2>
                 <p class="text-xs text-slate-400 font-medium mt-0.5">
-                    {{ request('scope') === 'personal' || !$isAdminOrHR ? 'Submit and track your personal leave applications' : 'Manage company-wide leave requests and approvals' }}
+                    {{ request('scope') === 'personal' || !$isAdminOrHR ? __('Submit and track your personal leave applications') : __('Manage company-wide leave requests and approvals') }}
                 </p>
             </div>
             <div>
@@ -14,7 +14,7 @@
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
-                    New Leave Request
+                    {{ __('New Leave Request') }}
                 </a>
             </div>
         </div>
@@ -54,16 +54,16 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Annual Leave Summary (Year: {{ $year }})</span>
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ __('Annual Leave Summary (Year: :year)', ['year' => $year]) }}</span>
                                 @if($lastSyncedAt)
-                                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Synced {{ $lastSyncedAt->diffForHumans() }}</span>
+                                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{{ __('Synced :time', ['time' => $lastSyncedAt->diffForHumans()]) }}</span>
                                 @endif
                             </div>
                             <a href="{{ request()->fullUrlWithQuery(['refresh_leave' => 1]) }}" class="inline-flex items-center gap-1.5 text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer">
                                 <svg class="w-3.5 h-3.5 hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                                 </svg>
-                                Sync with JPayroll
+                                {{ __('Sync with JPayroll') }}
                             </a>
                         </div>
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -75,8 +75,8 @@
                                     </svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Leave Quota</p>
-                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ $quota }} <span class="text-xs font-semibold text-slate-400">days</span></p>
+                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Leave Quota') }}</p>
+                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ __($quota != 1 ? ':count days' : ':count day', ['count' => $quota]) }}</p>
                                 </div>
                             </div>
                             
@@ -88,8 +88,8 @@
                                     </svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Leave Taken</p>
-                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ $taken }} <span class="text-xs font-semibold text-slate-400">days</span></p>
+                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Leave Taken') }}</p>
+                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ __($taken != 1 ? ':count days' : ':count day', ['count' => $taken]) }}</p>
                                 </div>
                             </div>
 
@@ -101,8 +101,8 @@
                                     </svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Pending Approval</p>
-                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ $pending }} <span class="text-xs font-semibold text-slate-400">days</span></p>
+                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Pending Approval') }}</p>
+                                    <p class="text-xl font-black text-slate-800 mt-0.5">{{ __($pending != 1 ? ':count days' : ':count day', ['count' => $pending]) }}</p>
                                 </div>
                             </div>
 
@@ -115,8 +115,8 @@
                                     </svg>
                                 </div>
                                 <div class="min-w-0 z-10 text-white">
-                                    <p class="text-[10px] font-extrabold text-white/70 uppercase tracking-wider">Available Balance</p>
-                                    <p class="text-xl font-black mt-0.5">{{ $remaining }} <span class="text-xs font-semibold text-white/80">days</span></p>
+                                    <p class="text-[10px] font-extrabold text-white/70 uppercase tracking-wider">{{ __('Available Balance') }}</p>
+                                    <p class="text-xl font-black mt-0.5">{{ __($remaining != 1 ? ':count days' : ':count day', ['count' => $remaining]) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -129,15 +129,15 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
                             <div>
-                                <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider">JPayroll Sync Unreachable</h4>
-                                <p class="text-[10px] text-amber-700/90 font-semibold mt-0.5">We could not fetch your real-time annual leave balance. Please try syncing again.</p>
+                                <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider">{{ __('JPayroll Sync Unreachable') }}</h4>
+                                <p class="text-[10px] text-amber-700/90 font-semibold mt-0.5">{{ __('We could not fetch your real-time annual leave balance. Please try syncing again.') }}</p>
                             </div>
                         </div>
                         <a href="{{ request()->fullUrlWithQuery(['refresh_leave' => 1]) }}" class="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-colors cursor-pointer self-start sm:self-auto">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                             </svg>
-                            Retry Sync
+                            {{ __('Retry Sync') }}
                         </a>
                     </div>
                 @endif
@@ -148,8 +148,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Leave Balance Offline</h4>
-                        <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Please ensure your Employee ID (NIK) is properly configured in your profile to sync with JPayroll.</p>
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ __('Leave Balance Offline') }}</h4>
+                        <p class="text-[10px] text-slate-500 font-semibold mt-0.5">{{ __('Please ensure your Employee ID (NIK) is properly configured in your profile to sync with JPayroll.') }}</p>
                     </div>
                 </div>
             @endif
@@ -159,12 +159,12 @@
         @if($isAdminOrHR && request('scope', 'company') !== 'personal')
             <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-150 shadow-sm">
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status:</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ __('Status:') }}</span>
                     <div class="flex gap-1">
                         @foreach(['all' => 'All', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $val => $label)
                             <a href="{{ route('leave-requests.index', ['scope' => 'company', 'status' => $val]) }}" 
                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ (request('status', 'all') === $val) ? 'bg-brand-50 text-brand-700 border border-brand-100 shadow-sm' : 'text-slate-600 hover:bg-slate-50 border border-transparent' }}">
-                                {{ $label }}
+                                {{ __($label) }}
                             </a>
                         @endforeach
                     </div>
@@ -179,14 +179,14 @@
                     <thead>
                         <tr class="bg-slate-50/60">
                             @if($isAdminOrHR && request('scope', 'company') !== 'personal')
-                                <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Employee</th>
+                                <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Employee') }}</th>
                             @endif
-                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Type</th>
-                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Period</th>
-                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Reason</th>
-                            <th class="px-6 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Submitted</th>
-                            <th class="px-6 py-4 text-right text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Type') }}</th>
+                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Period') }}</th>
+                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Reason') }}</th>
+                            <th class="px-6 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</th>
+                            <th class="px-6 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Submitted') }}</th>
+                            <th class="px-6 py-4 text-right text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -215,7 +215,7 @@
                                                     {{ $lr->user->employee->first_name ?? $lr->user->name }} {{ $lr->user->employee->last_name ?? '' }}
                                                 </p>
                                                 <p class="text-[10px] text-slate-400 font-semibold">
-                                                    {{ $lr->user->employee->employee_id ?? 'No NIK' }}
+                                                    {{ $lr->user->employee->employee_id ?? __('No NIK') }}
                                                 </p>
                                             </div>
                                         </div>
@@ -223,16 +223,16 @@
                                 @endif
                                 <td class="px-6 py-4">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold border uppercase tracking-wider {{ $typeColor }}">
-                                        {{ $lr->type }}
+                                        {{ __($lr->type) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <span class="text-xs font-bold text-slate-800">
-                                            {{ $lr->start_date->format('d M Y') }} - {{ $lr->end_date->format('d M Y') }}
+                                            {{ $lr->start_date->translatedFormat('d M Y') }} - {{ $lr->end_date->translatedFormat('d M Y') }}
                                         </span>
                                         <span class="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                            {{ $lr->start_date->diffInDays($lr->end_date) + 1 }} {{ Str::plural('day', $lr->start_date->diffInDays($lr->end_date) + 1) }}
+                                            {{ $lr->start_date->diffInDays($lr->end_date) + 1 }} {{ $lr->start_date->diffInDays($lr->end_date) + 1 == 1 ? __('day') : __('days') }}
                                         </span>
                                     </div>
                                 </td>
@@ -243,12 +243,12 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider {{ $statusColor }}">
-                                        {{ $lr->status }}
+                                        {{ __($lr->status) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="text-xs text-slate-500 font-semibold">
-                                        {{ $lr->created_at->format('d M Y') }}
+                                        {{ $lr->created_at->translatedFormat('d M Y') }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
@@ -259,31 +259,31 @@
                                                 <form action="{{ route('leave-requests.approve', $lr) }}" method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer uppercase tracking-wider">
-                                                        Approve
+                                                        {{ __('Approve') }}
                                                     </button>
                                                 </form>
                                                 <form action="{{ route('leave-requests.reject', $lr) }}" method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-100 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer uppercase tracking-wider">
-                                                        Reject
+                                                        {{ __('Reject') }}
                                                     </button>
                                                 </form>
                                             @else
                                                 <!-- Employee Edit/Delete Actions -->
                                                 <a href="{{ route('leave-requests.edit', $lr) }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-150 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer uppercase tracking-wider">
-                                                    Edit
+                                                    {{ __('Edit') }}
                                                 </a>
-                                                <form action="{{ route('leave-requests.destroy', $lr) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to cancel this request?');">
+                                                <form action="{{ route('leave-requests.destroy', $lr) }}" method="POST" class="inline" onsubmit="return confirm('{{ __('Are you sure you want to cancel this request?') }}');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer uppercase tracking-wider">
-                                                        Cancel
+                                                        {{ __('Cancel') }}
                                                     </button>
                                                 </form>
                                             @endif
                                         @else
                                             <a href="{{ route('leave-requests.show', $lr) }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-150 rounded-lg text-[10px] font-extrabold transition-colors cursor-pointer uppercase tracking-wider">
-                                                View
+                                                {{ __('View') }}
                                             </a>
                                         @endif
                                     </div>
@@ -296,8 +296,8 @@
                                         <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                         </svg>
-                                        <p class="text-xs font-bold">No leave requests found</p>
-                                        <p class="text-[10px] text-slate-400/80">There are no applications matching your current criteria.</p>
+                                        <p class="text-xs font-bold">{{ __('No leave requests found') }}</p>
+                                        <p class="text-[10px] text-slate-400/80">{{ __('There are no applications matching your current criteria.') }}</p>
                                     </div>
                                 </td>
                             </tr>

@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">Attendance - {{ $targetEmployee->first_name }} {{ $targetEmployee->last_name }}</h2>
-                <p class="text-xs text-slate-400 font-medium mt-0.5">Daily logs &amp; JPayroll synced data</p>
+                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">{{ __('Attendance - :name', ['name' => $targetEmployee->first_name . ' ' . $targetEmployee->last_name]) }}</h2>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">{{ __('Daily logs & JPayroll synced data') }}</p>
             </div>
 
             @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
@@ -43,7 +43,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Days</span>
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Total Days') }}</span>
                     </div>
                     <span class="text-2xl font-black text-slate-800">{{ (int) $summary->total_days }}</span>
                 </div>
@@ -53,7 +53,7 @@
                     </div>
                     <div class="flex items-center gap-2 mb-2 relative z-10">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">Present</span>
+                        <span class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">{{ __('Present') }}</span>
                     </div>
                     <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->present_days }}</span>
                 </div>
@@ -63,7 +63,7 @@
                     </div>
                     <div class="flex items-center gap-2 mb-2 relative z-10">
                         <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                        <span class="text-[10px] font-extrabold text-red-600 uppercase tracking-wider">Absent</span>
+                        <span class="text-[10px] font-extrabold text-red-600 uppercase tracking-wider">{{ __('Absent') }}</span>
                     </div>
                     <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->absent_days }}</span>
                 </div>
@@ -73,7 +73,7 @@
                     </div>
                     <div class="flex items-center gap-2 mb-2 relative z-10">
                         <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider">Late</span>
+                        <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider">{{ __('Late') }}</span>
                     </div>
                     <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->late_days }}</span>
                 </div>
@@ -83,7 +83,7 @@
                     </div>
                     <div class="flex items-center gap-2 mb-2 relative z-10">
                         <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-                        <span class="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider">Sick</span>
+                        <span class="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider">{{ __('Sick') }}</span>
                     </div>
                     <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->sick_days }}</span>
                 </div>
@@ -93,7 +93,7 @@
                     </div>
                     <div class="flex items-center gap-2 mb-2 relative z-10">
                         <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span class="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">Leave</span>
+                        <span class="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">{{ __('Leave') }}</span>
                     </div>
                     <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) ($summary->leave_days + ($summary->permitted_days ?? 0)) }}</span>
                 </div>
@@ -112,8 +112,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">JPayroll Daily Summary</h3>
-                        <p class="text-[10px] text-slate-400 font-medium">Synced from payroll system</p>
+                        <h3 class="text-sm font-extrabold text-slate-900">{{ __('JPayroll Daily Summary') }}</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">{{ __('Synced from payroll system') }}</p>
                     </div>
                 </div>
 
@@ -122,14 +122,14 @@
                     class="grid grid-cols-1 sm:grid-cols-2 {{ Auth::user()->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE) ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }} gap-3 w-full" id="date-filter-form">
                     
                     <div class="flex flex-col gap-1.5">
-                        <label for="date_from" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">From</label>
+                        <label for="date_from" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('From') }}</label>
                         <input type="date" id="date_from" name="date_from"
                             value="{{ $dateFrom }}"
                             class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
                     </div>
 
                     <div class="flex flex-col gap-1.5">
-                        <label for="date_to" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">To</label>
+                        <label for="date_to" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('To') }}</label>
                         <input type="date" id="date_to" name="date_to"
                             value="{{ $dateTo }}"
                             class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
@@ -140,26 +140,26 @@
                     @endcan
 
                     <div class="flex flex-col gap-1.5">
-                        <label for="status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
+                        <label for="status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</label>
                         <select id="status" name="status"
                             class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
-                            <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>All Statuses</option>
-                            <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>Present</option>
-                            <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>Absent</option>
-                            <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>Late</option>
-                            <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>Leave</option>
-                            <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>Sick</option>
+                            <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>{{ __('All Statuses') }}</option>
+                            <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Present') }}</option>
+                            <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>{{ __('Absent') }}</option>
+                            <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>{{ __('Late') }}</option>
+                            <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>{{ __('Leave') }}</option>
+                            <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>{{ __('Sick') }}</option>
                         </select>
                     </div>
 
                     <div class="flex items-center gap-2 pt-5">
                         <button type="submit"
                             class="flex-1 px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0 text-center">
-                            Filter
+                            {{ __('Filter') }}
                         </button>
                         <a href="{{ route('attendance.index') }}"
                             class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all text-center">
-                            Reset
+                            {{ __('Reset') }}
                         </a>
                     </div>
                 </form>
@@ -170,12 +170,12 @@
                 <table class="min-w-full divide-y divide-slate-100">
                     <thead>
                         <tr class="bg-slate-50/60">
-                            <th class="px-5 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Date</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">Absent</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">Late</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">Sick</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved leave / Cuti">Leave</th>
+                            <th class="px-5 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Date') }}</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">{{ __('Absent') }}</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">{{ __('Late') }}</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">{{ __('Sick') }}</th>
+                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved leave / Cuti">{{ __('Leave') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -194,13 +194,13 @@
                             <tr class="hover:bg-slate-50/40 transition-colors group">
                                 <td class="px-5 py-4">
                                     <div class="flex flex-col">
-                                        <span class="text-xs font-bold text-slate-800">{{ $log->shift_date->format('d M Y') }}</span>
-                                        <span class="text-[10px] text-slate-400">{{ $log->shift_date->format('l') }}</span>
+                                        <span class="text-xs font-bold text-slate-800">{{ $log->shift_date->translatedFormat('d M Y') }}</span>
+                                        <span class="text-[10px] text-slate-400">{{ $log->shift_date->translatedFormat('l') }}</span>
                                     </div>
                                 </td>
                                 <td class="px-5 py-4 text-center">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
-                                        {{ $statusLabel }}
+                                        {{ __($statusLabel) }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-4 text-center">
@@ -231,9 +231,9 @@
                                         <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
                                         </svg>
-                                        <p class="text-sm font-semibold text-slate-500">No attendance records for this date range</p>
+                                        <p class="text-sm font-semibold text-slate-500">{{ __('No attendance records for this date range') }}</p>
                                          @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
-                                            <p class="text-xs text-slate-400">Click <strong>Sync from JPayroll</strong> to fetch data.</p>
+                                             <p class="text-xs text-slate-400">{!! __('Click :strong_openSync from JPayroll:strong_close to fetch data.', ['strong_open' => '<strong>', 'strong_close' => '</strong>']) !!}</p>
                                          @endcan
                                     </div>
                                 </td>
@@ -261,8 +261,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Manual Clock Log</h3>
-                        <p class="text-[10px] text-slate-400 font-medium">Your clock-in &amp; clock-out records</p>
+                        <h3 class="text-sm font-extrabold text-slate-900">{{ __('Manual Clock Log') }}</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">{{ __('Your clock-in & clock-out records') }}</p>
                     </div>
                 </div>
 
@@ -276,7 +276,7 @@
                                     <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                     </svg>
-                                    Clock In
+                                    {{ __('Clock In') }}
                                 </button>
                             </form>
                         @else
@@ -286,7 +286,7 @@
                                     <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                     </svg>
-                                    Clock Out
+                                    {{ __('Clock Out') }}
                                 </button>
                             </form>
                         @endif
@@ -298,18 +298,18 @@
                 <table class="min-w-full divide-y divide-slate-100">
                     <thead>
                         <tr class="bg-slate-50/60">
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Date</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Clock In</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Clock Out</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Duration</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Note</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Date') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Clock In') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Clock Out') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Duration') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Note') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         @forelse($manualLogs as $log)
                             <tr class="hover:bg-slate-50/40 transition-colors">
                                 <td class="px-5 py-3 text-xs font-bold text-slate-800">
-                                    {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('d M Y') : '—' }}
+                                    {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->translatedFormat('d M Y') : '—' }}
                                 </td>
                                 <td class="px-5 py-3">
                                     <span class="text-xs font-semibold text-emerald-700">
@@ -322,7 +322,7 @@
                                     @else
                                         <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                            Active
+                                            {{ __('Active') }}
                                         </span>
                                     @endif
                                 </td>
@@ -332,7 +332,7 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="px-5 py-10 text-center">
-                                    <p class="text-sm font-semibold text-slate-400">No clock records yet.</p>
+                                    <p class="text-sm font-semibold text-slate-400">{{ __('No clock records yet.') }}</p>
                                 </td>
                             </tr>
                         @endforelse

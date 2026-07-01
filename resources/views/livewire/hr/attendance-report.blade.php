@@ -21,14 +21,14 @@
             <!-- Controls Header -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="space-y-1">
-                    <h3 class="text-lg font-bold text-slate-800">Monthly Aggregates</h3>
-                    <p class="text-xs text-slate-500">Overview of all employee attendance records from JPayroll.</p>
+                    <h3 class="text-lg font-bold text-slate-800">{{ __('Monthly Aggregates') }}</h3>
+                    <p class="text-xs text-slate-500">{{ __('Overview of all employee attendance records from JPayroll.') }}</p>
                 </div>
                 
                 <div class="flex items-center gap-3">
                     <select wire:model.live="month" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
                         @foreach($availableMonths as $m)
-                            <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                            <option value="{{ $m }}">{{ __(date('F', mktime(0, 0, 0, $m, 1))) }}</option>
                         @endforeach
                     </select>
 
@@ -38,7 +38,7 @@
                         @endforeach
                     </select>
                     <select wire:model.live="department_id" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
-                        <option value="">All Departments</option>
+                        <option value="">{{ __('All Departments') }}</option>
                         @if(isset($departments))
                             @foreach($departments as $dept)
                                 <option value="{{ $dept->id }}">{{ $dept->name }}</option>
@@ -52,7 +52,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search employee..." class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50 w-full md:w-48 lg:w-64">
+                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('Search employee...') }}" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50 w-full md:w-48 lg:w-64">
                     </div>
                 </div>
             </div>
@@ -61,7 +61,7 @@
             <div class="flex justify-end -mt-2">
                 <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
                     <input type="checkbox" wire:model.live="activeOnly" class="rounded text-brand-600 focus:ring-brand-500 border-slate-300 w-4 h-4 cursor-pointer">
-                    <span class="text-xs font-bold text-slate-700">Active Employees Only</span>
+                    <span class="text-xs font-bold text-slate-700">{{ __('Active Employees Only') }}</span>
                 </label>
             </div>
 
@@ -79,7 +79,7 @@
                             <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-extrabold tracking-wider text-slate-500">
                                 <th class="py-4 px-6 cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('first_name')">
                                     <div class="flex items-center gap-2">
-                                        Employee
+                                        {{ __('Employee') }}
                                         @if($sortField === 'first_name')
                                             <svg class="w-3 h-3 text-brand-600 transition-transform {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
@@ -89,7 +89,7 @@
                                 </th>
                                 <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('present_days')">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        Present
+                                        {{ __('Present') }}
                                         @if($sortField === 'present_days')
                                             <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
                                         @endif
@@ -97,7 +97,7 @@
                                 </th>
                                 <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('absent_days')">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        Absent
+                                        {{ __('Absent') }}
                                         @if($sortField === 'absent_days')
                                             <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
                                         @endif
@@ -105,7 +105,7 @@
                                 </th>
                                 <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('late_days')">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        Late
+                                        {{ __('Late') }}
                                         @if($sortField === 'late_days')
                                             <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
                                         @endif
@@ -113,7 +113,7 @@
                                 </th>
                                 <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('sick_days')">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        Sick
+                                        {{ __('Sick') }}
                                         @if($sortField === 'sick_days')
                                             <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
                                         @endif
@@ -121,7 +121,7 @@
                                 </th>
                                 <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('leave_days')">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        Leave
+                                        {{ __('Leave') }}
                                         @if($sortField === 'leave_days')
                                             <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
                                         @endif
@@ -129,13 +129,13 @@
                                 </th>
                                 <th class="py-4 px-6 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('total_days')">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        Total Days
+                                        {{ __('Total Days') }}
                                         @if($sortField === 'total_days')
                                             <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
                                         @endif
                                     </div>
                                 </th>
-                                <th class="py-4 px-6 text-right">Actions</th>
+                                <th class="py-4 px-6 text-right">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -148,15 +148,15 @@
                                             </div>
                                             <div>
                                                 <div class="flex items-center gap-2">
-                                                    <p class="text-sm font-bold text-slate-800 tracking-tight">{{ $row->employee->first_name ?? 'Unknown' }} {{ $row->employee->last_name ?? '' }}</p>
+                                                    <p class="text-sm font-bold text-slate-800 tracking-tight">{{ $row->employee->first_name ?? __('Unknown') }} {{ $row->employee->last_name ?? '' }}</p>
                                                     @if($row->absent_days >= 2 || $row->late_days >= 3)
                                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-red-100 text-red-700 border border-red-200" title="High absenteeism or lates">
                                                             <span class="w-1 h-1 bg-red-500 rounded-full mr-1"></span>
-                                                            Flagged
+                                                            {{ __('Flagged') }}
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <p class="text-[10px] text-slate-500 font-semibold">{{ $row->employee->employee_id ?? 'No ID' }}</p>
+                                                <p class="text-[10px] text-slate-500 font-semibold">{{ $row->employee->employee_id ?? __('No ID') }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -193,7 +193,7 @@
                                     </td>
                                     <td class="py-4 px-6 text-right">
                                         <a href="{{ route('attendance.index', ['employee_id' => $row->employee_id, 'date_from' => $startDate, 'date_to' => $endDate]) }}" wire:navigate class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all shadow-sm">
-                                            Details
+                                            {{ __('Details') }}
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                                             </svg>
@@ -208,8 +208,8 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
                                         </div>
-                                        <p class="text-sm font-bold text-slate-600">No attendance data found</p>
-                                        <p class="text-xs text-slate-400 mt-1">Try selecting a different month or year.</p>
+                                        <p class="text-sm font-bold text-slate-600">{{ __('No attendance data found') }}</p>
+                                        <p class="text-xs text-slate-400 mt-1">{{ __('Try selecting a different month or year.') }}</p>
                                     </td>
                                 </tr>
                             @endforelse

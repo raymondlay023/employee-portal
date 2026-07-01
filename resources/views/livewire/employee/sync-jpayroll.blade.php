@@ -7,28 +7,28 @@
                 </svg>
             </div>
             <div>
-                <h3 class="text-base font-extrabold text-slate-900">Master Data Synchronization</h3>
+                <h3 class="text-base font-extrabold text-slate-900">{{ __('Master Data Synchronization') }}</h3>
                 <div class="flex items-center gap-2 mt-0.5">
                     @if($isRunning || $justQueued)
                         <span wire:poll.2s class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                            Syncing...
+                            {{ __('Syncing...') }}
                         </span>
                     @elseif($latestLog && $latestLog->status === 'failed')
                         <span class="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
                             <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                            Last sync failed
+                            {{ __('Last sync failed') }}
                         </span>
                     @elseif($latestLog && $latestLog->status === 'success')
                         <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Last sync: {{ \Carbon\Carbon::parse($latestLog->started_at)->timezone('Asia/Jakarta')->diffForHumans() }}
+                            {{ __('Last sync:') }} {{ \Carbon\Carbon::parse($latestLog->started_at)->timezone('Asia/Jakarta')->diffForHumans() }}
                         </span>
                     @else
-                        <span class="text-[10px] text-slate-400 font-medium">Never synced</span>
+                        <span class="text-[10px] text-slate-400 font-medium">{{ __('Never synced') }}</span>
                     @endif
                     
-                    <a href="{{ route('system.api-logs') }}" wire:navigate class="text-[10px] text-brand-600 hover:text-brand-700 font-bold ml-2 underline decoration-brand-200 underline-offset-2">View Full Logs &rarr;</a>
+                    <a href="{{ route('system.api-logs') }}" wire:navigate class="text-[10px] text-brand-600 hover:text-brand-700 font-bold ml-2 underline decoration-brand-200 underline-offset-2">{{ __('View Full Logs') }} &rarr;</a>
                 </div>
             </div>
         </div>
@@ -41,7 +41,7 @@
                 <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                Sync Master Employees
+                {{ __('Sync Master Employees') }}
             </button>
         </div>
     </div>
@@ -79,14 +79,14 @@
                                 </svg>
                             </div>
                             <div class="mt-4 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                                <h3 class="text-lg font-extrabold leading-6 text-slate-900" id="modal-title">Sync Master Employees</h3>
+                                <h3 class="text-lg font-extrabold leading-6 text-slate-900" id="modal-title">{{ __('Sync Master Employees') }}</h3>
                                 
                                 <div class="mt-4 p-3 bg-slate-50 border border-slate-100 rounded-xl">
                                     <p class="text-xs text-slate-600 font-medium">
-                                        This action will fetch the latest master employee records from JPayroll for all employees. 
+                                        {{ __('This action will fetch the latest master employee records from JPayroll for all employees.') }}
                                     </p>
                                     <p class="text-[10px] text-red-500 font-bold mt-2">
-                                        Warning: JPayroll is the master source of truth. This sync may overwrite any local modifications to core employee data.
+                                        {{ __('Warning: JPayroll is the master source of truth. This sync may overwrite any local modifications to core employee data.') }}
                                     </p>
                                 </div>
                                 
@@ -107,12 +107,12 @@
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Confirm Sync
+                                            {{ __('Confirm Sync') }}
                                         </button>
                                         <button type="button" 
                                             wire:click="$set('showModal', false)"
                                             class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-all">
-                                            Cancel
+                                            {{ __('Cancel') }}
                                         </button>
                                     </div>
                                 </form>

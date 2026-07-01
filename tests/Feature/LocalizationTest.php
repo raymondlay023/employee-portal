@@ -104,4 +104,14 @@ class LocalizationTest extends TestCase
         $user->refresh();
         $this->assertEquals('en', $user->locale);
     }
+
+    public function test_indonesian_translation_resolves_correctly(): void
+    {
+        App::setLocale('id');
+
+        $this->assertEquals('Tindakan Keamanan Penting Diperlukan', __('Critical Security Action Required'));
+        $this->assertEquals('Log Jam Manual', __('Manual Clock Log'));
+        $this->assertEquals('Kehadiran - John Doe', __('Attendance - :name', ['name' => 'John Doe']));
+    }
 }
+

@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">API Logs</h2>
-                <p class="text-xs text-slate-400 font-medium mt-0.5">System-wide API synchronization history</p>
+                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">{{ __('API Logs') }}</h2>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">{{ __('System-wide API synchronization history') }}</p>
             </div>
         </div>
     </x-slot>
@@ -13,18 +13,18 @@
         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Search API Name</label>
-                    <input type="text" wire:model.live.debounce.300ms="searchApi" placeholder="e.g. jpayroll_attendance"
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Search API Name') }}</label>
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('e.g. jpayroll_attendance') }}"
                         class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
                 </div>
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</label>
                     <select wire:model.live="searchStatus"
                         class="text-xs border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
-                        <option value="">All Statuses</option>
-                        <option value="running">Running</option>
-                        <option value="success">Success</option>
-                        <option value="failed">Failed</option>
+                        <option value="">{{ __('All Statuses') }}</option>
+                        <option value="running">{{ __('Running') }}</option>
+                        <option value="success">{{ __('Success') }}</option>
+                        <option value="failed">{{ __('Failed') }}</option>
                     </select>
                 </div>
             </div>
@@ -40,8 +40,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Execution History</h3>
-                        <p class="text-[10px] text-slate-400 font-medium">Page {{ $logs->currentPage() }} of {{ $logs->lastPage() }}</p>
+                        <h3 class="text-sm font-extrabold text-slate-900">{{ __('Execution History') }}</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">{{ __('Page :current of :last', ['current' => $logs->currentPage(), 'last' => $logs->lastPage()]) }}</p>
                     </div>
                 </div>
             </div>
@@ -50,13 +50,13 @@
                 <table class="min-w-full divide-y divide-slate-100">
                     <thead>
                         <tr class="bg-slate-50/60">
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Started At</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">API</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Trigger</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Parameters</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
-                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Records (F / P / S)</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Details / Errors</th>
+                             <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Started At') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('API') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Trigger') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Parameters') }}</th>
+                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Status') }}</th>
+                            <th class="px-5 py-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Records (F / P / S)') }}</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Details / Errors') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -69,18 +69,18 @@
                                     default   => 'bg-slate-50 text-slate-500 border-slate-100',
                                 };
                                 $triggerText = match($log->trigger_type) {
-                                    'manual'    => ($log->triggeredBy ? $log->triggeredBy->name : 'Manual'),
-                                    'scheduled' => 'System Schedule',
-                                    'cli'       => 'Developer CLI',
+                                    'manual'    => ($log->triggeredBy ? $log->triggeredBy->name : __('Manual')),
+                                    'scheduled' => __('System Schedule'),
+                                    'cli'       => __('Developer CLI'),
                                     default     => ucfirst($log->trigger_type),
                                 };
                             @endphp
                             <tr class="hover:bg-slate-50/40 transition-colors">
                                 <td class="px-5 py-3 text-xs font-semibold text-slate-700">
                                     {{ $log->started_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }}
-                                    @if($log->ended_at)
-                                        <span class="block text-[9px] text-slate-400 font-medium">Duration: {{ $log->started_at->diffInSeconds($log->ended_at) }}s</span>
-                                    @endif
+                                     @if($log->ended_at)
+                                         <span class="block text-[9px] text-slate-400 font-medium">{{ __('Duration: :sec s', ['sec' => $log->started_at->diffInSeconds($log->ended_at)]) }}</span>
+                                     @endif
                                 </td>
                                 <td class="px-5 py-3 text-xs text-slate-600 font-medium">
                                     {{ str_replace('_', ' ', Str::title($log->api_name)) }}
@@ -99,7 +99,7 @@
                                 </td>
                                 <td class="px-5 py-3 text-center">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
-                                        {{ ucfirst($log->status) }}
+                                        {{ __($log->status) }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3 text-center text-xs font-mono">
@@ -121,7 +121,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
                                     </div>
-                                    <p class="text-sm font-semibold text-slate-400">No API sync logs found matching your criteria.</p>
+                                    <p class="text-sm font-semibold text-slate-400">{{ __('No API sync logs found matching your criteria.') }}</p>
                                 </td>
                             </tr>
                         @endforelse

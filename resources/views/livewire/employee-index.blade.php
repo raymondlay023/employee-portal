@@ -8,12 +8,12 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search employees..." class="input pl-10" />
+                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('Search employees...') }}" class="input pl-10" />
                     </div>
                     
                     <div class="w-full sm:w-48">
                         <select wire:model.live="department" class="input">
-                            <option value="">All Departments</option>
+                            <option value="">{{ __('All Departments') }}</option>
                             @if(isset($departments))
                                 @foreach($departments as $d)
                                     <option value="{{ $d->id }}">{{ $d->name }}</option>
@@ -27,7 +27,7 @@
                 <div class="w-full lg:w-auto flex justify-end">
                     <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
                         <input type="checkbox" wire:model.live="activeOnly" class="rounded text-brand-600 focus:ring-brand-500 border-slate-300 w-4 h-4 cursor-pointer">
-                        <span class="text-xs font-bold text-slate-700">Active Employees Only</span>
+                        <span class="text-xs font-bold text-slate-700">{{ __('Active Employees Only') }}</span>
                     </label>
                 </div>
             </div>
@@ -44,11 +44,11 @@
             <table class="min-w-full divide-y divide-slate-100">
                 <thead class="bg-slate-50/60">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Employee</th>
-                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Department</th>
-                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Role</th>
-                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Joined</th>
-                        <th scope="col" class="px-6 py-3 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Actions</th>
+                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Employee') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Department') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Role') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Joined') }}</th>
+                        <th scope="col" class="px-6 py-3 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -65,7 +65,7 @@
                                         <div class="text-sm font-semibold text-slate-800 flex items-center gap-2">
                                             {{ $emp->first_name }} {{ $emp->last_name }}
                                             @if($emp->status !== 'active' || $emp->end_date)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-red-50 text-red-750 border border-red-100 uppercase tracking-wider">Inactive</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-red-50 text-red-750 border border-red-100 uppercase tracking-wider">{{ __('Inactive') }}</span>
                                             @endif
                                         </div>
                                         <div class="text-[10px] text-slate-400 font-mono">{{ $emp->employee_id }}</div>
@@ -74,24 +74,24 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-700">
-                                    {{ $emp->department?->name ?? 'N/A' }}
+                                    {{ $emp->department?->name ?? __('N/A') }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                {{ $emp->designation?->title ?? 'N/A' }}
+                                {{ $emp->designation?->title ?? __('N/A') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                {{ $emp->joined_at?->format('M j, Y') ?? 'N/A' }}
+                                {{ $emp->joined_at?->translatedFormat('j M Y') ?? __('N/A') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{{ route('employees.show', $emp) }}" class="text-brand-600 hover:text-brand-900 font-bold" wire:navigate>View</a>
+                                <a href="{{ route('employees.show', $emp) }}" class="text-brand-600 hover:text-brand-900 font-bold" wire:navigate>{{ __('View') }}</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="5" class="px-6 py-12 text-center text-slate-500">
                                 <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                                <p class="mt-4 text-sm font-medium">No employees found.</p>
+                                <p class="mt-4 text-sm font-medium">{{ __('No employees found.') }}</p>
                             </td>
                         </tr>
                     @endforelse

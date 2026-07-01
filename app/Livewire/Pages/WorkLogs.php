@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages;
 
 use App\Models\DailyWorkLog;
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -11,8 +12,11 @@ class WorkLogs extends Component
     use WithFileUploads;
 
     public string $date = '';
+
     public array $logs = [];
+
     public array $newProofs = [];
+
     public array $pendingDeletions = [];
 
     /**
@@ -45,12 +49,12 @@ class WorkLogs extends Component
                     'activity' => '',
                     'remarks' => '',
                     'proof_path' => null,
-                ]
+                ],
             ];
         } else {
             $this->logs = $dbLogs->toArray();
         }
-        
+
         $this->newProofs = [];
         $this->pendingDeletions = [];
     }
@@ -68,7 +72,7 @@ class WorkLogs extends Component
         $nextStart = '';
         $nextEnd = '';
 
-        if (!empty($this->logs)) {
+        if (! empty($this->logs)) {
             // Find the last non-empty end_time from the end
             for ($i = count($this->logs) - 1; $i >= 0; $i--) {
                 $candidate = $this->logs[$i]['end_time'] ?? '';
@@ -76,7 +80,7 @@ class WorkLogs extends Component
                 if ($candidate !== '') {
                     if (preg_match('/^\d{1,2}:\d{2}$/', $candidate)) {
                         try {
-                            $start = \Carbon\Carbon::createFromFormat('H:i', $candidate);
+                            $start = Carbon::createFromFormat('H:i', $candidate);
                             $end = $start->copy()->addHour();
                             $nextStart = $start->format('H:i');
                             $nextEnd = $end->format('H:i');
@@ -123,7 +127,7 @@ class WorkLogs extends Component
     {
         if (isset($this->logs[$index])) {
             $logData = $this->logs[$index];
-            if (!empty($logData['id'])) {
+            if (! empty($logData['id'])) {
                 $dbLog = DailyWorkLog::find($logData['id']);
                 if ($dbLog) {
                     if ($dbLog->proof_path) {
@@ -132,10 +136,10 @@ class WorkLogs extends Component
                     $dbLog->delete();
                 }
             }
-            
+
             unset($this->logs[$index]);
             $this->logs = array_values($this->logs);
-            
+
             // Clear temporary arrays to prevent index misalignment
             $this->newProofs = [];
             $this->pendingDeletions = [];
@@ -151,11 +155,11 @@ class WorkLogs extends Component
                         'activity' => '',
                         'remarks' => '',
                         'proof_path' => null,
-                    ]
+                    ],
                 ];
             }
 
-            $this->dispatch('toast', ['message' => 'Time slot removed.', 'type' => 'success']);
+            $this->dispatch('toast', ['message' => __('Time slot removed.'), 'type' => 'success']);
         }
     }
 
@@ -182,12 +186,12 @@ class WorkLogs extends Component
                 'activity' => '',
                 'remarks' => '',
                 'proof_path' => null,
-            ]
+            ],
         ];
         $this->newProofs = [];
         $this->pendingDeletions = [];
 
-        $this->dispatch('toast', ['message' => 'All logs for this day have been cleared.', 'type' => 'success']);
+        $this->dispatch('toast', ['message' => __('All logs for this day have been cleared.'), 'type' => 'success']);
     }
 
     /**
@@ -201,14 +205,14 @@ class WorkLogs extends Component
 
         $logData = $this->logs[$index] ?? null;
         if ($logData) {
-            if (!empty($logData['id'])) {
+            if (! empty($logData['id'])) {
                 $this->pendingDeletions[$index] = true;
             } else {
                 $this->logs[$index]['proof_path'] = null;
             }
         }
 
-        $this->dispatch('toast', ['message' => 'Proof image marked for deletion.', 'type' => 'success']);
+        $this->dispatch('toast', ['message' => __('Proof image marked for deletion.'), 'type' => 'success']);
     }
 
     /**
@@ -220,7 +224,7 @@ class WorkLogs extends Component
             unset($this->pendingDeletions[$index]);
         }
 
-        $this->dispatch('toast', ['message' => 'Proof image deletion cancelled.', 'type' => 'success']);
+        $this->dispatch('toast', ['message' => __('Proof image deletion cancelled.'), 'type' => 'success']);
     }
 
     /**
@@ -235,11 +239,11 @@ class WorkLogs extends Component
             'logs.*.remarks' => 'nullable|string|max:1000',
             'newProofs.*' => 'nullable|image|max:5120', // 5MB max (in KB)
         ], [
-            'logs.*.activity.required' => 'The activity field is required.',
-            'logs.*.start_time.required' => 'Start time is required.',
-            'logs.*.end_time.required' => 'End time is required.',
-            'newProofs.*.image' => 'The proof must be an image file.',
-            'newProofs.*.max' => 'The proof must not be larger than 5MB.',
+            'logs.*.activity.required' => __('The activity field is required.'),
+            'logs.*.start_time.required' => __('Start time is required.'),
+            'logs.*.end_time.required' => __('End time is required.'),
+            'newProofs.*.image' => __('The proof must be an image file.'),
+            'newProofs.*.max' => __('The proof must not be larger than 5MB.'),
         ]);
 
         // Custom validation: check start_time < end_time and proof presence/size
@@ -248,7 +252,7 @@ class WorkLogs extends Component
             $start = $log['start_time'];
             $end = $log['end_time'];
             if ($start >= $end) {
-                $msg = "Start time must be before end time.";
+                $msg = __('Start time must be before end time.');
                 $this->addError("logs.{$index}.start_time", $msg);
                 $errorMessages[] = $msg;
                 $hasErrors = true;
@@ -279,7 +283,7 @@ class WorkLogs extends Component
                     }
 
                     if ($sizeBytes !== null && $sizeBytes > 5 * 1024 * 1024) {
-                        $msg = "The proof must not be larger than 5MB.";
+                        $msg = __('The proof must not be larger than 5MB.');
                         $this->addError("newProofs.{$index}", $msg);
                         $errorMessages[] = $msg;
                         $hasErrors = true;
@@ -301,7 +305,7 @@ class WorkLogs extends Component
 
                 // Overlap check: A.start < B.end && A.end > B.start
                 if ($startA < $endB && $endA > $startB) {
-                    $msg = "This time slot overlaps with another slot.";
+                    $msg = __('This time slot overlaps with another slot.');
                     $this->addError("logs.{$i}.start_time", $msg);
                     $this->addError("logs.{$j}.start_time", $msg);
                     $errorMessages[] = $msg;
@@ -327,7 +331,7 @@ class WorkLogs extends Component
                         if ($log->proof_path) {
                             \Storage::disk('public')->delete($log->proof_path);
                         }
-                        $proofPath = $this->newProofs[$index]->store('proofs/' . auth()->id(), 'public');
+                        $proofPath = $this->newProofs[$index]->store('proofs/'.auth()->id(), 'public');
                         $this->logs[$index]['proof_path'] = $proofPath;
                         if (isset($this->pendingDeletions[$index])) {
                             unset($this->pendingDeletions[$index]);
@@ -355,7 +359,7 @@ class WorkLogs extends Component
                 }
             } else {
                 if (isset($this->newProofs[$index]) && $this->newProofs[$index]) {
-                    $proofPath = $this->newProofs[$index]->store('proofs/' . auth()->id(), 'public');
+                    $proofPath = $this->newProofs[$index]->store('proofs/'.auth()->id(), 'public');
                     $this->logs[$index]['proof_path'] = $proofPath;
                 }
 
@@ -376,7 +380,7 @@ class WorkLogs extends Component
         $this->newProofs = [];
         $this->pendingDeletions = [];
 
-        $this->dispatch('toast', ['message' => 'Daily work logs saved successfully.', 'type' => 'success']);
+        $this->dispatch('toast', ['message' => __('Daily work logs saved successfully.'), 'type' => 'success']);
     }
 
     public function render()

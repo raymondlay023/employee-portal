@@ -33,24 +33,24 @@
                     </div>
                     <div class="space-y-1">
                         <h4 class="text-sm font-extrabold text-amber-900 tracking-tight flex items-center gap-2">
-                            Critical Security Action Required
+                            {{ __('Critical Security Action Required') }}
                         </h4>
                         <p class="text-xs text-amber-750 text-amber-850 text-amber-800 leading-relaxed font-semibold max-w-2xl">
                             @if ($isDefaultPassword && $isFallbackEmail)
-                                Your account is currently using the <span class="text-amber-950 font-black">default temporary password</span> and a <span class="text-amber-950 font-black">temporary placeholder email</span>.
+                                {!! __('Your account is currently using the :default_pw_startdefault temporary password:default_pw_end and a :temp_email_starttemporary placeholder email:temp_email_end.', ['default_pw_start' => '<span class="text-amber-950 font-black">', 'default_pw_end' => '</span>', 'temp_email_start' => '<span class="text-amber-950 font-black">', 'temp_email_end' => '</span>']) !!}
                             @elseif ($isDefaultPassword)
-                                Your account is currently using the <span class="text-amber-950 font-black">default temporary password</span>.
+                                {!! __('Your account is currently using the :default_pw_startdefault temporary password:default_pw_end.', ['default_pw_start' => '<span class="text-amber-950 font-black">', 'default_pw_end' => '</span>']) !!}
                             @else
-                                Your account is currently using a <span class="text-amber-950 font-black">temporary placeholder email</span>.
+                                {!! __('Your account is currently using a :temp_email_starttemporary placeholder email:temp_email_end.', ['temp_email_start' => '<span class="text-amber-950 font-black">', 'temp_email_end' => '</span>']) !!}
                             @endif
-                            To secure your employee portal and prevent unauthorized access, please update these credentials immediately.
+                            {{ __('To secure your employee portal and prevent unauthorized access, please update these credentials immediately.') }}
                         </p>
                     </div>
                 </div>
                 
                 <div class="flex-shrink-0">
                     <a href="{{ route('profile') }}" class="inline-flex justify-center items-center px-5 py-3 bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/15 hover:shadow-amber-500/25 rounded-xl font-bold text-xs transition-all hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer border-0">
-                        Secure Your Account
+                        {{ __('Secure Your Account') }}
                     </a>
                 </div>
             </div>
@@ -69,9 +69,9 @@
                         </svg>
                     </div>
                     <div class="space-y-1">
-                        <h4 class="text-sm font-extrabold text-red-900 tracking-tight">Profile Incomplete</h4>
+                        <h4 class="text-sm font-extrabold text-red-900 tracking-tight">{{ __('Profile Incomplete') }}</h4>
                         <p class="text-xs text-red-800 leading-relaxed font-semibold">
-                            Your manager profile is not currently linked to any department. Please contact HR to assign your department.
+                            {{ __('Your manager profile is not currently linked to any department. Please contact HR to assign your department.') }}
                         </p>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
                         {{ __('Workspace Portal') }}
                     </span>
                     <span class="text-[10px] tracking-wider font-bold text-white/80">
-                        {{ now()->format('l, F j, Y') }}
+                        {{ now()->translatedFormat('l, j F Y') }}
                     </span>
                 </div>
                 
@@ -100,7 +100,7 @@
                 </h2>
                 
                 <p class="text-sm text-brand-100 max-w-2xl leading-relaxed">
-                    Welcome back to your employee dashboard. Easily manage your shifts, leaves, and look up team contacts from one secure portal.
+                    {{ __('Welcome back to your employee dashboard. Easily manage your shifts, leaves, and look up team contacts from one secure portal.') }}
                 </p>
             </div>
 
@@ -111,14 +111,14 @@
                         <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        Search Directory
+                        {{ __('Search Directory') }}
                     </a>
                 @endcan
                 <a href="{{ route('attendance.index') }}" class="inline-flex items-center px-4 py-2.5 bg-brand-800 border border-brand-600 text-white font-bold text-xs rounded-xl hover:bg-brand-700 transition-all shadow-md shadow-black/5 hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
                     <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 00-2 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
                     </svg>
-                    Attendance History
+                    {{ __('Attendance History') }}
                 </a>
             </div>
         </div>
@@ -137,15 +137,15 @@
                 <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div class="space-y-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Attendance Desk</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Attendance Desk') }}</span>
                             @if ($todayLog)
                                 <span class="flex h-2 w-2 relative">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                 </span>
-                                <span class="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">ACTIVE SHIFT</span>
+                                <span class="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">{{ __('ACTIVE SHIFT') }}</span>
                             @else
-                                <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">READY</span>
+                                <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">{{ __('READY') }}</span>
                             @endif
                         </div>
                         
@@ -154,19 +154,19 @@
                                 <div class="flex items-center gap-2 mt-4 text-emerald-700 bg-emerald-50 rounded-xl px-4 py-3">
                                     <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                                     <span class="text-xs font-bold">
-                                        Active shift started at {{ \Carbon\Carbon::parse($todayLog->clock_in_at)->timezone('Asia/Jakarta')->format('H:i') }}
+                                        {{ __('Active shift started at :time', ['time' => \Carbon\Carbon::parse($todayLog->clock_in_at)->timezone('Asia/Jakarta')->format('H:i')]) }}
                                     </span>
                                 </div>
                             @else
-                                Ready to record your daily attendance
+                                {{ __('Ready to record your daily attendance') }}
                             @endif
                         </h3>
                         
                         <p class="text-xs text-slate-500 leading-relaxed max-w-lg">
                             @if ($todayLog)
-                                Shift is active. Make sure to clock out when finishing your work day to complete log registration.
+                                {{ __('Shift is active. Make sure to clock out when finishing your work day to complete log registration.') }}
                             @else
-                                Ensure your device location services are active. Clock in to begin recording your portal shift.
+                                {{ __('Ensure your device location services are active. Clock in to begin recording your portal shift.') }}
                             @endif
                         </p>
                     </div>
@@ -186,20 +186,20 @@
                                 <form action="{{ route('attendance.clock-out') }}" method="POST" class="w-full">
                                     @csrf
                                     <button type="submit" class="w-full px-6 py-2.5 bg-red-650 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shadow-red-500/10 hover:shadow-red-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
-                                        Clock Out Now
+                                        {{ __('Clock Out Now') }}
                                     </button>
                                 </form>
                             @else
                                 <form action="{{ route('attendance.clock-in') }}" method="POST" class="w-full">
                                     @csrf
                                     <button type="submit" class="w-full px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
-                                        Clock In Now
+                                        {{ __('Clock In Now') }}
                                     </button>
                                 </form>
                             @endif
                         @else
                             <div class="w-full px-4 py-2.5 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-xl border border-slate-200 text-center uppercase tracking-wider">
-                                Manual Entry Disabled
+                                {{ __('Manual Entry Disabled') }}
                             </div>
                         @endif
                     </div>
@@ -213,18 +213,18 @@
                 <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div class="space-y-3 flex-grow">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Activity & Timesheet Desk</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Activity & Timesheet Desk') }}</span>
                             @if ($todayIsComplete)
-                                <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">TARGET REACHED</span>
+                                <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">{{ __('TARGET REACHED') }}</span>
                             @elseif ($todayTotalHours > 0)
-                                <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">IN PROGRESS</span>
+                                <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">{{ __('IN PROGRESS') }}</span>
                             @else
-                                <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">READY</span>
+                                <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">{{ __('READY') }}</span>
                             @endif
                         </div>
                         
                         <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
-                            {{ $todayFormattedHours }} Hour{{ $todayTotalHours != 1 ? 's' : '' }} Logged for Today
+                            {{ __(':hours Hours Logged for Today', ['hours' => $todayFormattedHours]) }}
                         </h3>
                         
                         <!-- Small Progress Bar -->
@@ -237,18 +237,18 @@
 
                         @if($todayWorkLogs->isNotEmpty())
                             <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                                Latest activity: <span class="font-bold text-slate-700">{{ $todayWorkLogs->last()->activity }}</span> ({{ $todayWorkLogs->last()->start_time }} - {{ $todayWorkLogs->last()->end_time }})
+                                {{ __('Latest activity:') }} <span class="font-bold text-slate-700">{{ $todayWorkLogs->last()->activity }}</span> ({{ $todayWorkLogs->last()->start_time }} - {{ $todayWorkLogs->last()->end_time }})
                             </p>
                         @else
                             <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                                You haven't recorded any work slots for today yet. Make sure to log your hourly work to reach the 8-hour target.
+                                {{ __("You haven't recorded any work slots for today yet. Make sure to log your hourly work to reach the 8-hour target.") }}
                             </p>
                         @endif
                     </div>
 
                     <div class="flex-shrink-0">
                         <a href="{{ route('daily-work-logs.index') }}" class="inline-flex justify-center items-center px-5 py-3 bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100 hover:text-brand-800 rounded-xl font-bold text-xs transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
-                            Manage Timesheet
+                            {{ __('Manage Timesheet') }}
                         </a>
                     </div>
                 </div>
@@ -261,22 +261,26 @@
                 <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div class="space-y-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Leave Balance Desk</span>
-                            <span class="text-[10px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full font-bold">ONLINE</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Leave Balance Desk') }}</span>
+                            <span class="text-[10px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full font-bold">{{ __('ONLINE') }}</span>
                         </div>
                         
                         <h3 class="text-xl font-extrabold text-slate-950 leading-tight">
-                            {{ $pendingLeaves > 0 ? "$pendingLeaves Pending Requests awaiting review" : "No active pending leave requests" }}
+                            @if ($pendingLeaves > 0)
+                                {{ __(':count Pending Requests awaiting review', ['count' => $pendingLeaves]) }}
+                            @else
+                                {{ __('No active pending leave requests') }}
+                            @endif
                         </h3>
                         
                         <p class="text-xs text-slate-500 leading-relaxed max-w-lg">
-                            Review your personal balances, create medical or personal leave requests, and monitor manager approvals directly.
+                            {{ __('Review your personal balances, create medical or personal leave requests, and monitor manager approvals directly.') }}
                         </p>
                     </div>
 
                     <div class="flex-shrink-0">
                         <a href="{{ route('leave-requests.create') }}" class="inline-flex justify-center items-center px-5 py-3 bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-800 rounded-xl font-bold text-xs transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer">
-                            Request Time Off
+                            {{ __('Request Time Off') }}
                         </a>
                     </div>
                 </div>
@@ -293,8 +297,8 @@
                 
                 <div class="relative z-10 space-y-5">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Portal Sync Profile</span>
-                        <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-0.5 rounded-full font-bold">Synced</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Portal Sync Profile') }}</span>
+                        <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-0.5 rounded-full font-bold">{{ __('Synced') }}</span>
                     </div>
                     
                     <!-- Employee Info Header -->
@@ -307,15 +311,15 @@
                     <!-- List of Details -->
                     <div class="space-y-3 border-t border-slate-100 pt-4 text-xs font-medium text-slate-600">
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-400">NIK (ID)</span>
+                            <span class="text-slate-400">{{ __('NIK (ID)') }}</span>
                             <span class="font-mono text-slate-800 font-bold bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">{{ $employee->employee_id ?? 'N/A' }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-400">Branch</span>
+                            <span class="text-slate-400">{{ __('Branch') }}</span>
                             <span class="text-slate-800 font-bold">{{ $employee->branch ?? 'N/A' }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-400">Department</span>
+                            <span class="text-slate-400">{{ __('Department') }}</span>
                             <span class="text-slate-800 font-bold text-right truncate max-w-[150px]">{{ $employee->department->name ?? 'N/A' }}</span>
                         </div>
                     </div>
@@ -323,7 +327,7 @@
                 
                 <div class="relative z-10 mt-5 pt-4 border-t border-slate-100">
                     <a href="{{ route('profile') }}" class="w-full inline-flex justify-center items-center px-4 py-2.5 bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 hover:text-amber-800 rounded-xl font-bold text-xs transition-colors cursor-pointer">
-                        Configure Profile Settings
+                        {{ __('Configure Profile Settings') }}
                     </a>
                 </div>
             </div>
@@ -337,10 +341,10 @@
         <div class="space-y-4 pt-6 border-t border-slate-100">
             <div class="flex items-center justify-between">
                 <h4 class="text-base font-bold text-slate-800 tracking-tight">
-                    {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Company Management Overview' : 'Department Management Overview' }}
+                    {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? __('Company Management Overview') : __('Department Management Overview') }}
                 </h4>
                 <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">
-                    {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Admin Controls' : 'Manager Controls' }}
+                    {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? __('Admin Controls') : __('Manager Controls') }}
                 </span>
             </div>
 
@@ -354,7 +358,7 @@
                     </div>
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Active Employees' : 'Department Employees' }}
+                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? __('Active Employees') : __('Department Employees') }}
                         </p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">{{ $activeEmployeesCount }}</p>
                     </div>
@@ -369,7 +373,7 @@
                     </div>
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Pending Leaves' : 'Dept Pending Leaves' }}
+                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? __('Pending Leaves') : __('Dept Pending Leaves') }}
                         </p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">
                             {{ $pendingLeavesCount }}
@@ -386,7 +390,7 @@
                     </div>
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? 'Present Today' : 'Dept Present Today' }}
+                            {{ (Auth::user()->hasRole('HR') || Auth::user()->hasRole('Admin')) ? __('Present Today') : __('Dept Present Today') }}
                         </p>
                         <p class="text-2xl font-black text-slate-900 leading-tight">
                             {{ $presentTodayCount }}

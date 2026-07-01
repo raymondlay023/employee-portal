@@ -41,7 +41,7 @@ new class extends Component
         ]);
 
         if ($this->email === $user->email) {
-            $this->addError('email', 'This is already your current email address.');
+            $this->addError('email', __('This is already your current email address.'));
             return;
         }
 
@@ -60,7 +60,7 @@ new class extends Component
             \Illuminate\Support\Facades\Notification::route('mail', $this->email)
                 ->notify(new \App\Notifications\EmailVerificationCodeNotification($code));
         } catch (\Exception $e) {
-            $this->addError('email', 'Could not send verification email: ' . $e->getMessage());
+            $this->addError('email', __('Could not send verification email: :msg', ['msg' => $e->getMessage()]));
             return;
         }
 
@@ -108,24 +108,24 @@ new class extends Component
 
             // Ensure they have initiated the OTP flow for this email
             if (!$this->codeSent || $this->email !== $this->pendingEmail) {
-                $this->addError('email', 'Please request a verification code for this new email address.');
+                $this->addError('email', __('Please request a verification code for this new email address.'));
                 return;
             }
 
             // Retrieve and validate stored OTP details
             $verification = session('email_verification');
             if (!$verification || $verification['email'] !== $this->email) {
-                $this->addError('verificationCode', 'Verification session has expired. Please request a new code.');
+                $this->addError('verificationCode', __('Verification session has expired. Please request a new code.'));
                 return;
             }
 
             if (now()->greaterThan($verification['expires_at'])) {
-                $this->addError('verificationCode', 'This verification code has expired. Please request a new one.');
+                $this->addError('verificationCode', __('This verification code has expired. Please request a new one.'));
                 return;
             }
 
             if ($this->verificationCode !== $verification['code']) {
-                $this->addError('verificationCode', 'The 6-digit verification code is incorrect.');
+                $this->addError('verificationCode', __('The 6-digit verification code is incorrect.'));
                 return;
             }
 

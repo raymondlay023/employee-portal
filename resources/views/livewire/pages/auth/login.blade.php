@@ -31,8 +31,8 @@ new #[Layout('layouts.guest')] class extends Component
                 <x-application-logo class="w-14 h-14 text-brand-600" />
             </div>
         </div>
-        <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">Welcome back</h2>
-        <p class="mt-3 text-base text-slate-500 font-medium">Please enter your credentials to access your account.</p>
+        <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">{{ __('Welcome back') }}</h2>
+        <p class="mt-3 text-base text-slate-500 font-medium">{{ __('Please enter your credentials to access your account.') }}</p>
     </div>
 
     <!-- Session Status -->
@@ -41,14 +41,14 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="login" class="space-y-6">
         <!-- NIK / Email Input -->
         <div>
-            <label for="login" class="block text-sm font-semibold text-slate-700 mb-1.5">NIK or Email Address</label>
+            <label for="login" class="block text-sm font-semibold text-slate-700 mb-1.5">{{ __('NIK or Email Address') }}</label>
             <div class="relative group">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-brand-500">
                     <svg class="h-5 w-5 text-slate-400 group-focus-within:text-brand-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                 </div>
-                <input wire:model="form.login" id="login" type="text" class="block w-full pl-11 px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium shadow-sm placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all" placeholder="e.g. 12345 or admin@example.com" required autofocus autocomplete="username">
+                <input wire:model="form.login" id="login" type="text" class="block w-full pl-11 px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium shadow-sm placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all" placeholder="{{ __('e.g. 12345 or admin@example.com') }}" required autofocus autocomplete="username">
             </div>
             <x-input-error :messages="$errors->get('form.login')" class="mt-2" />
         </div>
@@ -56,9 +56,9 @@ new #[Layout('layouts.guest')] class extends Component
         <!-- Password -->
         <div>
             <div class="flex items-center justify-between mb-1.5">
-                <label for="password" class="block text-sm font-semibold text-slate-700">Password</label>
+                <label for="password" class="block text-sm font-semibold text-slate-700">{{ __('Password') }}</label>
                 @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" wire:navigate class="text-sm font-bold text-brand-600 hover:text-brand-700 transition-colors">Forgot password?</a>
+                    <a href="{{ route('password.request') }}" wire:navigate class="text-sm font-bold text-brand-600 hover:text-brand-700 transition-colors">{{ __('Forgot password?') }}</a>
                 @endif
             </div>
             <div class="relative group">
@@ -76,13 +76,13 @@ new #[Layout('layouts.guest')] class extends Component
         <div class="flex items-center justify-between pt-2">
             <div class="flex items-center">
                 <input wire:model="form.remember" id="remember" type="checkbox" class="h-4.5 w-4.5 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-pointer transition-colors">
-                <label for="remember" class="ml-2.5 block text-sm font-medium text-slate-700 cursor-pointer">Remember me for 30 days</label>
+                <label for="remember" class="ml-2.5 block text-sm font-medium text-slate-700 cursor-pointer">{{ __('Remember me for 30 days') }}</label>
             </div>
         </div>
 
         <div class="pt-4">
             <button type="submit" class="w-full flex justify-center items-center space-x-2 py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0 relative overflow-hidden group">
-                <span class="relative z-10">Sign In Securely</span>
+                <span class="relative z-10">{{ __('Sign In Securely') }}</span>
                 <svg class="w-5 h-5 relative z-10 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
