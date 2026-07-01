@@ -251,103 +251,102 @@
         </div>
 
         {{-- ── SECTION 2: Manual Clock-In / Clock-Out Log ───────────────────── --}}
-        @can('view attendance')
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
 
-                <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-2">
-                        <div class="p-2 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-extrabold text-slate-900">Manual Clock Log</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">Your clock-in &amp; clock-out records</p>
-                        </div>
+            <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+                        </svg>
                     </div>
-
-                    {{-- Clock In / Out actions --}}
-                    @if(config('app.enable_manual_attendance'))
-                        <div class="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0 lg:ml-auto">
-                            @if (!$todayLog)
-                                <form action="{{ route('attendance.clock-in') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 transform transition-all">
-                                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                        </svg>
-                                        Clock In
-                                    </button>
-                                </form>
-                            @else
-                                <form action="{{ route('attendance.clock-out') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 transform transition-all">
-                                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                        </svg>
-                                        Clock Out
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    @endif
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900">Manual Clock Log</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">Your clock-in &amp; clock-out records</p>
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-100">
-                        <thead>
-                            <tr class="bg-slate-50/60">
-                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Date</th>
-                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Clock In</th>
-                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Clock Out</th>
-                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Duration</th>
-                                <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Note</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            @forelse($manualLogs as $log)
-                                <tr class="hover:bg-slate-50/40 transition-colors">
-                                    <td class="px-5 py-3 text-xs font-bold text-slate-800">
-                                        {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('d M Y') : '—' }}
-                                    </td>
-                                    <td class="px-5 py-3">
-                                        <span class="text-xs font-semibold text-emerald-700">
-                                            {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('H:i:s') : '—' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-5 py-3">
-                                        @if($log->clock_out_at)
-                                            <span class="text-xs font-semibold text-slate-700">{{ $log->clock_out_at->timezone('Asia/Jakarta')->format('H:i:s') }}</span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                Active
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="px-5 py-3 text-xs text-slate-500 font-medium">{{ $log->duration }}</td>
-                                    <td class="px-5 py-3 text-xs text-slate-400">{{ $log->note ?? '—' }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-5 py-10 text-center">
-                                        <p class="text-sm font-semibold text-slate-400">No clock records yet.</p>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                @if($manualLogs instanceof \Illuminate\Pagination\LengthAwarePaginator && $manualLogs->hasPages())
-                    <div class="px-6 py-4 border-t border-slate-100">
-                        {{ $manualLogs->links() }}
+                {{-- Clock In / Out actions --}}
+                @if(config('app.enable_manual_attendance'))
+                    <div class="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0 lg:ml-auto">
+                        @if (!$todayLog)
+                            <form action="{{ route('attendance.clock-in') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 transform transition-all">
+                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    </svg>
+                                    Clock In
+                                </button>
+                            </form>
+                        @else
+                            <form action="{{ route('attendance.clock-out') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 transform transition-all">
+                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    Clock Out
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 @endif
             </div>
-        @endcan
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-100">
+                    <thead>
+                        <tr class="bg-slate-50/60">
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Date</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Clock In</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Clock Out</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Duration</th>
+                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Note</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        @forelse($manualLogs as $log)
+                            <tr class="hover:bg-slate-50/40 transition-colors">
+                                <td class="px-5 py-3 text-xs font-bold text-slate-800">
+                                    {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('d M Y') : '—' }}
+                                </td>
+                                <td class="px-5 py-3">
+                                    <span class="text-xs font-semibold text-emerald-700">
+                                        {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('H:i:s') : '—' }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3">
+                                    @if($log->clock_out_at)
+                                        <span class="text-xs font-semibold text-slate-700">{{ $log->clock_out_at->timezone('Asia/Jakarta')->format('H:i:s') }}</span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            Active
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-3 text-xs text-slate-500 font-medium">{{ $log->duration }}</td>
+                                <td class="px-5 py-3 text-xs text-slate-400">{{ $log->note ?? '—' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-5 py-10 text-center">
+                                    <p class="text-sm font-semibold text-slate-400">No clock records yet.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if($manualLogs instanceof \Illuminate\Pagination\LengthAwarePaginator && $manualLogs->hasPages())
+                <div class="px-6 py-4 border-t border-slate-100">
+                    {{ $manualLogs->links() }}
+                </div>
+            @endif
+        </div>
+    </div>
     </div>
 
     @push('styles')
