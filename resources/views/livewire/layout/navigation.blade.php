@@ -73,6 +73,24 @@ new class extends Component
     ];
 
     /**
+     * Set the application language.
+     */
+    public function setLanguage(string $locale): void
+    {
+        if (in_array($locale, ['en', 'id'], true)) {
+            session(['locale' => $locale]);
+            
+            if (auth()->check()) {
+                $user = auth()->user();
+                $user->locale = $locale;
+                $user->save();
+            }
+            
+            $this->redirect(request()->header('Referer', '/dashboard'), navigate: true);
+        }
+    }
+
+    /**
      * Log the current user out of the application.
      */
     public function logout(Logout $logout): void
@@ -121,7 +139,7 @@ new class extends Component
                                         <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             {!! $link['icon'] !!}
                                         </svg>
-                                        {{ $link['label'] }}
+                                        {{ __($link['label']) }}
                                     </a>
                                 @endforeach
                             </div>
@@ -136,7 +154,7 @@ new class extends Component
                                                 <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     {!! $link['icon'] !!}
                                                 </svg>
-                                                {{ $link['label'] }}
+                                                {{ __($link['label']) }}
                                             </a>
                                         @endif
                                     @endforeach
@@ -146,6 +164,13 @@ new class extends Component
                     </nav>
                 </div>
                 
+                <div class="px-4 py-3 border-t border-slate-200 flex items-center justify-between text-sm">
+                    <span class="text-slate-500 font-medium">{{ __('Language') }}</span>
+                    <div class="inline-flex rounded-md shadow-sm">
+                        <button wire:click="setLanguage('en')" class="px-3 py-1 text-xs font-semibold rounded-l-md {{ app()->getLocale() === 'en' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100' }} border border-slate-200 transition-colors">EN</button>
+                        <button wire:click="setLanguage('id')" class="px-3 py-1 text-xs font-semibold rounded-r-md {{ app()->getLocale() === 'id' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100' }} border-t border-b border-r border-slate-200 transition-colors">ID</button>
+                    </div>
+                </div>
                 <div class="flex flex-shrink-0 border-t border-slate-200 p-4">
                     <a href="{{ route('profile') }}" wire:navigate class="group block flex-shrink-0 w-full">
                         <div class="flex items-center">
@@ -156,7 +181,7 @@ new class extends Component
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-slate-700 group-hover:text-slate-900" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
-                                <p class="text-xs font-medium text-slate-500 group-hover:text-slate-700">View profile</p>
+                                <p class="text-xs font-medium text-slate-500 group-hover:text-slate-700">{{ __('View profile') }}</p>
                             </div>
                         </div>
                     </a>
@@ -166,7 +191,7 @@ new class extends Component
                         <svg class="mr-4 h-6 w-6 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                         </svg>
-                        Log Out
+                        {{ __('Log Out') }}
                     </button>
                 </div>
             </div>
@@ -199,7 +224,7 @@ new class extends Component
                                     <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                         {!! $link['icon'] !!}
                                     </svg>
-                                    {{ $link['label'] }}
+                                    {{ __($link['label']) }}
                                 </a>
                             @endforeach
                         </div>
@@ -214,7 +239,7 @@ new class extends Component
                                             <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 {!! $link['icon'] !!}
                                             </svg>
-                                            {{ $link['label'] }}
+                                            {{ __($link['label']) }}
                                         </a>
                                     @endif
                                 @endforeach
@@ -224,6 +249,13 @@ new class extends Component
                 </nav>
             </div>
             
+            <div class="px-4 py-3 border-t border-slate-200 flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">{{ __('Language') }}</span>
+                <div class="inline-flex rounded-md shadow-sm">
+                    <button wire:click="setLanguage('en')" class="px-2.5 py-1 text-[10px] font-bold rounded-l-md {{ app()->getLocale() === 'en' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100' }} border border-slate-200 transition-colors">EN</button>
+                    <button wire:click="setLanguage('id')" class="px-2.5 py-1 text-[10px] font-bold rounded-r-md {{ app()->getLocale() === 'id' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100' }} border-t border-b border-r border-slate-200 transition-colors">ID</button>
+                </div>
+            </div>
             <div class="flex flex-col border-t border-slate-200">
                 <a href="{{ route('profile') }}" wire:navigate class="group block w-full flex-shrink-0 p-4 hover:bg-slate-50 transition-colors">
                     <div class="flex items-center">
@@ -234,7 +266,7 @@ new class extends Component
                         </div>
                         <div class="ml-3">
                             <p class="text-sm font-medium text-slate-700 group-hover:text-slate-900" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
-                            <p class="text-xs font-medium text-slate-500 group-hover:text-slate-700">View profile</p>
+                            <p class="text-xs font-medium text-slate-500 group-hover:text-slate-700">{{ __('View profile') }}</p>
                         </div>
                     </div>
                 </a>
@@ -243,7 +275,7 @@ new class extends Component
                         <svg class="mr-3 h-5 w-5 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                         </svg>
-                        Log Out
+                        {{ __('Log Out') }}
                     </button>
                 </div>
             </div>

@@ -10,6 +10,7 @@ new class extends Component
 {
     public string $name = '';
     public string $email = '';
+    public string $locale = 'en';
     
     // Custom states for 6-digit OTP verification
     public string $verificationCode = '';
@@ -24,6 +25,7 @@ new class extends Component
         $user = Auth::user();
         $this->name = $user->name;
         $this->email = $user->email;
+        $this->locale = $user->locale ?? 'en';
     }
 
     /**
@@ -89,6 +91,12 @@ new class extends Component
     public function updateProfileInformation(): void
     {
         $user = Auth::user();
+        
+        $this->validate([
+            'locale' => ['required', 'string', Rule::in(['en', 'id'])],
+        ]);
+
+        $localeChanged = $this->locale !== ($user->locale ?? 'en');
         $emailChanged = $this->email !== $user->email;
 
         if ($emailChanged) {
@@ -124,8 +132,10 @@ new class extends Component
             // Verification succeeded! Update name and email, then mark as verified
             $user->name = $this->name;
             $user->email = $this->email;
+            $user->locale = $this->locale;
             $user->email_verified_at = now();
             $user->save();
+            session(['locale' => $this->locale]);
 
             // Clear session & reset component states
             session()->forget('email_verification');
@@ -140,10 +150,16 @@ new class extends Component
             ]);
 
             $user->name = $this->name;
+            $user->locale = $this->locale;
             $user->save();
+            session(['locale' => $this->locale]);
         }
 
         $this->dispatch('profile-updated', name: $user->name);
+
+        if ($localeChanged) {
+            $this->redirect(route('profile'), navigate: true);
+        }
     }
 }; ?>
 
@@ -286,6 +302,16 @@ new class extends Component
                     @endif
                 </div>
             @endif
+        </div>
+
+        <!-- Preferred Language -->
+        <div>
+            <x-input-label for="locale" :value="__('Preferred Language')" class="text-slate-700 font-medium" />
+            <select wire:model="locale" id="locale" class="mt-1 block w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50">
+                <option value="en">{{ __('English') }}</option>
+                <option value="id">{{ __('Bahasa Indonesia') }}</option>
+            </select>
+            <x-input-error class="mt-2" :messages="$errors->get('locale')" />
         </div>
 
         <!-- Submission Controls -->
