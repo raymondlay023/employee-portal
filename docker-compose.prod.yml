@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    command: php artisan queue:work --verbose --tries=3 --timeout=90
+    command: php artisan queue:work --verbose --tries=1 --timeout=300
     volumes:
       - storage_app:/var/www/html/storage/app
       - storage_logs:/var/www/html/storage/logs

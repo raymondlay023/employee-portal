@@ -60,7 +60,7 @@ class SyncJpayroll extends Component
         } else {
             Artisan::queue('jpayroll:sync-attendance', $options);
             session()->flash('sync_success', 'JPayroll attendance sync queued successfully. Please watch the logs.');
-            $this->syncRequestedAt = now()->toDateTimeString();
+            $this->syncRequestedAt = now()->toIso8601String();
         }
 
         $this->showModal = false;
@@ -70,6 +70,16 @@ class SyncJpayroll extends Component
     {
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
         
+        // Auto-recover logs stuck in 'running' for > 10 minutes (killed by queue worker timeout)
+        ApiSyncLog::where('api_name', 'jpayroll_attendance')
+            ->where('status', 'running')
+            ->where('started_at', '<', now()->subMinutes(10))
+            ->update([
+                'status'        => 'failed',
+                'error_message' => 'Job timed out or was interrupted before completing.',
+                'ended_at'      => now(),
+            ]);
+
         $latestLog = ApiSyncLog::where('api_name', 'jpayroll_attendance')
             ->orderBy('started_at', 'desc')
             ->first();
@@ -77,7 +87,8 @@ class SyncJpayroll extends Component
         $isRunning = $latestLog && $latestLog->status === 'running';
         
         if ($this->syncRequestedAt) {
-            if ($latestLog && $latestLog->created_at >= $this->syncRequestedAt) {
+            $requestedAt = \Carbon\Carbon::parse($this->syncRequestedAt);
+            if ($latestLog && \Carbon\Carbon::parse($latestLog->created_at)->gte($requestedAt)) {
                 if ($latestLog->status !== 'running') {
                     $this->redirect(route('attendance.index'));
                 }

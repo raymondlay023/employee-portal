@@ -32,6 +32,15 @@ class ApiLogs extends Component
 
     public function render()
     {
+        // Auto-recover logs stuck in 'running' for > 10 minutes (killed by queue worker timeout)
+        ApiSyncLog::where('status', 'running')
+            ->where('started_at', '<', now()->subMinutes(10))
+            ->update([
+                'status'        => 'failed',
+                'error_message' => 'Job timed out or was interrupted before completing.',
+                'ended_at'      => now(),
+            ]);
+
         $query = ApiSyncLog::with('triggeredBy')
             ->orderBy('started_at', 'desc');
 

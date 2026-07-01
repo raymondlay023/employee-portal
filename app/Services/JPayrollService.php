@@ -24,7 +24,7 @@ class JPayrollService
     public function fetchAllEmployees()
     {
         try {
-            $response = Http::timeout(60)->withHeaders([
+            $response = Http::timeout(120)->withHeaders([
                 'Authorization' => $this->apiKey,
             ])->post("{$this->baseUrl}/API_View_Master_Employee.php", [
                 'CompanyArea' => $this->companyArea,
@@ -75,7 +75,7 @@ class JPayrollService
                 $payload['NIK'] = $nik;
             }
 
-            $response = Http::timeout(60)->withHeaders([
+            $response = Http::timeout(180)->withHeaders([
                 'Authorization' => $this->apiKey,
             ])->post("{$this->baseUrl}/API_View_Attendance.php", $payload);
 
