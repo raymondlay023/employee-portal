@@ -675,130 +675,131 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                 @endforeach
             </div>
+            <!-- Footer Save Bar -->
+            <div wire:key="timesheet-footer-container"
+                class="sticky bottom-0 z-20 bg-white/95 backdrop-blur-sm p-6 flex items-center justify-between border-t border-slate-100 rounded-b-3xl"
+                id="timesheet-footer">
+                <div class="text-xs text-slate-500 font-medium">
+                    {!! __('Please make sure to click :strong_openSave Timesheet:strong_close to persist all daily logs.', [
+                        'strong_open' => '<strong>',
+                        'strong_close' => '</strong>',
+                    ]) !!}
+                </div>
+
+                <div class="flex items-center gap-3">
+                    @if (count($logs) > 0)
+                        <button type="button" wire:click="addHourSlot"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer border-0 hidden md:inline-flex">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            {{ __('Add Next Hour') }}
+                        </button>
+
+                        <!-- Mobile visible add button (always visible when logs exist) -->
+                        <button type="button" wire:click="addHourSlot"
+                            class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer md:hidden">
+                            {{ __('Add Slot') }}
+                        </button>
+                    @endif
+
+                    <button type="submit" wire:loading.attr="disabled"
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
+                        <svg wire:loading wire:target="save" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ __('Save Timesheet') }}
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 
-    <!-- Footer Save Bar -->
-    <div wire:key="timesheet-footer-container"
-        class="sticky bottom-0 z-20 bg-white/95 backdrop-blur-sm p-6 flex items-center justify-between border-t border-slate-100 rounded-b-3xl"
-        id="timesheet-footer">
-        <div class="text-xs text-slate-500 font-medium">
-            {!! __('Please make sure to click :strong_openSave Timesheet:strong_close to persist all daily logs.', [
-                'strong_open' => '<strong>',
-                'strong_close' => '</strong>',
-            ]) !!}
-        </div>
-
-        <div class="flex items-center gap-3">
-            @if (count($logs) > 0)
-                <button type="button" wire:click="addHourSlot"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer border-0 hidden md:inline-flex">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    {{ __('Add Next Hour') }}
-                </button>
-
-                <!-- Mobile visible add button (always visible when logs exist) -->
-                <button type="button" wire:click="addHourSlot"
-                    class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer md:hidden">
-                    {{ __('Add Slot') }}
-                </button>
-            @endif
-
-            <button type="submit" wire:loading.attr="disabled"
-                class="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
-                <svg wire:loading wire:target="save" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                        stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                    </path>
-                </svg>
-                {{ __('Save Timesheet') }}
-            </button>
-        </div>
-    </div>
-    </form>
-</div>
-
-<!-- Toast container (bottom-right) -->
-<div id="toast-container-alpine" x-data="{ toasts: [] }" x-init="window.addEventListener('toast', e => {
-    const id = Date.now() + Math.random();
-    const message = toastMessageFrom(e.detail);
-    const toast = { id, message, type: (e.detail && e.detail.type) || 'success' };
-    toasts.push(toast);
-    setTimeout(() => { toasts = toasts.filter(t => t.id !== id) }, 4000);
-})"
-    class="fixed bottom-6 right-6 z-50 space-y-3">
-    <script>
-        // Normalize payload to a message string
-        function toastMessageFrom(detail) {
-            if (!detail) return '';
-            if (typeof detail === 'string') return detail;
-            if (Array.isArray(detail)) {
-                if (detail.length === 1) {
-                    const first = detail[0];
-                    if (!first) return '';
-                    if (typeof first === 'string') return first;
-                    if (first.message) return first.message;
-                    return JSON.stringify(first);
+    <!-- Toast container (bottom-right) -->
+    <div id="toast-container-alpine" x-data="{ toasts: [] }" x-init="window.addEventListener('toast', e => {
+        const id = Date.now() + Math.random();
+        const message = toastMessageFrom(e.detail);
+        const toast = { id, message, type: (e.detail && e.detail.type) || 'success' };
+        toasts.push(toast);
+        setTimeout(() => { toasts = toasts.filter(t => t.id !== id) }, 4000);
+    })"
+        class="fixed bottom-6 right-6 z-50 space-y-3">
+        <script>
+            // Normalize payload to a message string
+            function toastMessageFrom(detail) {
+                if (!detail) return '';
+                if (typeof detail === 'string') return detail;
+                if (Array.isArray(detail)) {
+                    if (detail.length === 1) {
+                        const first = detail[0];
+                        if (!first) return '';
+                        if (typeof first === 'string') return first;
+                        if (first.message) return first.message;
+                        return JSON.stringify(first);
+                    }
+                    // multiple args - join if strings
+                    const strings = detail.filter(d => typeof d === 'string');
+                    if (strings.length) return strings.join(' ');
+                    return JSON.stringify(detail);
                 }
-                // multiple args - join if strings
-                const strings = detail.filter(d => typeof d === 'string');
-                if (strings.length) return strings.join(' ');
+                if (detail.message) return detail.message;
+                if (detail[0] && detail[0].message) return detail[0].message;
                 return JSON.stringify(detail);
             }
-            if (detail.message) return detail.message;
-            if (detail[0] && detail[0].message) return detail[0].message;
-            return JSON.stringify(detail);
-        }
 
-        // Forward Livewire server emits named `toast` to a window-level CustomEvent so our toast listeners work
-        if (window.livewire && typeof window.livewire.on === 'function') {
-            window.livewire.on('toast', function() {
-                const payload = arguments.length === 1 ? arguments[0] : Array.from(arguments);
-                window.dispatchEvent(new CustomEvent('toast', {
-                    detail: payload
-                }));
-            });
-        }
-    </script>
-    <template x-for="toast in toasts" :key="toast.id">
-        <div :class="toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-            'bg-amber-50 border-amber-200 text-amber-800'"
-            class="border rounded-xl p-3 shadow-md max-w-xs">
-            <div x-text="toast.message" class="text-sm font-semibold"></div>
+            // Forward Livewire server emits named `toast` to a window-level CustomEvent so our toast listeners work
+            if (window.livewire && typeof window.livewire.on === 'function') {
+                window.livewire.on('toast', function() {
+                    const payload = arguments.length === 1 ? arguments[0] : Array.from(arguments);
+                    window.dispatchEvent(new CustomEvent('toast', {
+                        detail: payload
+                    }));
+                });
+            }
+        </script>
+        <template x-for="toast in toasts" :key="toast.id">
+            <div :class="toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                'bg-amber-50 border-amber-200 text-amber-800'"
+                class="border rounded-xl p-3 shadow-md max-w-xs">
+                <div x-text="toast.message" class="text-sm font-semibold"></div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Glassmorphic Fullscreen Lightbox Modal -->
+    <div x-data="{ open: false, url: '' }" x-on:open-lightbox.window="open = true; url = $event.detail.url"
+        x-on:keydown.escape.window="open = false" x-show="open"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+        style="display: none;">
+        <!-- Modal backdrop -->
+        <div class="absolute inset-0 bg-transparent cursor-pointer" x-on:click="open = false"></div>
+
+        <!-- Modal container -->
+        <div
+            class="relative max-w-4xl max-h-[85vh] w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden shadow-2xl p-2 flex flex-col items-center">
+            <!-- Close Button -->
+            <button type="button" x-on:click="open = false"
+                class="absolute top-4 right-4 text-white hover:text-slate-200 bg-white/10 hover:bg-white/20 p-2.5 rounded-2xl border border-white/10 transition-all z-10 cursor-pointer">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Full Image -->
+            <img :src="url" class="max-w-full max-h-[80vh] object-contain rounded-2xl"
+                alt="Proof details">
         </div>
-    </template>
-</div>
-
-<!-- Glassmorphic Fullscreen Lightbox Modal -->
-<div x-data="{ open: false, url: '' }" x-on:open-lightbox.window="open = true; url = $event.detail.url"
-    x-on:keydown.escape.window="open = false" x-show="open" x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
-    x-transition:leave-end="opacity-0 scale-95"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
-    style="display: none;">
-    <!-- Modal backdrop -->
-    <div class="absolute inset-0 bg-transparent cursor-pointer" x-on:click="open = false"></div>
-
-    <!-- Modal container -->
-    <div
-        class="relative max-w-4xl max-h-[85vh] w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden shadow-2xl p-2 flex flex-col items-center">
-        <!-- Close Button -->
-        <button type="button" x-on:click="open = false"
-            class="absolute top-4 right-4 text-white hover:text-slate-200 bg-white/10 hover:bg-white/20 p-2.5 rounded-2xl border border-white/10 transition-all z-10 cursor-pointer">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-        </button>
-
-        <!-- Full Image -->
-        <img :src="url" class="max-w-full max-h-[80vh] object-contain rounded-2xl" alt="Proof details">
     </div>
 </div>
