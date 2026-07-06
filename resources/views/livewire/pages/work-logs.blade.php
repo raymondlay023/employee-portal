@@ -19,13 +19,66 @@
                 </p>
             </div>
 
-            <!-- Sleek Date Selector -->
-            <div
-                class="flex-shrink-0 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex flex-col gap-1.5 w-full md:w-auto">
-                <label for="timesheet-date"
-                    class="text-[10px] uppercase font-bold text-brand-200 tracking-wider">{{ __('Timesheet Date') }}</label>
-                <input type="date" id="timesheet-date" wire:model.live="date"
-                    class="bg-white border-0 text-slate-800 font-bold text-sm rounded-xl py-2 px-3 focus:ring-2 focus:ring-brand-500 cursor-pointer" />
+            <!-- Weekly Date Ribbon Selector -->
+            <div class="flex-shrink-0 flex flex-col gap-2 w-full md:w-auto">
+                <span class="text-[10px] uppercase font-extrabold text-brand-200 tracking-wider md:text-right px-1">
+                    {{ __('Weekly Timesheet Navigation') }}
+                </span>
+                
+                <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-2xl">
+                    <!-- Previous Week -->
+                    <button type="button" wire:click="previousWeek" 
+                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center" 
+                        title="{{ __('Previous Week') }}">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
+
+                    <!-- Days Ribbon -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        @foreach ($weekDays as $day)
+                            @php
+                                $dotColor = 'bg-white/20';
+                                if ($day['status'] === 'complete') {
+                                    $dotColor = 'bg-emerald-400';
+                                } elseif ($day['status'] === 'partial') {
+                                    $dotColor = 'bg-amber-400';
+                                } elseif ($day['status'] === 'missed') {
+                                    $dotColor = 'bg-rose-400';
+                                }
+                            @endphp
+                            <button type="button" wire:click="$set('date', '{{ $day['date'] }}')"
+                                class="flex flex-col items-center justify-between w-11 h-13 py-1.5 rounded-xl border transition-all cursor-pointer border-0 bg-transparent
+                                {{ $day['is_active'] 
+                                    ? 'bg-white text-slate-800 shadow-md font-extrabold border-white scale-105' 
+                                    : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent' }}">
+                                <span class="text-[9px] uppercase tracking-wider opacity-60 font-bold {{ $day['is_active'] ? 'text-slate-500' : 'text-white/60' }}">{{ $day['day_label'] }}</span>
+                                <span class="text-sm font-black -mt-0.5">{{ $day['day_number'] }}</span>
+                                <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} mt-0.5"></span>
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <!-- Next Week -->
+                    <button type="button" wire:click="nextWeek" 
+                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center" 
+                        title="{{ __('Next Week') }}">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+
+                    <!-- Arbitrary Date Picker Dropdown -->
+                    <div class="relative flex items-center">
+                        <label for="hidden-date-picker" class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center" title="{{ __('Pick Custom Date') }}">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                            </svg>
+                        </label>
+                        <input type="date" id="hidden-date-picker" wire:model.live="date" class="absolute inset-0 opacity-0 w-8 cursor-pointer" />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -182,9 +235,9 @@
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($logs as $index => $log)
                             <tr wire:key="desktop-log-{{ $index }}"
-                                class="hover:bg-slate-50/30 transition-colors group">
+                                class="hover:bg-slate-50/30 transition-colors group {{ empty($log['id']) ? 'bg-indigo-50/5' : '' }}">
                                 <!-- Time slot input fields -->
-                                <td class="py-4 px-6 align-top">
+                                <td class="py-4 px-6 align-top {{ empty($log['id']) ? 'border-l-4 border-indigo-400' : '' }}">
                                     <div class="flex flex-col gap-1.5">
                                         <div class="flex items-center gap-1.5">
                                             <input type="time" wire:model="logs.{{ $index }}.start_time"
@@ -423,9 +476,10 @@
                 @foreach ($logs as $index => $log)
                     @php
                         $cardHasErrors = $errors->has('logs.' . $index . '.*') || $errors->has('newProofs.' . $index);
+                        $isNewDraft = empty($log['id']);
                     @endphp
                     <div wire:key="mobile-log-{{ $index }}"
-                        class="bg-slate-50/50 border {{ $cardHasErrors ? 'border-red-200 shadow-sm shadow-red-50/50' : 'border-slate-100' }} rounded-2xl p-4 space-y-4 relative"
+                        class="bg-slate-50/50 border {{ $cardHasErrors ? 'border-red-200 shadow-sm shadow-red-50/50' : ($isNewDraft ? 'border-slate-200 border-l-4 border-l-indigo-400 bg-indigo-50/5' : 'border-slate-100') }} rounded-2xl p-4 space-y-4 relative"
                         x-data="{ expanded: {{ $cardHasErrors ? 'true' : 'false' }} }">
 
                         <!-- Collapsible Header -->
@@ -708,6 +762,7 @@
                     @endif
 
                     <button type="submit" wire:loading.attr="disabled"
+                        wire:dirty.class="!bg-amber-600 hover:!bg-amber-700 shadow-amber-500/20"
                         class="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transform transition-all cursor-pointer border-0">
                         <svg wire:loading wire:target="save" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                             fill="none" viewBox="0 0 24 24">
@@ -717,7 +772,11 @@
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
                         </svg>
-                        {{ __('Save Timesheet') }}
+                        <span wire:dirty.remove>{{ __('Save Timesheet') }}</span>
+                        <span wire:dirty class="flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                            {{ __('Save Unsaved Changes') }}
+                        </span>
                     </button>
                 </div>
             </div>

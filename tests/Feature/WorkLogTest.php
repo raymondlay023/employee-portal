@@ -2,9 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\DailyWorkLog;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -58,7 +59,7 @@ class WorkLogTest extends TestCase
             ->call('addHourSlot');
 
         $component->assertCount('logs', 2);
-        
+
         $logs = $component->get('logs');
         $this->assertSame('07:30', $logs[0]['start_time']);
         $this->assertSame('08:30', $logs[0]['end_time']);
@@ -101,7 +102,7 @@ class WorkLogTest extends TestCase
     public function test_saving_logs_requires_activity(): void
     {
         \Storage::fake('public');
-        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+        $file = UploadedFile::fake()->image('proof.jpg');
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -123,8 +124,8 @@ class WorkLogTest extends TestCase
     public function test_can_save_work_logs_to_database(): void
     {
         \Storage::fake('public');
-        $file1 = \Illuminate\Http\UploadedFile::fake()->image('proof1.jpg');
-        $file2 = \Illuminate\Http\UploadedFile::fake()->image('proof2.jpg');
+        $file1 = UploadedFile::fake()->image('proof1.jpg');
+        $file2 = UploadedFile::fake()->image('proof2.jpg');
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -143,7 +144,7 @@ class WorkLogTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertDatabaseCount('daily_work_logs', 2);
-        
+
         $this->assertDatabaseHas('daily_work_logs', [
             'user_id' => $user->id,
             'start_time' => '07:30',
@@ -167,7 +168,7 @@ class WorkLogTest extends TestCase
     public function test_can_override_time_range_with_valid_times(): void
     {
         \Storage::fake('public');
-        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+        $file = UploadedFile::fake()->image('proof.jpg');
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -194,8 +195,8 @@ class WorkLogTest extends TestCase
     public function test_cannot_save_overlapping_time_ranges(): void
     {
         \Storage::fake('public');
-        $file1 = \Illuminate\Http\UploadedFile::fake()->image('proof1.jpg');
-        $file2 = \Illuminate\Http\UploadedFile::fake()->image('proof2.jpg');
+        $file1 = UploadedFile::fake()->image('proof1.jpg');
+        $file2 = UploadedFile::fake()->image('proof2.jpg');
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -222,7 +223,7 @@ class WorkLogTest extends TestCase
     public function test_cannot_save_if_start_time_is_after_end_time(): void
     {
         \Storage::fake('public');
-        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+        $file = UploadedFile::fake()->image('proof.jpg');
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -248,7 +249,7 @@ class WorkLogTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $file = \Illuminate\Http\UploadedFile::fake()->image('screenshot.jpg');
+        $file = UploadedFile::fake()->image('screenshot.jpg');
 
         $component = Volt::test('pages.work-logs')
             ->set('logs.0.start_time', '08:00')
@@ -260,7 +261,7 @@ class WorkLogTest extends TestCase
 
         $log = DailyWorkLog::first();
         $this->assertNotNull($log->proof_path);
-        
+
         \Storage::disk('public')->assertExists($log->proof_path);
     }
 
@@ -274,7 +275,7 @@ class WorkLogTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $file1 = \Illuminate\Http\UploadedFile::fake()->image('proof1.jpg');
+        $file1 = UploadedFile::fake()->image('proof1.jpg');
 
         $component = Volt::test('pages.work-logs')
             ->set('logs.0.start_time', '07:30')
@@ -292,7 +293,7 @@ class WorkLogTest extends TestCase
         $component->call('deleteProof', 0);
 
         // Upload a new proof and save successfully
-        $file2 = \Illuminate\Http\UploadedFile::fake()->image('proof2.jpg');
+        $file2 = UploadedFile::fake()->image('proof2.jpg');
         $component->set('newProofs.0', $file2)
             ->call('save')
             ->assertHasNoErrors();
@@ -314,7 +315,7 @@ class WorkLogTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+        $file = UploadedFile::fake()->image('proof.jpg');
 
         $component = Volt::test('pages.work-logs')
             ->set('logs.0.start_time', '07:30')
@@ -344,5 +345,40 @@ class WorkLogTest extends TestCase
         $this->assertSame($log->proof_path, $originalLog->proof_path);
         \Storage::disk('public')->assertExists($log->proof_path);
     }
-}
 
+    /**
+     * Test that the weekly progress is correctly initialized and shifts upon navigation.
+     */
+    public function test_weekly_progress_initializes_and_navigates(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // Pick a fixed Wednesday (e.g. 2026-07-01)
+        $component = Volt::test('pages.work-logs')
+            ->set('date', '2026-07-01'); // Wednesday
+
+        $weekDays = $component->get('weekDays');
+        $this->assertCount(7, $weekDays);
+
+        // Sunday is 2026-06-28
+        $this->assertSame('2026-06-28', $weekDays[0]['date']);
+        $this->assertSame('Sun', $weekDays[0]['day_label']);
+        $this->assertSame('28', $weekDays[0]['day_number']);
+
+        // Wednesday (active date) is 2026-07-01
+        $this->assertSame('2026-07-01', $weekDays[3]['date']);
+        $this->assertTrue($weekDays[3]['is_active']);
+
+        // Navigate to the previous week
+        $component->call('previousWeek');
+        $this->assertSame('2026-06-24', $component->get('date'));
+
+        $newWeekDays = $component->get('weekDays');
+        $this->assertSame('2026-06-21', $newWeekDays[0]['date']); // Previous Sunday
+
+        // Navigate to the next week
+        $component->call('nextWeek');
+        $this->assertSame('2026-07-01', $component->get('date'));
+    }
+}

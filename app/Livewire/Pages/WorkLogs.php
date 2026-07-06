@@ -19,6 +19,8 @@ class WorkLogs extends Component
 
     public array $pendingDeletions = [];
 
+    public array $weekDays = [];
+
     /**
      * Mount the component.
      */
@@ -57,6 +59,8 @@ class WorkLogs extends Component
 
         $this->newProofs = [];
         $this->pendingDeletions = [];
+
+        $this->loadWeeklyProgress();
     }
 
     /**
@@ -380,7 +384,96 @@ class WorkLogs extends Component
         $this->newProofs = [];
         $this->pendingDeletions = [];
 
+        $this->loadWeeklyProgress();
+
         $this->dispatch('toast', ['message' => __('Daily work logs saved successfully.'), 'type' => 'success']);
+    }
+
+    /**
+     * Load weekly progress check (starting from Sunday).
+     */
+    public function loadWeeklyProgress(): void
+    {
+        $currentDate = Carbon::parse($this->date);
+        $dayOfWeek = $currentDate->dayOfWeek; // 0 for Sunday, 6 for Saturday
+        $startOfWeek = $currentDate->copy()->subDays($dayOfWeek);
+        $endOfWeek = $startOfWeek->copy()->addDays(6);
+
+        $weeklyLogs = DailyWorkLog::where('user_id', auth()->id())
+            ->whereBetween('date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
+            ->get();
+
+        $groupedLogs = $weeklyLogs->groupBy('date');
+
+        $this->weekDays = [];
+        for ($i = 0; $i < 7; $i++) {
+            $dateObj = $startOfWeek->copy()->addDays($i);
+            $dateStr = $dateObj->toDateString();
+
+            $dayLogs = $groupedLogs->get($dateStr, collect());
+            $totalHours = 0;
+
+            foreach ($dayLogs as $log) {
+                if (! empty($log->start_time) && ! empty($log->end_time)) {
+                    try {
+                        $start = Carbon::createFromFormat('H:i:s', $log->start_time);
+                        $end = Carbon::createFromFormat('H:i:s', $log->end_time);
+                        if ($end->greaterThan($start)) {
+                            $totalHours += ($end->timestamp - $start->timestamp) / 3600;
+                        }
+                    } catch (\Exception $e) {
+                        try {
+                            $start = Carbon::createFromFormat('H:i', substr($log->start_time, 0, 5));
+                            $end = Carbon::createFromFormat('H:i', substr($log->end_time, 0, 5));
+                            if ($end->greaterThan($start)) {
+                                $totalHours += ($end->timestamp - $start->timestamp) / 3600;
+                            }
+                        } catch (\Exception $ex) {
+                            // ignore parsing exceptions
+                        }
+                    }
+                }
+            }
+
+            $isToday = $dateObj->isToday();
+            $isPast = $dateObj->isPast();
+
+            $status = 'empty';
+            if ($totalHours >= 8) {
+                $status = 'complete';
+            } elseif ($totalHours > 0) {
+                $status = 'partial';
+            } elseif ($isPast || $isToday) {
+                $status = 'missed';
+            }
+
+            $this->weekDays[] = [
+                'date' => $dateStr,
+                'day_label' => $dateObj->format('D'),
+                'day_number' => $dateObj->format('j'),
+                'total_hours' => $totalHours,
+                'status' => $status,
+                'is_active' => $dateStr === $this->date,
+            ];
+        }
+    }
+
+    /**
+     * Navigate to the previous week.
+     */
+    public function previousWeek(): void
+    {
+        $this->date = Carbon::parse($this->date)->subWeek()->toDateString();
+        $this->loadLogs();
+    }
+
+    /**
+     * Navigate to the next week.
+     */
+    public function nextWeek(): void
+    {
+        $this->date = Carbon::parse($this->date)->addWeek()->toDateString();
+        $this->loadLogs();
     }
 
     public function render()
