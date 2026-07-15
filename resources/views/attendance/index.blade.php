@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">{{ __('Attendance - :name', ['name' => $targetEmployee->first_name . ' ' . $targetEmployee->last_name]) }}</h2>
+                <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight">{{ $targetEmployee ? __('Attendance - :name', ['name' => $targetEmployee->first_name . ' ' . $targetEmployee->last_name]) : __('Attendance') }}</h2>
                 <p class="text-xs text-slate-400 font-medium mt-0.5">{{ __('Daily logs & JPayroll synced data') }}</p>
             </div>
 
@@ -15,6 +15,18 @@
     <div class="space-y-6">
 
         {{-- Flash messages --}}
+        @if(isset($unlinkedProfileError) && $unlinkedProfileError)
+            <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <h3 class="font-bold text-sm">{{ __('Employee Profile Not Linked') }}</h3>
+                    <p class="text-xs mt-0.5">{{ __('Your user account is not linked to an employee profile. Please contact an administrator. You can still manage other employees via the Attendance Report if you have permission.') }}</p>
+                </div>
+            </div>
+        @endif
+
         @if(session('success'))
             <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
                 <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

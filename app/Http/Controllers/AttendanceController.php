@@ -60,7 +60,16 @@ class AttendanceController extends Controller
 
         if ($targetEmployeeId === null) {
             if (! $employee) {
-                abort(403, 'Employee profile not linked to your account. Please contact an administrator.');
+                return view('attendance.index', [
+                    'jpayrollLogs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20),
+                    'manualLogs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                    'dateFrom' => $dateFrom,
+                    'dateTo' => $dateTo,
+                    'targetEmployee' => null,
+                    'summary' => null,
+                    'lastSync' => null,
+                    'unlinkedProfileError' => true,
+                ]);
             }
             $targetEmployeeId = $employee->id;
         }
