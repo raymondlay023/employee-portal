@@ -6,6 +6,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Livewire\Hr\AttendanceReport;
 use App\Livewire\Hr\AttendanceReportDetail;
+use App\Livewire\Hr\WorkLogReport;
+use App\Livewire\Hr\WorkLogReportDetail;
 use App\Livewire\System\ApiLogs;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +38,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('attendance-report/{employee}', AttendanceReportDetail::class)
         ->name('attendance-report.detail')
         ->middleware('can:'.Permissions::VIEW_ANY_ATTENDANCE);
+
+    // Work Log Report
+    Route::get('work-log-report', WorkLogReport::class)
+        ->name('work-log-report')
+        ->middleware('can:'.Permissions::VIEW_ANY_WORK_LOGS);
+
+    Route::get('work-log-report/{employee}', WorkLogReportDetail::class)
+        ->name('work-log-report.detail')
+        ->middleware('can:'.Permissions::VIEW_ANY_WORK_LOGS);
 
     // Leave requests
     Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('leave-requests.approve');

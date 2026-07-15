@@ -15,4 +15,6 @@ final class Permissions
     public const MANAGE_LEAVES = 'manage-leaves';
 
     public const VIEW_API_LOGS = 'view-api-logs';
+
+    public const VIEW_ANY_WORK_LOGS = 'view-any-work-logs';
 }

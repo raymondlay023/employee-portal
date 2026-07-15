@@ -24,6 +24,7 @@ class RolesAndPermissionsSeeder extends Seeder
             Permissions::MANAGE_ATTENDANCE,
             Permissions::MANAGE_LEAVES,
             Permissions::VIEW_API_LOGS,
+            Permissions::VIEW_ANY_WORK_LOGS,
         ];
 
         // Prune old obsolete permissions that are no longer defined
@@ -44,12 +45,14 @@ class RolesAndPermissionsSeeder extends Seeder
                 Permissions::VIEW_ANY_ATTENDANCE,
                 Permissions::MANAGE_ATTENDANCE,
                 Permissions::MANAGE_LEAVES,
+                Permissions::VIEW_ANY_WORK_LOGS,
             ],
 
             Roles::MANAGER => [
                 Permissions::ACCESS_HR_PORTAL,
                 Permissions::MANAGE_LEAVES,
                 Permissions::VIEW_ANY_ATTENDANCE,
+                Permissions::VIEW_ANY_WORK_LOGS,
             ],
 
             Roles::EMPLOYEE => [], // Employees have no special administrative permissions

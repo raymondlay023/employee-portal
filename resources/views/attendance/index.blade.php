@@ -148,7 +148,7 @@
                     </div>
 
                     @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
-                        <input type="hidden" name="employee_id" value="{{ $targetEmployee->id }}">
+                        <input type="hidden" name="employee_id" value="{{ $targetEmployee->id ?? '' }}">
                     @endcan
 
                     <div class="flex flex-col gap-1.5">
