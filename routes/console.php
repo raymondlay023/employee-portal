@@ -8,5 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Sync JPayroll attendance every day at 06:00 (covers yesterday + today by default)
-Schedule::command('jpayroll:sync-attendance', ['--trigger' => 'scheduled'])->dailyAt('06:00');
+// Sync JPayroll employees and attendance every day at 09:00 (Asia/Jakarta timezone)
+Schedule::command('jpayroll:sync-employees', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('14:00');
+Schedule::command('jpayroll:sync-attendance', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('14:00');
