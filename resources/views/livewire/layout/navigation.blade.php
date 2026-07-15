@@ -147,7 +147,7 @@ new class extends Component
                             <!-- Management Section -->
                             @if($hasManagementAccess)
                                 <div class="space-y-1 pt-4 border-t border-slate-100">
-                                    <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-2">HR Management</div>
+                                    <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-2">Management</div>
                                     @foreach($managementLinks as $link)
                                         @if(!$link['permission'] || auth()->user()->can($link['permission']))
                                             <a href="{{ route($link['route'], $link['params']) }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors">
@@ -232,7 +232,7 @@ new class extends Component
                         <!-- Management Section -->
                         @if($hasManagementAccess)
                             <div class="space-y-1 pt-4 border-t border-slate-100">
-                                <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">HR Management</div>
+                                <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">Management</div>
                                 @foreach($managementLinks as $link)
                                     @if(!$link['permission'] || auth()->user()->can($link['permission']))
                                         <a href="{{ route($link['route'], $link['params']) }}" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
