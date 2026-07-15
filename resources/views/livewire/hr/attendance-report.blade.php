@@ -206,7 +206,7 @@
                                         </span>
                                     </td>
                                     <td class="py-4 px-6 text-right">
-                                        <a href="{{ route('attendance.index', ['employee_id' => $row->employee_id, 'date_from' => $startDate, 'date_to' => $endDate]) }}" wire:navigate class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all shadow-sm">
+                                        <a href="{{ route('hr.attendance-report.detail', ['employee' => $row->employee_id, 'month' => $month, 'year' => $year]) }}" wire:navigate class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all shadow-sm">
                                             {{ __('Details') }}
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />

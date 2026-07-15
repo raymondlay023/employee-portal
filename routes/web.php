@@ -5,6 +5,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Livewire\Hr\AttendanceReport;
+use App\Livewire\Hr\AttendanceReportDetail;
 use App\Livewire\System\ApiLogs;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('hr/attendance-report', AttendanceReport::class)
         ->name('hr.attendance-report')
+        ->middleware('can:'.Permissions::VIEW_ANY_ATTENDANCE);
+
+    Route::get('hr/attendance-report/{employee}', AttendanceReportDetail::class)
+        ->name('hr.attendance-report.detail')
         ->middleware('can:'.Permissions::VIEW_ANY_ATTENDANCE);
 
     // Leave requests
