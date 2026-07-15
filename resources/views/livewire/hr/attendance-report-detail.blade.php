@@ -3,7 +3,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h2 class="font-extrabold text-xl text-slate-900 leading-tight tracking-tight flex items-center gap-2">
-                    <a href="{{ route('hr.attendance-report') }}" wire:navigate class="text-slate-400 hover:text-brand-600 transition-colors" title="{{ __('Back to Report') }}">
+                    <a href="{{ route('attendance-report') }}" wire:navigate class="text-slate-400 hover:text-brand-600 transition-colors" title="{{ __('Back to Report') }}">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>

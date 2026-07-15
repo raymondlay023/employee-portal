@@ -382,7 +382,7 @@
                 </a>
 
                 <!-- Stat Card 3: Present Today -->
-                <a href="{{ route('hr.attendance-report') }}" class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-200/60 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 transform group">
+                <a href="{{ route('attendance-report') }}" class="bg-white rounded-3xl p-5 flex items-center space-x-4 border border-slate-200/60 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 transform group">
                     <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>

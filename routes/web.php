@@ -29,12 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clock-in');
     Route::post('attendance/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clock-out');
 
-    Route::get('hr/attendance-report', AttendanceReport::class)
-        ->name('hr.attendance-report')
+    Route::get('attendance-report', AttendanceReport::class)
+        ->name('attendance-report')
         ->middleware('can:'.Permissions::VIEW_ANY_ATTENDANCE);
 
-    Route::get('hr/attendance-report/{employee}', AttendanceReportDetail::class)
-        ->name('hr.attendance-report.detail')
+    Route::get('attendance-report/{employee}', AttendanceReportDetail::class)
+        ->name('attendance-report.detail')
         ->middleware('can:'.Permissions::VIEW_ANY_ATTENDANCE);
 
     // Leave requests
