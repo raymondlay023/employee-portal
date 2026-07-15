@@ -9,5 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Sync JPayroll employees and attendance every day at 09:00 (Asia/Jakarta timezone)
-Schedule::command('jpayroll:sync-employees', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('14:00');
-Schedule::command('jpayroll:sync-attendance', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('14:00');
+Schedule::command('jpayroll:sync-employees', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('08:00');
+Schedule::command('jpayroll:sync-attendance', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('08:00');
