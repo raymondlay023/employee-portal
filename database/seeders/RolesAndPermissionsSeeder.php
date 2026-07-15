@@ -49,6 +49,7 @@ class RolesAndPermissionsSeeder extends Seeder
             Roles::MANAGER => [
                 Permissions::ACCESS_HR_PORTAL,
                 Permissions::MANAGE_LEAVES,
+                Permissions::VIEW_ANY_ATTENDANCE,
             ],
 
             Roles::EMPLOYEE => [], // Employees have no special administrative permissions

@@ -38,6 +38,10 @@ class AttendanceReport extends Component
     {
         $this->month = now()->month;
         $this->year  = now()->year;
+
+        if (!auth()->user()->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)) {
+            $this->department_id = auth()->user()->employee?->department_id ?? '';
+        }
     }
 
     public function updatingDepartmentId(): void
@@ -129,8 +133,17 @@ class AttendanceReport extends Component
             ')
             ->groupBy('jpayroll_attendances.employee_id', 'employees.first_name');
 
-        if (!empty($this->department_id)) {
-            $query->where('employees.department_id', $this->department_id);
+        if (!auth()->user()->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)) {
+            $managerDeptId = auth()->user()->employee?->department_id;
+            if (!$managerDeptId) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('employees.department_id', $managerDeptId);
+            }
+        } else {
+            if (!empty($this->department_id)) {
+                $query->where('employees.department_id', $this->department_id);
+            }
         }
 
         if (!empty($this->search)) {

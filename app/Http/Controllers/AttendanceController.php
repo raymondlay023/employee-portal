@@ -43,10 +43,12 @@ class AttendanceController extends Controller
 
             if ($user->can(Permissions::MANAGE_ATTENDANCE)) {
                 $targetEmployeeId = $requestedEmployeeId;
-            } elseif ($user->hasRole('Manager')) {
+            } elseif ($user->can(Permissions::VIEW_ANY_ATTENDANCE)) {
                 // Check if the requested employee belongs to the manager's department
                 $requestedEmployee = Employee::find($requestedEmployeeId);
-                if ($requestedEmployee && $requestedEmployee->department_id === $employee?->department_id) {
+                $managerDepartmentId = $employee?->department_id;
+
+                if ($requestedEmployee && $managerDepartmentId && $requestedEmployee->department_id === $managerDepartmentId) {
                     $targetEmployeeId = $requestedEmployeeId;
                 } else {
                     abort(403, 'You are only authorized to view attendance logs for employees in your department.');

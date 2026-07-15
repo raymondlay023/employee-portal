@@ -37,6 +37,7 @@
                             <option value="{{ $y }}">{{ $y }}</option>
                         @endforeach
                     </select>
+                    @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
                     <select wire:model.live="department_id" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
                         <option value="">{{ __('All Departments') }}</option>
                         @if(isset($departments))
@@ -45,6 +46,7 @@
                             @endforeach
                         @endif
                     </select>
+                    @endcan
 
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -66,6 +68,18 @@
             </div>
 
             <!-- Main Data Table -->
+            @if(!auth()->user()->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE) && empty(auth()->user()->employee?->department_id))
+                <div class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl shadow-sm flex items-start gap-3">
+                    <svg class="w-5 h-5 mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h4 class="font-bold">{{ __('No Department Assigned') }}</h4>
+                        <p class="text-sm">{{ __('You are not assigned to any department, so no employee attendance records can be displayed. Please contact the administrator.') }}</p>
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
                 <div wire:loading class="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
                     <svg class="animate-spin h-8 w-8 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

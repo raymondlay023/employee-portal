@@ -30,7 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('hr/attendance-report', AttendanceReport::class)
         ->name('hr.attendance-report')
-        ->middleware('can:'.Permissions::MANAGE_ATTENDANCE);
+        ->middleware('can:'.Permissions::VIEW_ANY_ATTENDANCE);
 
     // Leave requests
     Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('leave-requests.approve');
