@@ -11,3 +11,10 @@ Artisan::command('inspire', function () {
 // Sync JPayroll employees and attendance every day at 09:00 (Asia/Jakarta timezone)
 Schedule::command('jpayroll:sync-employees', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('08:00');
 Schedule::command('jpayroll:sync-attendance', ['--trigger' => 'scheduled'])->timezone('Asia/Jakarta')->dailyAt('08:00');
+
+// Send monthly report notifications on the 4th of each month at 09:00
+Schedule::command('reports:send-monthly')
+    ->timezone('Asia/Jakarta')
+    ->monthlyOn(4, '09:00')
+    ->withoutOverlapping()
+    ->environments(['production']);

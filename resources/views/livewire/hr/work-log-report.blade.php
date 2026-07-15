@@ -247,7 +247,7 @@
                                                 {{ __('Partial') }}
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-55 text-slate-500 border border-slate-200">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-500 border border-slate-200">
                                                 <span class="w-1.5 h-1.5 bg-slate-400 rounded-full mr-1.5"></span>
                                                 {{ __('Not Logged') }}
                                             </span>

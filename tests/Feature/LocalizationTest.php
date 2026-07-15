@@ -112,6 +112,8 @@ class LocalizationTest extends TestCase
         $this->assertEquals('Tindakan Keamanan Penting Diperlukan', __('Critical Security Action Required'));
         $this->assertEquals('Log Jam Manual', __('Manual Clock Log'));
         $this->assertEquals('Kehadiran - John Doe', __('Attendance - :name', ['name' => 'John Doe']));
+        $this->assertEquals('Laporan Log Kerja', __('Work Log Report'));
+        $this->assertEquals('Detail Log Kerja - John Doe', __('Work Log Details - :name', ['name' => 'John Doe']));
+        $this->assertEquals('Menampilkan log dari: 01/05/2026 hingga 07/05/2026', __('Showing logs from: :start to :end', ['start' => '01/05/2026', 'end' => '07/05/2026']));
     }
 }
-
