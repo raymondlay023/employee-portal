@@ -45,14 +45,11 @@ class EmployeeMonthlyReport extends Notification implements ShouldQueue
             ->subject(__('Your Monthly Attendance Summary')." - {$monthLabel}")
             ->greeting(__('Hello').", {$notifiable->name}!")
             ->line(__('Here is your attendance summary for **:month**:', ['month' => $monthLabel]))
-            ->line(__('Total Working Days').": **{$s->totalDays}**")
-            ->line(__('Present').": **{$s->presentDays}** | ".
-                   __('Absent').": **{$s->absentDays}** | ".
+            ->line(__('Absent').": **{$s->absentDays}** | ".
                    __('Late').": **{$s->lateDays}**")
             ->line(__('Sick').": **{$s->sickDays}** | ".
                    __('Leave').": **{$s->leaveDays}**")
-            ->line(__('Attendance Rate').": **{$s->attendanceRate()}%**")
-            ->action(__('View My Attendance'), url('/my-attendance'));
+            ->action(__('View My Attendance'), route('attendance.index'));
     }
 
     /**

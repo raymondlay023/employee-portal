@@ -282,10 +282,130 @@ class SendMonthlyReportNotificationsTest extends TestCase
                 $mailMessage = $notification->toMail($this->employeeUser);
                 $this->assertStringContainsString('Your Monthly Attendance Summary', $mailMessage->subject);
                 $this->assertStringContainsString('Regular Employee', $mailMessage->greeting);
-                $this->assertStringContainsString('Total Working Days', $mailMessage->introLines[1]);
+                $this->assertStringContainsString('Absent', $mailMessage->introLines[1]);
 
                 return true;
             }
+        );
+    }
+
+    public function test_manager_with_employee_role_receives_both_reports(): void
+    {
+        // Manager has BOTH Manager + Employee roles
+        $this->managerUser->assignRole(Roles::EMPLOYEE);
+
+        $prevMonth = now()->subMonthNoOverflow();
+        // Create attendance for the regular employee
+        JPayrollAttendance::create([
+            'employee_id' => $this->employee->id,
+            'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
+            'alpha' => 0,
+            'telat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+        ]);
+
+        // Create attendance for the manager employee
+        JPayrollAttendance::create([
+            'employee_id' => $this->managerEmployee->id,
+            'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
+            'alpha' => 0,
+            'telat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+        ]);
+
+        Notification::fake();
+
+        $this->artisan('reports:send-monthly')
+            ->assertSuccessful();
+
+        // Manager should receive BOTH reports since they have BOTH roles
+        Notification::assertSentTo(
+            $this->managerUser,
+            ManagerMonthlyReport::class,
+            function (ManagerMonthlyReport $notification) {
+                return $notification->departmentName === 'Engineering'
+                    && $notification->attendanceSummaries->count() >= 1;
+            }
+        );
+
+        Notification::assertSentTo(
+            $this->managerUser,
+            EmployeeMonthlyReport::class
+        );
+    }
+
+    public function test_only_manager_role_receives_only_manager_report(): void
+    {
+        // Manager has ONLY Manager role (default from setUp, not Employee)
+        $prevMonth = now()->subMonthNoOverflow();
+        // Create attendance for the regular employee
+        JPayrollAttendance::create([
+            'employee_id' => $this->employee->id,
+            'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
+            'alpha' => 0,
+            'telat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+        ]);
+
+        // Create attendance for the manager employee
+        JPayrollAttendance::create([
+            'employee_id' => $this->managerEmployee->id,
+            'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
+            'alpha' => 0,
+            'telat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+        ]);
+
+        Notification::fake();
+
+        $this->artisan('reports:send-monthly')
+            ->assertSuccessful();
+
+        // Manager should receive ManagerMonthlyReport
+        Notification::assertSentTo(
+            $this->managerUser,
+            ManagerMonthlyReport::class
+        );
+
+        // Manager should NOT receive EmployeeMonthlyReport because they do not have Employee role
+        Notification::assertNotSentTo(
+            $this->managerUser,
+            EmployeeMonthlyReport::class
+        );
+    }
+
+    public function test_only_employee_role_receives_only_employee_report(): void
+    {
+        // employeeUser has ONLY Employee role
+        $prevMonth = now()->subMonthNoOverflow();
+        JPayrollAttendance::create([
+            'employee_id' => $this->employee->id,
+            'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
+            'alpha' => 0,
+            'telat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+        ]);
+
+        Notification::fake();
+
+        $this->artisan('reports:send-monthly')
+            ->assertSuccessful();
+
+        // Regular employee should receive EmployeeMonthlyReport
+        Notification::assertSentTo(
+            $this->employeeUser,
+            EmployeeMonthlyReport::class
+        );
+
+        // Regular employee should NOT receive ManagerMonthlyReport
+        Notification::assertNotSentTo(
+            $this->employeeUser,
+            ManagerMonthlyReport::class
         );
     }
 }

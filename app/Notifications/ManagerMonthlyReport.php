@@ -54,15 +54,13 @@ class ManagerMonthlyReport extends Notification implements ShouldQueue
 
         foreach ($this->attendanceSummaries as $summary) {
             $message->line("**{$summary->employeeName}** — ".
-                __('Present').": {$summary->presentDays}, ".
                 __('Absent').": {$summary->absentDays}, ".
                 __('Late').": {$summary->lateDays}, ".
                 __('Sick').": {$summary->sickDays}, ".
-                __('Leave').": {$summary->leaveDays} ".
-                "({$summary->attendanceRate()}%)");
+                __('Leave').": {$summary->leaveDays}");
         }
 
-        $message->action(__('View Full Report'), url('/reports/attendance'));
+        $message->action(__('View Full Report'), route('attendance-report'));
 
         return $message;
     }

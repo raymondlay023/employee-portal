@@ -130,6 +130,9 @@ class SendMonthlyReportNotifications extends Command
         Employee::active()
             ->with('user')
             ->whereNotNull('user_id')
+            ->whereHas('user', function ($q) {
+                $q->role(Roles::EMPLOYEE);
+            })
             ->chunkById(100, function ($employees) use (
                 $reportService, $startDate, $endDate, $period, &$count
             ) {
