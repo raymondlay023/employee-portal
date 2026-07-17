@@ -13,3 +13,5 @@ tests
 .idea
 .vscode
 .DS_Store
+public/hot
+public/build
