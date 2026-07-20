@@ -44,25 +44,14 @@ class ManagerMonthlyReport extends Notification implements ShouldQueue
     {
         $monthLabel = $this->month->translatedFormat('F Y');
 
-        $message = (new MailMessage)
+        return (new MailMessage)
             ->subject(__('Monthly Attendance Report')." - {$monthLabel}")
-            ->greeting(__('Hello').", {$notifiable->name}!")
-            ->line(__('Here is the attendance summary for **:department** for **:month**:', [
-                'department' => $this->departmentName,
-                'month' => $monthLabel,
-            ]));
-
-        foreach ($this->attendanceSummaries as $summary) {
-            $message->line("**{$summary->employeeName}** — ".
-                __('Absent').": {$summary->absentDays}, ".
-                __('Late').": {$summary->lateDays}, ".
-                __('Sick').": {$summary->sickDays}, ".
-                __('Leave').": {$summary->leaveDays}");
-        }
-
-        $message->action(__('View Full Report'), route('attendance-report'));
-
-        return $message;
+            ->markdown('emails.manager-monthly-report', [
+                'notifiable' => $notifiable,
+                'monthLabel' => $monthLabel,
+                'departmentName' => $this->departmentName,
+                'attendanceSummaries' => $this->attendanceSummaries,
+            ]);
     }
 
     /**

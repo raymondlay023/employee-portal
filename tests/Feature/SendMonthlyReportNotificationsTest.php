@@ -267,9 +267,10 @@ class SendMonthlyReportNotificationsTest extends TestCase
             function (ManagerMonthlyReport $notification) {
                 $mailMessage = $notification->toMail($this->managerUser);
                 $this->assertStringContainsString('Monthly Attendance Report', $mailMessage->subject);
-                $this->assertStringContainsString('Manager User', $mailMessage->greeting);
-                $this->assertStringContainsString('Engineering', $mailMessage->introLines[0]);
-                $this->assertStringContainsString('John Employee', $mailMessage->introLines[1]);
+                $html = (string) $mailMessage->render();
+                $this->assertStringContainsString('Manager User', $html);
+                $this->assertStringContainsString('Engineering', $html);
+                $this->assertStringContainsString('John Employee', $html);
 
                 return true;
             }
