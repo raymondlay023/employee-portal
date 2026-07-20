@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ApiSyncLog;
+use App\Models\Employee;
+use App\Models\JPayrollAttendance;
+use App\Services\JPayrollService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use App\Services\JPayrollService;
-use App\Models\Employee;
-use App\Models\JPayrollAttendance;
-use App\Models\ApiSyncLog;
-use Carbon\Carbon;
 use Throwable;
 
 class SyncJPayrollAttendance extends Command
@@ -36,26 +36,26 @@ class SyncJPayrollAttendance extends Command
     {
         $date1 = $this->option('date1') ?? now()->subDays(7)->format('d/m/Y');
         $date2 = $this->option('date2') ?? now()->format('d/m/Y');
-        $nik   = $this->option('nik') ?: null;
+        $nik = $this->option('nik') ?: null;
         $trigger = $this->option('trigger') ?: 'cli';
         $triggeredBy = $this->option('triggered-by') ?: null;
 
         // Initialize API audit log
         $syncLog = ApiSyncLog::create([
-            'api_name'             => 'jpayroll_attendance',
-            'trigger_type'         => $trigger,
+            'api_name' => 'jpayroll_attendance',
+            'trigger_type' => $trigger,
             'triggered_by_user_id' => $triggeredBy,
-            'parameters'           => [
+            'parameters' => [
                 'date_from' => $date1,
-                'date_to'   => $date2,
-                'nik'       => $nik,
+                'date_to' => $date2,
+                'nik' => $nik,
             ],
-            'status'               => 'running',
-            'started_at'           => now(),
+            'status' => 'running',
+            'started_at' => now(),
         ]);
 
-        $this->info("Syncing JPayroll attendance from {$date1} to {$date2}" . ($nik ? " (NIK: {$nik})" : '') . ' ...');
-        Log::channel('jpayroll')->info("Sync started. Source: {$trigger}, Target dates: {$date1} to {$date2}, NIK: " . ($nik ?? 'All') . " (Triggered by user ID: " . ($triggeredBy ?? 'System') . ")");
+        $this->info("Syncing JPayroll attendance from {$date1} to {$date2}".($nik ? " (NIK: {$nik})" : '').' ...');
+        Log::channel('jpayroll')->info("Sync started. Source: {$trigger}, Target dates: {$date1} to {$date2}, NIK: ".($nik ?? 'All').' (Triggered by user ID: '.($triggeredBy ?? 'System').')');
 
         try {
             $records = $jpayroll->fetchAttendance($date1, $date2, $nik);
@@ -66,9 +66,9 @@ class SyncJPayrollAttendance extends Command
                 Log::channel('jpayroll')->error($errorMsg);
 
                 $syncLog->update([
-                    'status'        => 'failed',
+                    'status' => 'failed',
                     'error_message' => $errorMsg,
-                    'ended_at'      => now(),
+                    'ended_at' => now(),
                 ]);
 
                 return self::FAILURE;
@@ -78,7 +78,7 @@ class SyncJPayrollAttendance extends Command
             $this->info("Fetched {$totalRecords} records. Upserting...");
             Log::channel('jpayroll')->info("Fetched {$totalRecords} records from JPayroll API. Starting local updates.");
 
-            $synced  = 0;
+            $synced = 0;
             $skipped = 0;
 
             // Build a NIK → local employee_id map to avoid N+1 queries
@@ -86,14 +86,17 @@ class SyncJPayrollAttendance extends Command
             $employeeMap = Employee::whereIn('employee_id', $niks)
                 ->pluck('id', 'employee_id'); // ['07073' => 5, ...]
 
+            $upsertData = [];
+
             foreach ($records as $row) {
                 $rowNik = $row['NIK'] ?? null;
 
-                if (!$rowNik || !isset($employeeMap[$rowNik])) {
+                if (! $rowNik || ! isset($employeeMap[$rowNik])) {
                     $warnMsg = "SyncJPayrollAttendance: no local employee found for NIK: {$rowNik}";
                     Log::warning($warnMsg);
                     Log::channel('jpayroll')->warning($warnMsg, ['row' => $row]);
                     $skipped++;
+
                     continue;
                 }
 
@@ -103,32 +106,37 @@ class SyncJPayrollAttendance extends Command
                 try {
                     $shiftDate = Carbon::createFromFormat('d/m/Y', $row['ShiftDate'])->toDateString();
                 } catch (\Exception $e) {
-                    $warnMsg = "SyncJPayrollAttendance: invalid ShiftDate format: " . ($row['ShiftDate'] ?? 'null');
+                    $warnMsg = 'SyncJPayrollAttendance: invalid ShiftDate format: '.($row['ShiftDate'] ?? 'null');
                     Log::warning($warnMsg);
                     Log::channel('jpayroll')->warning($warnMsg, ['row' => $row]);
                     $skipped++;
+
                     continue;
                 }
 
-                JPayrollAttendance::updateOrCreate(
-                    [
-                        'employee_id' => $employeeId,
-                        'shift_date'  => $shiftDate,
-                    ],
-                    [
-                        'alpha'  => (int) ($row['ABS']   ?? 0),
-                        'telat'  => (int) ($row['LT']    ?? 0),
-                        'izin'   => (int) ($row['CT']    ?? 0),
-                        'sakit'  => (int) ($row['HOS'] ?? 0) + (int) ($row['WA'] ?? 0) + (int) ($row['HOSWA'] ?? 0),
-                    ]
-                );
+                $upsertData[] = [
+                    'employee_id' => $employeeId,
+                    'shift_date' => $shiftDate,
+                    'alpha' => (int) ($row['ABS'] ?? 0),
+                    'telat' => (int) ($row['LT'] ?? 0),
+                    'izin' => (int) ($row['CT'] ?? 0),
+                    'sakit' => (int) ($row['HOS'] ?? 0) + (int) ($row['WA'] ?? 0) + (int) ($row['HOSWA'] ?? 0),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
 
                 $synced++;
-                Log::channel('jpayroll')->debug("Synced attendance record", [
-                    'employee_id' => $employeeId,
-                    'nik'         => $rowNik,
-                    'shift_date'  => $shiftDate,
-                ]);
+            }
+
+            if (! empty($upsertData)) {
+                foreach (array_chunk($upsertData, 1000) as $chunk) {
+                    JPayrollAttendance::upsert(
+                        $chunk,
+                        ['employee_id', 'shift_date'],
+                        ['alpha', 'telat', 'izin', 'sakit', 'updated_at']
+                    );
+                    Log::channel('jpayroll')->debug('Synced chunk of '.count($chunk).' attendance records');
+                }
             }
 
             // Record the last sync timestamp in cache
@@ -139,27 +147,27 @@ class SyncJPayrollAttendance extends Command
             Log::channel('jpayroll')->info($successMsg);
 
             $syncLog->update([
-                'status'            => 'success',
-                'records_fetched'   => $totalRecords,
+                'status' => 'success',
+                'records_fetched' => $totalRecords,
                 'records_processed' => $synced,
-                'records_failed'    => $skipped,
-                'ended_at'          => now(),
+                'records_failed' => $skipped,
+                'ended_at' => now(),
             ]);
 
             return self::SUCCESS;
         } catch (Throwable $e) {
-            $errorMsg = "Sync failed with exception: " . $e->getMessage();
+            $errorMsg = 'Sync failed with exception: '.$e->getMessage();
             $this->error($errorMsg);
             Log::error($errorMsg, ['exception' => $e]);
             Log::channel('jpayroll')->error($errorMsg, [
                 'exception_message' => $e->getMessage(),
-                'trace'             => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $syncLog->update([
-                'status'        => 'failed',
+                'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                'ended_at'      => now(),
+                'ended_at' => now(),
             ]);
 
             return self::FAILURE;
