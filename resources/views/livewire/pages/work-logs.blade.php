@@ -25,18 +25,18 @@
                     {{ __('Weekly Timesheet Navigation') }}
                 </span>
                 
-                <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-2xl">
+                <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-1.5 sm:p-2 rounded-2xl w-full sm:w-auto">
                     <!-- Previous Week -->
                     <button type="button" wire:click="previousWeek" 
-                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center" 
+                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0" 
                         title="{{ __('Previous Week') }}">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </button>
 
-                    <!-- Days Ribbon -->
-                    <div class="flex items-center gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <!-- Days Ribbon (Flexible full-width on mobile) -->
+                    <div class="flex items-center gap-1 sm:gap-1.5 flex-1 justify-between overflow-x-auto no-scrollbar">
                         @foreach ($weekDays as $day)
                             @php
                                 $dotColor = 'bg-white/20';
@@ -49,12 +49,12 @@
                                 }
                             @endphp
                             <button type="button" wire:click="$set('date', '{{ $day['date'] }}')"
-                                class="flex flex-col items-center justify-between w-11 h-13 py-1.5 rounded-xl border transition-all cursor-pointer border-0 bg-transparent
+                                class="flex flex-col items-center justify-between flex-1 min-w-[34px] sm:min-w-[44px] h-12 sm:h-13 py-1 rounded-xl transition-all cursor-pointer border-0 bg-transparent
                                 {{ $day['is_active'] 
                                     ? 'bg-white text-slate-800 shadow-md font-extrabold border-white scale-105' 
                                     : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent' }}">
-                                <span class="text-[9px] uppercase tracking-wider opacity-60 font-bold {{ $day['is_active'] ? 'text-slate-500' : 'text-white/60' }}">{{ $day['day_label'] }}</span>
-                                <span class="text-sm font-black -mt-0.5">{{ $day['day_number'] }}</span>
+                                <span class="text-[8px] sm:text-[9px] uppercase tracking-wider opacity-60 font-bold {{ $day['is_active'] ? 'text-slate-500' : 'text-white/60' }}">{{ $day['day_label'] }}</span>
+                                <span class="text-xs sm:text-sm font-black -mt-0.5">{{ $day['day_number'] }}</span>
                                 <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} mt-0.5"></span>
                             </button>
                         @endforeach
@@ -62,7 +62,7 @@
 
                     <!-- Next Week -->
                     <button type="button" wire:click="nextWeek" 
-                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center" 
+                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0" 
                         title="{{ __('Next Week') }}">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -70,7 +70,7 @@
                     </button>
 
                     <!-- Arbitrary Date Picker Dropdown -->
-                    <div class="relative flex items-center">
+                    <div class="relative flex items-center shrink-0">
                         <label for="hidden-date-picker" class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center" title="{{ __('Pick Custom Date') }}">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -85,19 +85,19 @@
 
     <!-- Dynamic Work Progress Indicator -->
     @php
-        $workHours = 0;
-        $breakHours = 0;
+        $workMinutes = 0;
+        $breakMinutes = 0;
         foreach ($logs as $log) {
             if (!empty($log['start_time']) && !empty($log['end_time'])) {
                 try {
                     $start = \Carbon\Carbon::createFromFormat('H:i', substr($log['start_time'], 0, 5));
                     $end = \Carbon\Carbon::createFromFormat('H:i', substr($log['end_time'], 0, 5));
                     if ($end->greaterThan($start)) {
-                        $duration = ($end->timestamp - $start->timestamp) / 3600;
+                        $durationMins = (int) round(($end->timestamp - $start->timestamp) / 60);
                         if ($this->isBreakLog($log)) {
-                            $breakHours += $duration;
+                            $breakMinutes += $durationMins;
                         } else {
-                            $workHours += $duration;
+                            $workMinutes += $durationMins;
                         }
                     }
                 } catch (\Exception $e) {
@@ -105,10 +105,12 @@
                 }
             }
         }
+        $workHours = $workMinutes / 60;
         $percentage = min(100, ($workHours / 8) * 100);
         $isComplete = $workHours >= 8;
-        $formattedWorkHours = number_format($workHours, $workHours == (int) $workHours ? 0 : 1);
-        $formattedBreakHours = number_format($breakHours, $breakHours == (int) $breakHours ? 0 : 1);
+        $formattedWorkString = \App\Models\DailyWorkLog::formatMinutes($workMinutes);
+        $formattedBreakString = \App\Models\DailyWorkLog::formatMinutes($breakMinutes);
+        $formattedWorkCompact = \App\Models\DailyWorkLog::formatMinutes($workMinutes, true);
     @endphp
     <div
         class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
@@ -129,9 +131,9 @@
                     @endif
                 </div>
                 <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
-                    {{ __($workHours != 1 ? ':hours Hours Work' : ':hours Hour Work', ['hours' => $formattedWorkHours]) }}
-                    @if ($breakHours > 0)
-                        <span class="text-amber-600 font-bold text-base ml-1.5">+ {{ __(':hours Break', ['hours' => $formattedBreakHours]) }}</span>
+                    {{ $formattedWorkString }} {{ __('Work') }}
+                    @if ($breakMinutes > 0)
+                        <span class="text-amber-600 font-bold text-base ml-1.5">+ {{ $formattedBreakString }} {{ __('Break') }}</span>
                     @endif
                     <span class="text-slate-400 font-medium text-sm block md:inline md:ml-1">— {{ \Carbon\Carbon::parse($date)->translatedFormat('l, j F') }}</span>
                 </h3>
@@ -143,10 +145,10 @@
                 </div>
             </div>
 
-            <div class="flex-shrink-0 bg-slate-50 border border-slate-100 p-4 rounded-2xl text-center w-full md:w-36">
+            <div class="flex-shrink-0 bg-slate-50 border border-slate-100 p-4 rounded-2xl text-center w-full md:w-40">
                 <span
-                    class="text-3xl font-black {{ $isComplete ? 'text-emerald-600' : 'text-amber-600' }} block tracking-tight">
-                    {{ $formattedWorkHours }}/8
+                    class="text-2xl font-black {{ $isComplete ? 'text-emerald-600' : 'text-amber-600' }} block tracking-tight">
+                    {{ $formattedWorkCompact }}/8h
                 </span>
                 <span
                     class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{{ __('Work Target') }}</span>
@@ -510,9 +512,10 @@
                     @php
                         $cardHasErrors = $errors->has('logs.' . $index . '.*') || $errors->has('newProofs.' . $index);
                         $isNewDraft = empty($log['id']);
+                        $isMobileBreak = $this->isBreakLog($log);
                     @endphp
                     <div wire:key="mobile-log-{{ $index }}"
-                        class="bg-slate-50/50 border {{ $cardHasErrors ? 'border-red-200 shadow-sm shadow-red-50/50' : ($isNewDraft ? 'border-slate-200 border-l-4 border-l-indigo-400 bg-indigo-50/5' : 'border-slate-100') }} rounded-2xl p-4 space-y-4 relative"
+                        class="border rounded-2xl p-4 space-y-4 relative transition-all {{ $isMobileBreak ? 'bg-amber-50/40 border-amber-200 border-l-4 border-l-amber-400' : ($cardHasErrors ? 'bg-slate-50/50 border-red-200 shadow-sm shadow-red-50/50' : ($isNewDraft ? 'bg-indigo-50/5 border-slate-200 border-l-4 border-l-indigo-400' : 'bg-slate-50/50 border-slate-100')) }}"
                         x-data="{ expanded: {{ $cardHasErrors ? 'true' : 'false' }} }">
 
                         <!-- Collapsible Header -->
@@ -521,8 +524,13 @@
                             <div class="flex items-center gap-2 overflow-hidden mr-2">
                                 <span
                                     class="text-xs font-black text-slate-800 tracking-wide flex-shrink-0">{{ __('Time Slot #:num', ['num' => $index + 1]) }}</span>
+                                @if($isMobileBreak)
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-md shrink-0 border border-amber-200">
+                                        ☕ {{ __('Break') }}
+                                    </span>
+                                @endif
                                 <span x-show="!expanded"
-                                    class="text-[10px] text-slate-500 font-semibold truncate max-w-[160px] animate-fade-in"
+                                    class="text-[10px] text-slate-500 font-semibold truncate max-w-[140px] animate-fade-in"
                                     style="display: none;">
                                     {{ !empty($log['start_time']) ? substr($log['start_time'], 0, 5) : '--:--' }} -
                                     {{ !empty($log['end_time']) ? substr($log['end_time'], 0, 5) : '--:--' }} |

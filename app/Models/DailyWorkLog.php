@@ -33,9 +33,9 @@ class DailyWorkLog extends Model
     }
 
     /**
-     * Calculate duration in hours between start_time and end_time.
+     * Calculate duration in minutes between start_time and end_time.
      */
-    public function getDurationInHoursAttribute(): float
+    public function getDurationMinutesAttribute(): int
     {
         try {
             $start = Carbon::createFromFormat('H:i:s', $this->start_time);
@@ -50,7 +50,51 @@ class DailyWorkLog extends Model
         }
 
         return $end->greaterThan($start)
-            ? ($end->timestamp - $start->timestamp) / 3600
+            ? (int) round(($end->timestamp - $start->timestamp) / 60)
             : 0;
+    }
+
+    /**
+     * Calculate duration in hours between start_time and end_time.
+     */
+    public function getDurationInHoursAttribute(): float
+    {
+        return $this->duration_minutes / 60;
+    }
+
+    /**
+     * Format total minutes into human-readable hours and minutes string.
+     * Examples: 70 mins -> "1 hour 10 mins" (or "1h 10m" if $short = true).
+     */
+    public static function formatMinutes(int|float $minutes, bool $short = false): string
+    {
+        $totalMinutes = (int) round($minutes);
+        if ($totalMinutes <= 0) {
+            return $short ? '0m' : '0 '.__('mins');
+        }
+
+        $hours = (int) floor($totalMinutes / 60);
+        $mins = $totalMinutes % 60;
+
+        $parts = [];
+        if ($hours > 0) {
+            $hourUnit = $short ? 'h' : ($hours === 1 ? __('hour') : __('hours'));
+            $parts[] = $short ? "{$hours}{$hourUnit}" : "{$hours} {$hourUnit}";
+        }
+
+        if ($mins > 0) {
+            $minUnit = $short ? 'm' : __('mins');
+            $parts[] = $short ? "{$mins}{$minUnit}" : "{$mins} {$minUnit}";
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
+     * Accessor for compact formatted duration.
+     */
+    public function getFormattedDurationAttribute(): string
+    {
+        return static::formatMinutes($this->duration_minutes, true);
     }
 }

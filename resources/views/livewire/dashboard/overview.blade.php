@@ -272,7 +272,7 @@
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Activity & Timesheet Desk') }}</span>
                             @if ($todayIsComplete)
                                 <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">{{ __('TARGET REACHED') }}</span>
-                            @elseif ($todayTotalHours > 0)
+                            @elseif ($todayWorkMinutes > 0 || $todayBreakMinutes > 0)
                                 <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">{{ __('IN PROGRESS') }}</span>
                             @else
                                 <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-full font-bold">{{ __('READY') }}</span>
@@ -280,7 +280,10 @@
                         </div>
                         
                         <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
-                            {{ __(':hours Hours Logged for Today', ['hours' => $todayFormattedHours]) }}
+                            {{ $todayFormattedWorkString }} {{ __('Work Logged Today') }}
+                            @if ($todayBreakMinutes > 0)
+                                <span class="text-amber-600 font-bold text-base ml-1.5">+ {{ $todayFormattedBreakString }} {{ __('Break') }}</span>
+                            @endif
                         </h3>
                         
                         <!-- Small Progress Bar -->
@@ -292,8 +295,16 @@
                         </div>
 
                         @if($todayWorkLogs->isNotEmpty())
+                            @php
+                                $lastLog = $todayWorkLogs->last();
+                                $lastIsBreak = in_array(strtolower(trim($lastLog->activity)), ['break', 'istirahat', 'rest', 'lunch', 'ishoma']);
+                            @endphp
                             <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                                {{ __('Latest activity:') }} <span class="font-bold text-slate-700">{{ $todayWorkLogs->last()->activity }}</span> ({{ $todayWorkLogs->last()->start_time }} - {{ $todayWorkLogs->last()->end_time }})
+                                {{ __('Latest activity:') }} 
+                                <span class="font-bold {{ $lastIsBreak ? 'text-amber-700' : 'text-slate-700' }}">
+                                    @if($lastIsBreak) ☕ @endif{{ $lastLog->activity }}
+                                </span> 
+                                ({{ substr($lastLog->start_time, 0, 5) }} - {{ substr($lastLog->end_time, 0, 5) }})
                             </p>
                         @else
                             <p class="text-xs text-slate-500 leading-relaxed font-medium">

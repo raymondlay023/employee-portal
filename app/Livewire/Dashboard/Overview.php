@@ -8,7 +8,6 @@ use App\Models\DailyWorkLog;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
 use App\Models\LeaveRequest;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 
@@ -45,23 +44,26 @@ class Overview extends Component
             ->orderBy('start_time', 'asc')
             ->get();
 
-        $todayTotalHours = 0;
+        $todayWorkMinutes = 0;
+        $todayBreakMinutes = 0;
         foreach ($todayWorkLogs as $wlog) {
-            if (! empty($wlog->start_time) && ! empty($wlog->end_time)) {
-                try {
-                    $start = Carbon::createFromFormat('H:i', substr($wlog->start_time, 0, 5));
-                    $end = Carbon::createFromFormat('H:i', substr($wlog->end_time, 0, 5));
-                    if ($end->greaterThan($start)) {
-                        $todayTotalHours += ($end->timestamp - $start->timestamp) / 3600;
-                    }
-                } catch (\Exception $e) {
-                }
+            $durationMins = $wlog->duration_minutes;
+            $activity = strtolower(trim($wlog->activity));
+            $isBreak = in_array($activity, ['break', 'istirahat', 'rest', 'lunch', 'ishoma']);
+
+            if ($isBreak) {
+                $todayBreakMinutes += $durationMins;
+            } else {
+                $todayWorkMinutes += $durationMins;
             }
         }
 
-        $todayPercentage = min(100, ($todayTotalHours / 8) * 100);
-        $todayIsComplete = $todayTotalHours >= 8;
-        $todayFormattedHours = number_format($todayTotalHours, $todayTotalHours == (int) $todayTotalHours ? 0 : 1);
+        $todayWorkHours = $todayWorkMinutes / 60;
+        $todayPercentage = min(100, ($todayWorkHours / 8) * 100);
+        $todayIsComplete = $todayWorkHours >= 8;
+        $todayFormattedWorkString = DailyWorkLog::formatMinutes($todayWorkMinutes);
+        $todayFormattedBreakString = DailyWorkLog::formatMinutes($todayBreakMinutes);
+        $todayFormattedWorkCompact = DailyWorkLog::formatMinutes($todayWorkMinutes, true);
 
         // Admin stats
         $activeEmployeesCount = 0;
@@ -157,7 +159,8 @@ class Overview extends Component
         return view('livewire.dashboard.overview', compact(
             'user', 'employee', 'todayLog', 'pendingLeaves', 'isManagerial',
             'isDefaultPassword', 'isFallbackEmail', 'needsSecurityUpdate',
-            'todayWorkLogs', 'todayTotalHours', 'todayPercentage', 'todayIsComplete', 'todayFormattedHours',
+            'todayWorkLogs', 'todayWorkMinutes', 'todayBreakMinutes', 'todayPercentage', 'todayIsComplete',
+            'todayFormattedWorkString', 'todayFormattedBreakString', 'todayFormattedWorkCompact',
             'activeEmployeesCount', 'pendingLeavesCount', 'presentTodayCount', 'isManagerWithoutDept',
             'needsWorkLogToday', 'missingPastDates'
         ));

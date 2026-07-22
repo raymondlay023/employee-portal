@@ -230,7 +230,7 @@
                                                 <div class="flex items-center justify-between mb-3">
                                                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ __('Daily Work Logs') }}</h4>
                                                     <span class="text-[11px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md border border-brand-100">
-                                                        {{ number_format($dayWorkLogs->sum('duration_minutes') / 60, 1) }} {{ __('Hours Total') }}
+                                                        {{ \App\Models\DailyWorkLog::formatMinutes($dayWorkLogs->sum('duration_minutes')) }} {{ __('Total') }}
                                                     </span>
                                                 </div>
                                                 <div class="space-y-2">
@@ -247,7 +247,7 @@
                                                                 @endif
                                                             </div>
                                                             <div class="ml-auto flex items-center shrink-0">
-                                                                <span class="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">{{ number_format($workLog->duration_minutes / 60, 1) }}h</span>
+                                                                <span class="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">{{ \App\Models\DailyWorkLog::formatMinutes($workLog->duration_minutes, true) }}</span>
                                                             </div>
                                                         </div>
                                                     @endforeach
