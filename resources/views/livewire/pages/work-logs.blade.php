@@ -85,23 +85,30 @@
 
     <!-- Dynamic Work Progress Indicator -->
     @php
-        $totalHours = 0;
+        $workHours = 0;
+        $breakHours = 0;
         foreach ($logs as $log) {
             if (!empty($log['start_time']) && !empty($log['end_time'])) {
                 try {
                     $start = \Carbon\Carbon::createFromFormat('H:i', substr($log['start_time'], 0, 5));
                     $end = \Carbon\Carbon::createFromFormat('H:i', substr($log['end_time'], 0, 5));
                     if ($end->greaterThan($start)) {
-                        $totalHours += ($end->timestamp - $start->timestamp) / 3600;
+                        $duration = ($end->timestamp - $start->timestamp) / 3600;
+                        if ($this->isBreakLog($log)) {
+                            $breakHours += $duration;
+                        } else {
+                            $workHours += $duration;
+                        }
                     }
                 } catch (\Exception $e) {
                     // fallback if time is not H:i format
                 }
             }
         }
-        $percentage = min(100, ($totalHours / 8) * 100);
-        $isComplete = $totalHours >= 8;
-        $formattedHours = number_format($totalHours, $totalHours == (int) $totalHours ? 0 : 1);
+        $percentage = min(100, ($workHours / 8) * 100);
+        $isComplete = $workHours >= 8;
+        $formattedWorkHours = number_format($workHours, $workHours == (int) $workHours ? 0 : 1);
+        $formattedBreakHours = number_format($breakHours, $breakHours == (int) $breakHours ? 0 : 1);
     @endphp
     <div
         class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
@@ -122,7 +129,11 @@
                     @endif
                 </div>
                 <h3 class="text-xl font-extrabold text-slate-900 leading-tight">
-                    {{ __($totalHours != 1 ? ':hours Hours Logged for :date' : ':hours Hour Logged for :date', ['hours' => $formattedHours, 'date' => \Carbon\Carbon::parse($date)->translatedFormat('l, j F')]) }}
+                    {{ __($workHours != 1 ? ':hours Hours Work' : ':hours Hour Work', ['hours' => $formattedWorkHours]) }}
+                    @if ($breakHours > 0)
+                        <span class="text-amber-600 font-bold text-base ml-1.5">+ {{ __(':hours Break', ['hours' => $formattedBreakHours]) }}</span>
+                    @endif
+                    <span class="text-slate-400 font-medium text-sm block md:inline md:ml-1">— {{ \Carbon\Carbon::parse($date)->translatedFormat('l, j F') }}</span>
                 </h3>
 
                 <!-- Custom Progress Bar -->
@@ -135,10 +146,10 @@
             <div class="flex-shrink-0 bg-slate-50 border border-slate-100 p-4 rounded-2xl text-center w-full md:w-36">
                 <span
                     class="text-3xl font-black {{ $isComplete ? 'text-emerald-600' : 'text-amber-600' }} block tracking-tight">
-                    {{ $formattedHours }}/8
+                    {{ $formattedWorkHours }}/8
                 </span>
                 <span
-                    class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{{ __('Hours Target') }}</span>
+                    class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{{ __('Work Target') }}</span>
             </div>
         </div>
 
@@ -201,6 +212,14 @@
                     {{ __('Add Next Hour') }}
                 </button>
 
+                <button type="button" wire:click="addBreakSlot"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-50 border border-amber-200/80 hover:bg-amber-100 text-amber-700 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer border-0">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ __('Add Break') }}
+                </button>
+
                 @if (!empty($logs) && (count($logs) > 1 || !empty($logs[0]['id'])))
                     <button type="button"
                         wire:confirm="{{ __('Are you sure you want to completely clear all logs for this day? This cannot be undone.') }}"
@@ -234,10 +253,11 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($logs as $index => $log)
+                            @php $isBreak = $this->isBreakLog($log); @endphp
                             <tr wire:key="desktop-log-{{ $index }}"
-                                class="hover:bg-slate-50/30 transition-colors group {{ empty($log['id']) ? 'bg-indigo-50/5' : '' }}">
+                                class="hover:bg-slate-50/30 transition-colors group {{ $isBreak ? 'bg-amber-50/30' : (empty($log['id']) ? 'bg-indigo-50/5' : '') }}">
                                 <!-- Time slot input fields -->
-                                <td class="py-4 px-6 align-top {{ empty($log['id']) ? 'border-l-4 border-indigo-400' : '' }}">
+                                <td class="py-4 px-6 align-top {{ $isBreak ? 'border-l-4 border-amber-400' : (empty($log['id']) ? 'border-l-4 border-indigo-400' : '') }}">
                                     <div class="flex flex-col gap-1.5">
                                         <div class="flex items-center gap-1.5">
                                             <input type="time" wire:model="logs.{{ $index }}.start_time"
@@ -246,6 +266,11 @@
                                             <input type="time" wire:model="logs.{{ $index }}.end_time"
                                                 class="w-24 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.end_time') ? 'border-red-300 bg-red-50/10' : '' }}" />
                                         </div>
+                                        @if($isBreak)
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md w-max border border-amber-200">
+                                                ☕ {{ __('Break Time') }}
+                                            </span>
+                                        @endif
                                         @error('logs.' . $index . '.start_time')
                                             <span
                                                 class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
@@ -275,10 +300,18 @@
 
                                 <!-- Activity Input -->
                                 <td class="py-4 px-6 align-top">
-                                    <div class="space-y-1">
+                                    <div class="space-y-1.5">
                                         <input type="text" wire:model="logs.{{ $index }}.activity"
-                                            placeholder="{{ __('e.g., Code Review, Standup, Development') }}"
+                                            placeholder="{{ __('e.g., Code Review, Standup, Break') }}"
                                             class="w-full text-sm font-semibold text-slate-800 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.activity') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}" />
+                                        
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[10px] text-slate-400 font-medium">{{ __('Quick preset:') }}</span>
+                                            <button type="button" wire:click="$set('logs.{{ $index }}.activity', '{{ __('Break') }}')"
+                                                class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/60 transition-colors cursor-pointer border-0">
+                                                <span>☕ {{ __('Break') }}</span>
+                                            </button>
+                                        </div>
                                         @error('logs.' . $index . '.activity')
                                             <span
                                                 class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">
@@ -555,12 +588,20 @@
                             </div>
 
                             <!-- Activity Field -->
-                            <div class="space-y-1">
+                            <div class="space-y-1.5">
                                 <label
                                     class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{{ __('Activity Name') }}</label>
                                 <input type="text" wire:model="logs.{{ $index }}.activity"
-                                    placeholder="{{ __('e.g., Code Review, Standup, Development') }}"
+                                    placeholder="{{ __('e.g., Code Review, Standup, Break') }}"
                                     class="w-full text-sm font-semibold text-slate-800 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200/50 transition-colors {{ $errors->has('logs.' . $index . '.activity') ? 'border-red-300 focus:border-red-500 focus:ring-red-200/50 bg-red-50/10' : '' }}" />
+                                
+                                <div class="flex items-center gap-1.5 pt-0.5">
+                                    <span class="text-[10px] text-slate-400 font-medium">{{ __('Quick preset:') }}</span>
+                                    <button type="button" wire:click="$set('logs.{{ $index }}.activity', '{{ __('Break') }}')"
+                                        class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/60 transition-colors cursor-pointer border-0">
+                                        <span>☕ {{ __('Break') }}</span>
+                                    </button>
+                                </div>
                                 @error('logs.' . $index . '.activity')
                                     <span
                                         class="text-[10px] font-semibold text-red-600 flex items-center gap-0.5 mt-1 leading-tight">

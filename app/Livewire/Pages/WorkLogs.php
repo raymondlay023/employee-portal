@@ -114,6 +114,58 @@ class WorkLogs extends Component
     }
 
     /**
+     * Check if a log entry represents a break time.
+     */
+    public function isBreakLog($log): bool
+    {
+        $activity = is_array($log) ? ($log['activity'] ?? '') : ($log->activity ?? '');
+        $activity = strtolower(trim($activity));
+
+        return in_array($activity, ['break', 'istirahat', 'rest', 'lunch', 'ishoma']);
+    }
+
+    /**
+     * Add a break slot pre-filled with break details.
+     */
+    public function addBreakSlot(): void
+    {
+        $nextStart = '';
+        $nextEnd = '';
+
+        if (! empty($this->logs)) {
+            for ($i = count($this->logs) - 1; $i >= 0; $i--) {
+                $candidate = $this->logs[$i]['end_time'] ?? '';
+                $candidate = trim(substr($candidate, 0, 5));
+                if ($candidate !== '') {
+                    if (preg_match('/^\d{1,2}:\d{2}$/', $candidate)) {
+                        try {
+                            $start = Carbon::createFromFormat('H:i', $candidate);
+                            $end = $start->copy()->addHour();
+                            $nextStart = $start->format('H:i');
+                            $nextEnd = $end->format('H:i');
+                        } catch (\Exception $e) {
+                            $nextStart = '';
+                            $nextEnd = '';
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        $this->logs[] = [
+            'id' => null,
+            'user_id' => auth()->id(),
+            'date' => $this->date,
+            'start_time' => $nextStart,
+            'end_time' => $nextEnd,
+            'activity' => __('Break'),
+            'remarks' => __('Rest / Lunch Break'),
+            'proof_path' => null,
+        ];
+    }
+
+    /**
      * Remove the last chronological hour slot.
      */
     public function removeLastSlot(): void
@@ -414,6 +466,10 @@ class WorkLogs extends Component
             $totalHours = 0;
 
             foreach ($dayLogs as $log) {
+                if ($this->isBreakLog($log)) {
+                    continue;
+                }
+
                 if (! empty($log->start_time) && ! empty($log->end_time)) {
                     try {
                         $start = Carbon::createFromFormat('H:i:s', $log->start_time);
