@@ -22,7 +22,7 @@ class Overview extends Component
         // Attendance logs status
         $todayLog = null;
         if ($employee) {
-            $todayLog = AttendanceLog::where('employee_id', $employee->id)
+            $todayLog = AttendanceLog::where('employee_id', $employee->employee_id)
                 ->whereNull('clock_out_at')
                 ->first();
         }
@@ -110,7 +110,7 @@ class Overview extends Component
                     });
                 }
 
-                $manualPresent = $manualPresentQuery->pluck('employee_id')->toArray();
+                $manualPresent = $manualPresentQuery->with('employee')->get()->pluck('employee.id')->filter()->unique()->toArray();
                 $jpayrollPresent = $jpayrollPresentQuery->pluck('employee_id')->toArray();
                 $presentTodayCount = count(array_unique(array_merge($manualPresent, $jpayrollPresent)));
             }

@@ -9,6 +9,7 @@ use App\Models\JPayrollAttendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -22,19 +23,11 @@ class AttendanceController extends Controller
 
         // Validate optional filter parameters
         $validated = $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'month' => ['nullable', 'integer', 'between:1,12'],
+            'year' => ['nullable', 'integer', 'between:2020,2030'],
             'employee_id' => ['nullable', 'exists:employees,id'],
             'status' => ['nullable', 'in:all,present,absent,late,leave,sick'],
         ]);
-
-        $dateFrom = $validated['date_from'] ?? now()->startOfMonth()->toDateString();
-        $dateTo = $validated['date_to'] ?? now()->toDateString();
-
-        // ── JPayroll attendance records ───────────────────────────────────────
-        $jpayrollQuery = JPayrollAttendance::with('employee')
-            ->whereBetween('shift_date', [$dateFrom, $dateTo])
-            ->orderBy('shift_date', 'desc');
 
         $targetEmployeeId = null;
 
@@ -61,10 +54,12 @@ class AttendanceController extends Controller
         if ($targetEmployeeId === null) {
             if (! $employee) {
                 return view('attendance.index', [
-                    'jpayrollLogs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20),
-                    'manualLogs' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
-                    'dateFrom' => $dateFrom,
-                    'dateTo' => $dateTo,
+                    'jpayrollLogs' => collect(),
+                    'manualLogs' => collect(),
+                    'month' => (int) $request->input('month', now()->month),
+                    'year' => (int) $request->input('year', now()->year),
+                    'availableMonths' => range(1, 12),
+                    'availableYears' => [now()->year],
                     'targetEmployee' => null,
                     'summary' => null,
                     'lastSync' => null,
@@ -75,48 +70,123 @@ class AttendanceController extends Controller
         }
 
         $targetEmployee = Employee::findOrFail($targetEmployeeId);
-        $jpayrollQuery->where('employee_id', $targetEmployeeId);
+
+        // Fetch distinct years with data for the target employee
+        $jpYears = JPayrollAttendance::where('employee_id', $targetEmployeeId)
+            ->selectRaw('DISTINCT YEAR(shift_date) as year')
+            ->pluck('year')
+            ->toArray();
+
+        $manualYears = AttendanceLog::where('employee_id', $targetEmployee->employee_id)
+            ->selectRaw('DISTINCT YEAR(clock_in_at) as year')
+            ->pluck('year')
+            ->toArray();
+
+        $availableYears = array_unique(array_merge($jpYears, $manualYears));
+        sort($availableYears);
+
+        if (empty($availableYears)) {
+            $availableYears = [now()->year];
+        }
+
+        $year = (int) $request->input('year', now()->year);
+        if (! in_array($year, $availableYears)) {
+            $year = end($availableYears);
+        }
+
+        // Fetch distinct months for the selected year
+        $jpMonths = JPayrollAttendance::where('employee_id', $targetEmployeeId)
+            ->whereYear('shift_date', $year)
+            ->selectRaw('DISTINCT MONTH(shift_date) as month')
+            ->pluck('month')
+            ->toArray();
+
+        $manualMonths = AttendanceLog::where('employee_id', $targetEmployee->employee_id)
+            ->whereYear('clock_in_at', $year)
+            ->selectRaw('DISTINCT MONTH(clock_in_at) as month')
+            ->pluck('month')
+            ->toArray();
+
+        $availableMonths = array_unique(array_merge($jpMonths, $manualMonths));
+        sort($availableMonths);
+
+        if (empty($availableMonths)) {
+            $availableMonths = [now()->month];
+        }
+
+        $month = (int) $request->input('month', now()->month);
+        if (! in_array($month, $availableMonths)) {
+            $month = end($availableMonths);
+        }
+
+        $selectedDate = now()->setDate($year, $month, 1);
+        $startDate = $selectedDate->copy()->startOfMonth()->toDateString();
+        $endDate = $selectedDate->copy()->endOfMonth()->toDateString();
+
+        // ── JPayroll attendance records ───────────────────────────────────────
+        $jpayrollQuery = JPayrollAttendance::with('employee')
+            ->join('employees', 'jpayroll_attendances.employee_id', '=', 'employees.id')
+            ->leftJoin(DB::raw('(SELECT employee_id, DATE(clock_in_at) as punch_date FROM attendance_logs GROUP BY employee_id, DATE(clock_in_at)) as logs'), function ($join) {
+                $join->on('logs.employee_id', '=', 'employees.employee_id')
+                    ->on('logs.punch_date', '=', 'jpayroll_attendances.shift_date');
+            })
+            ->select('jpayroll_attendances.*')
+            ->where('jpayroll_attendances.employee_id', $targetEmployeeId)
+            ->whereBetween('jpayroll_attendances.shift_date', [$startDate, $endDate])
+            ->orderBy('jpayroll_attendances.shift_date', 'desc');
 
         // ── Calculate Summary (Always single employee targeted now) ───────
         $summaryQuery = clone $jpayrollQuery;
-        // Remove orderBy for the aggregate query
+        // Remove orderBy and columns for the aggregate query
         $summaryQuery->getQuery()->orders = null;
+        $summaryQuery->getQuery()->columns = null;
 
         $summary = $summaryQuery->selectRaw('
-            COUNT(*) as total_days,
-            SUM(CASE WHEN alpha > 0 THEN 1 ELSE 0 END) as absent_days,
-            SUM(CASE WHEN alpha <= 0 AND sakit > 0 THEN 1 ELSE 0 END) as sick_days,
-            SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin > 0 THEN 1 ELSE 0 END) as leave_days,
-            SUM(CASE WHEN alpha <= 0 AND sakit = 0 AND izin <= 0 AND telat > 0 THEN 1 ELSE 0 END) as late_days,
-            SUM(CASE WHEN alpha = 0 AND sakit = 0 AND izin = 0 THEN 1 ELSE 0 END) as present_days
+            COUNT(jpayroll_attendances.id) as total_days,
+            SUM(CASE WHEN jpayroll_attendances.alpha > 0 OR (jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NULL) THEN 1 ELSE 0 END) as absent_days,
+            SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit > 0 THEN 1 ELSE 0 END) as sick_days,
+            SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as leave_days,
+            SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as late_days,
+            SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as present_days
         ')->first();
 
         // Apply advanced status filters
         if (! empty($validated['status']) && $validated['status'] !== 'all') {
             $status = $validated['status'];
             if ($status === 'present') {
-                $jpayrollQuery->where('alpha', 0)
-                    ->where('izin', 0)
-                    ->where('sakit', 0);
+                $jpayrollQuery->where('jpayroll_attendances.alpha', 0)
+                    ->where('jpayroll_attendances.izin', 0)
+                    ->where('jpayroll_attendances.sakit', 0)
+                    ->whereNotNull('logs.employee_id');
             } elseif ($status === 'absent') {
-                $jpayrollQuery->where('alpha', '>', 0);
+                $jpayrollQuery->where(function ($q) {
+                    $q->where('jpayroll_attendances.alpha', '>', 0)
+                        ->orWhere(function ($sub) {
+                            $sub->where('jpayroll_attendances.alpha', 0)
+                                ->where('jpayroll_attendances.sakit', 0)
+                                ->where('jpayroll_attendances.izin', 0)
+                                ->where('jpayroll_attendances.telat', '>', 0)
+                                ->whereNull('logs.employee_id');
+                        });
+                });
             } elseif ($status === 'late') {
-                $jpayrollQuery->where('telat', '>', 0);
+                $jpayrollQuery->where('jpayroll_attendances.telat', '>', 0);
             } elseif ($status === 'leave') {
-                $jpayrollQuery->where('izin', '>', 0);
+                $jpayrollQuery->where('jpayroll_attendances.izin', '>', 0);
             } elseif ($status === 'sick') {
-                $jpayrollQuery->where('sakit', '>', 0);
+                $jpayrollQuery->where('jpayroll_attendances.sakit', '>', 0);
             }
         }
 
-        $jpayrollLogs = $jpayrollQuery->paginate(20, ['*'], 'jp_page');
+        $jpayrollLogs = $jpayrollQuery->get();
 
         // ── Manual clock-in / clock-out logs ─────────────────────────────────
         $manualLogs = collect();
         if ($employee) {
-            $manualLogs = AttendanceLog::where('employee_id', $employee->id)
-                ->latest()
-                ->paginate(15, ['*'], 'manual_page');
+            $manualLogs = AttendanceLog::where('employee_id', $targetEmployee->employee_id)
+                ->whereBetween('clock_in_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+                ->orderBy('clock_in_at', 'desc')
+                ->get();
         }
 
         // Last JPayroll sync timestamp
@@ -125,11 +195,13 @@ class AttendanceController extends Controller
         return view('attendance.index', compact(
             'jpayrollLogs',
             'manualLogs',
-            'dateFrom',
-            'dateTo',
+            'month',
+            'year',
+            'availableMonths',
+            'availableYears',
             'lastSync',
             'targetEmployee',
-            'summary',
+            'summary'
         ));
     }
 
@@ -151,7 +223,7 @@ class AttendanceController extends Controller
 
         return Cache::lock('attendance_clock_'.$employee->id, 5)->get(function () use ($employee) {
             // Check for any unclosed sessions
-            $openSessions = AttendanceLog::where('employee_id', $employee->id)->whereNull('clock_out_at')->get();
+            $openSessions = AttendanceLog::where('employee_id', $employee->employee_id)->whereNull('clock_out_at')->get();
 
             foreach ($openSessions as $session) {
                 // If the session is from a previous day, auto-close it 8 hours after clock in
@@ -167,7 +239,7 @@ class AttendanceController extends Controller
             }
 
             AttendanceLog::create([
-                'employee_id' => $employee->id,
+                'employee_id' => $employee->employee_id,
                 'clock_in_at' => now(),
             ]);
 
@@ -192,7 +264,7 @@ class AttendanceController extends Controller
         }
 
         return Cache::lock('attendance_clock_'.$employee->id, 5)->get(function () use ($employee) {
-            $open = AttendanceLog::where('employee_id', $employee->id)
+            $open = AttendanceLog::where('employee_id', $employee->employee_id)
                 ->whereNull('clock_out_at')
                 ->whereDate('clock_in_at', today())
                 ->first();

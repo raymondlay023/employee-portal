@@ -14,20 +14,22 @@ class AttendanceReportDetail extends Component
     use WithPagination;
 
     public Employee $employee;
+
     public $month;
+
     public $year;
 
     public function mount(Employee $employee): void
     {
         $this->employee = $employee;
-        
+
         $this->month = request('month', now()->month);
         $this->year = request('year', now()->year);
 
         $user = auth()->user();
-        if (!$user->can(Permissions::MANAGE_ATTENDANCE)) {
+        if (! $user->can(Permissions::MANAGE_ATTENDANCE)) {
             $managerDeptId = $user->employee?->department_id;
-            if (!$managerDeptId || $employee->department_id !== $managerDeptId) {
+            if (! $managerDeptId || $employee->department_id !== $managerDeptId) {
                 abort(403, 'You are only authorized to view attendance logs for employees in your department.');
             }
         }
@@ -56,7 +58,7 @@ class AttendanceReportDetail extends Component
             $availableYears = [now()->year];
         }
 
-        if (!in_array((int) $this->year, $availableYears)) {
+        if (! in_array((int) $this->year, $availableYears)) {
             $this->year = $availableYears[0];
         }
 
@@ -72,12 +74,12 @@ class AttendanceReportDetail extends Component
             $availableMonths = [now()->month];
         }
 
-        if (!in_array((int) $this->month, $availableMonths)) {
+        if (! in_array((int) $this->month, $availableMonths)) {
             $this->month = $availableMonths[0] ?? now()->month;
         }
 
         $startDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->startOfMonth()->toDateString();
-        $endDate   = now()->setYear((int) $this->year)->setMonth((int) $this->month)->endOfMonth()->toDateString();
+        $endDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->endOfMonth()->toDateString();
 
         $query = JPayrollAttendance::where('employee_id', $this->employee->id)
             ->whereBetween('shift_date', [$startDate, $endDate])
@@ -101,14 +103,17 @@ class AttendanceReportDetail extends Component
 
         foreach ($allLogs as $log) {
             $summary['total']++;
-            if ($log->alpha > 0) {
+            $status = $log->statusLabel();
+            if ($status === 'Absent' || $status === 'Absent (No Biometric)') {
                 $summary['absent']++;
-            } elseif ($log->sakit > 0) {
+            } elseif ($status === 'Sick') {
                 $summary['sick']++;
-            } elseif ($log->izin > 0) {
+            } elseif ($status === 'Leave') {
                 $summary['leave']++;
-            } elseif ($log->telat > 0) {
+            } elseif ($status === 'Late') {
                 $summary['late']++;
+            } elseif ($status === 'Off Day') {
+                // Exclude off day/non-working day from present or absent summaries
             } else {
                 $summary['present']++;
             }

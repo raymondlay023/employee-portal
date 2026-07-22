@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Authorization\Roles;
+use App\Models\AttendanceLog;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
@@ -79,6 +80,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
     {
         // Add attendance data for employee in previous month
         $prevMonth = now()->subMonthNoOverflow();
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -107,6 +113,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
     public function test_command_sends_employee_notifications(): void
     {
         $prevMonth = now()->subMonthNoOverflow();
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -149,6 +160,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
     public function test_command_dry_run_does_not_send_notifications(): void
     {
         $prevMonth = now()->subMonthNoOverflow();
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -171,6 +187,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
     public function test_command_uses_custom_month_and_year(): void
     {
         // Add attendance data for custom month (e.g. May 2026)
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => '2026-05-15 08:00:00',
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => '2026-05-15',
@@ -197,6 +218,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
     public function test_notifications_have_correct_array_data(): void
     {
         $prevMonth = now()->subMonthNoOverflow();
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -247,6 +273,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
     public function test_notification_mail_content(): void
     {
         $prevMonth = now()->subMonthNoOverflow();
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -297,6 +328,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
 
         $prevMonth = now()->subMonthNoOverflow();
         // Create attendance for the regular employee
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -307,6 +343,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
         ]);
 
         // Create attendance for the manager employee
+        AttendanceLog::create([
+            'employee_id' => $this->managerEmployee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->managerEmployee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -342,6 +383,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
         // Manager has ONLY Manager role (default from setUp, not Employee)
         $prevMonth = now()->subMonthNoOverflow();
         // Create attendance for the regular employee
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -352,6 +398,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
         ]);
 
         // Create attendance for the manager employee
+        AttendanceLog::create([
+            'employee_id' => $this->managerEmployee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->managerEmployee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),
@@ -383,6 +434,11 @@ class SendMonthlyReportNotificationsTest extends TestCase
     {
         // employeeUser has ONLY Employee role
         $prevMonth = now()->subMonthNoOverflow();
+        AttendanceLog::create([
+            'employee_id' => $this->employee->employee_id,
+            'clock_in_at' => $prevMonth->copy()->startOfMonth()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
             'shift_date' => $prevMonth->copy()->startOfMonth()->toDateString(),

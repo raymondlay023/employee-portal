@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\DataTransferObjects\AttendanceSummary;
+use App\Models\AttendanceLog;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
@@ -56,6 +57,16 @@ class MonthlyReportServiceTest extends TestCase
             'telat' => 0,
             'izin' => 0,
             'sakit' => 0,
+        ]);
+
+        // Create biometric proofs for present days
+        AttendanceLog::create([
+            'employee_id' => 'EMP001',
+            'clock_in_at' => '2026-06-01 08:00:00',
+        ]);
+        AttendanceLog::create([
+            'employee_id' => 'EMP001',
+            'clock_in_at' => '2026-06-03 08:00:00',
         ]);
 
         // Absent day: alpha > 0
@@ -134,6 +145,20 @@ class MonthlyReportServiceTest extends TestCase
             'sakit' => 0,
         ]);
 
+        // Create biometric proofs
+        AttendanceLog::create([
+            'employee_id' => 'EMP001',
+            'clock_in_at' => '2026-06-15 08:00:00',
+        ]);
+        AttendanceLog::create([
+            'employee_id' => 'EMP001',
+            'clock_in_at' => '2026-05-31 08:00:00',
+        ]);
+        AttendanceLog::create([
+            'employee_id' => 'EMP001',
+            'clock_in_at' => '2026-07-01 08:00:00',
+        ]);
+
         // Outside range (before)
         JPayrollAttendance::create([
             'employee_id' => $this->employee->id,
@@ -188,6 +213,16 @@ class MonthlyReportServiceTest extends TestCase
             'sakit' => 0,
         ]);
 
+        // Create biometric proofs
+        AttendanceLog::create([
+            'employee_id' => 'EMP001',
+            'clock_in_at' => '2026-06-15 08:00:00',
+        ]);
+        AttendanceLog::create([
+            'employee_id' => 'EMP002',
+            'clock_in_at' => '2026-06-15 08:00:00',
+        ]);
+
         JPayrollAttendance::create([
             'employee_id' => $inactiveEmployee->id,
             'shift_date' => '2026-06-15',
@@ -233,6 +268,12 @@ class MonthlyReportServiceTest extends TestCase
             'telat' => 0,
             'izin' => 0,
             'sakit' => 0,
+        ]);
+
+        // Create biometric proof
+        AttendanceLog::create([
+            'employee_id' => 'EMP001',
+            'clock_in_at' => '2026-06-15 08:00:00',
         ]);
 
         JPayrollAttendance::create([

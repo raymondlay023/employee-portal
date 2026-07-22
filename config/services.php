@@ -41,4 +41,8 @@ return [
         'company_area' => env('JPAYROLL_COMPANY_AREA'),
     ],
 
+    'biometric_device' => [
+        'urls' => explode(',', env('BIOMETRIC_DEVICE_URLS', 'http://192.168.6.96/iWsService,http://192.168.6.97/iWsService')),
+    ],
+
 ];

@@ -9,6 +9,16 @@
     </x-slot>
 
     <div class="space-y-6">
+        <!-- Alerts -->
+        @if(session('error'))
+            <div class="bg-red-50 border border-red-200 text-red-800 rounded-3xl p-4 flex items-center gap-3 shadow-sm text-xs font-semibold">
+                <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
         <!-- Filters -->
         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -91,7 +101,39 @@
                                 <td class="px-5 py-3 text-[10px] text-slate-500 font-mono">
                                     @if($log->parameters && count($log->parameters) > 0)
                                         @foreach($log->parameters as $key => $val)
-                                            <div class="truncate max-w-[150px]" title="{{ $key }}: {{ $val }}"><span class="font-bold">{{ $key }}:</span> {{ $val ?: '—' }}</div>
+                                            @if($key === 'raw_payloads' && is_array($val))
+                                                <div class="mt-1 space-y-1">
+                                                    <span class="font-bold block text-slate-400 uppercase tracking-wider text-[9px]">{{ __('Raw Payloads:') }}</span>
+                                                    @foreach($val as $device => $path)
+                                                        @php
+                                                            $fileExists = \Illuminate\Support\Facades\Storage::exists($path);
+                                                        @endphp
+                                                        @if($fileExists)
+                                                            <button wire:click="downloadPayload('{{ $path }}')" class="inline-flex items-center gap-1 text-[9px] font-bold text-brand-600 hover:text-brand-800 hover:underline bg-brand-50 border border-brand-100 px-1.5 py-0.5 rounded cursor-pointer transition-all hover:bg-brand-100">
+                                                                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                                                </svg>
+                                                                {{ $device }}
+                                                            </button>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-1 text-[9px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded cursor-not-allowed line-through" title="{{ __('File missing or pruned') }}">
+                                                                {{ $device }}
+                                                            </span>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            @elseif($key === 'raw_payloads_pruned')
+                                                <div class="mt-1">
+                                                    <span class="inline-flex items-center gap-1 text-[9px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded" title="{{ __('Raw XML payloads have been deleted to save space') }}">
+                                                        {{ __('Backups Pruned') }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                @php
+                                                    $displayVal = is_array($val) ? json_encode($val) : $val;
+                                                @endphp
+                                                <div class="truncate max-w-[150px]" title="{{ $key }}: {{ $displayVal }}"><span class="font-bold">{{ $key }}:</span> {{ $displayVal ?: '—' }}</div>
+                                            @endif
                                         @endforeach
                                     @else
                                         —

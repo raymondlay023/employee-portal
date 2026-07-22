@@ -95,17 +95,31 @@
                                         <div class="text-sm font-bold text-slate-800">{{ $log->shift_date->format('D, M j, Y') }}</div>
                                     </td>
                                     <td class="py-4 px-4 text-center">
-                                        @if($log->alpha > 0)
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">{{ __('Absent') }}</span>
-                                        @elseif($log->sakit > 0)
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200 shadow-sm">{{ __('Sick') }}</span>
-                                        @elseif($log->izin > 0)
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm">{{ __('Leave') }}</span>
-                                        @elseif($log->telat > 0)
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">{{ __('Late') }}</span>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700 border border-green-200 shadow-sm">{{ __('Present') }}</span>
-                                        @endif
+                                        @php
+                                            $statusLabel = $log->statusLabel();
+                                            $statusClass = match($statusLabel) {
+                                                'Present' => 'bg-green-100 text-green-700 border-green-200',
+                                                'Absent', 'Absent (No Biometric)' => 'bg-red-100 text-red-700 border-red-200',
+                                                'Late' => 'bg-amber-100 text-amber-700 border-amber-200',
+                                                'Leave' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                                'Sick' => 'bg-purple-100 text-purple-700 border-purple-200',
+                                                'Off Day' => 'bg-slate-100 text-slate-600 border-slate-200',
+                                                default => 'bg-slate-100 text-slate-700 border-slate-200',
+                                            };
+                                        @endphp
+                                        <div class="flex items-center justify-center gap-1">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold {{ $statusClass }} border shadow-sm">
+                                                {{ __($statusLabel) }}
+                                            </span>
+                                            @if($log->getAbnormality())
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-sm shrink-0 cursor-help" title="{{ __($log->getAbnormality()) }}">
+                                                    <svg class="w-3 h-3 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                                    </svg>
+                                                    {{ __('Conflict') }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="py-4 px-4 text-center">
                                         <span class="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 {{ $log->alpha > 0 ? 'bg-red-50 text-red-700 border-red-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded-lg border border-transparent">

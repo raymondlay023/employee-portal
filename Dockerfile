@@ -46,7 +46,8 @@ RUN mkdir -p \
     bootstrap/cache \
     storage/framework/sessions \
     storage/framework/views \
-    storage/framework/cache/data
+    storage/framework/cache/data \
+    storage/app/private/biometric
 
 # Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache \

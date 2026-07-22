@@ -134,17 +134,23 @@
                     class="grid grid-cols-1 sm:grid-cols-2 {{ Auth::user()->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE) ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }} gap-3 w-full" id="date-filter-form">
                     
                     <div class="flex flex-col gap-1.5">
-                        <label for="date_from" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('From') }}</label>
-                        <input type="date" id="date_from" name="date_from"
-                            value="{{ $dateFrom }}"
+                        <label for="month" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Month') }}</label>
+                        <select id="month" name="month" onchange="this.form.submit()"
                             class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
+                            @foreach($availableMonths as $m)
+                                <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>{{ __(date('F', mktime(0, 0, 0, $m, 1))) }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="flex flex-col gap-1.5">
-                        <label for="date_to" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('To') }}</label>
-                        <input type="date" id="date_to" name="date_to"
-                            value="{{ $dateTo }}"
+                        <label for="year" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Year') }}</label>
+                        <select id="year" name="year" onchange="this.form.submit()"
                             class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
+                            @foreach($availableYears as $y)
+                                <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
@@ -153,7 +159,7 @@
 
                     <div class="flex flex-col gap-1.5">
                         <label for="status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</label>
-                        <select id="status" name="status"
+                        <select id="status" name="status" onchange="this.form.submit()"
                             class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
                             <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>{{ __('All Statuses') }}</option>
                             <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Present') }}</option>
@@ -196,10 +202,11 @@
                                 $statusLabel = $log->statusLabel();
                                 $statusClass = match($statusLabel) {
                                     'Present' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                                    'Absent' => 'bg-red-50 text-red-700 border-red-100',
+                                    'Absent', 'Absent (No Biometric)' => 'bg-red-50 text-red-700 border-red-100',
                                     'Late' => 'bg-amber-50 text-amber-700 border-amber-100',
                                     'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
                                     'Sick' => 'bg-orange-50 text-orange-700 border-orange-100',
+                                    'Off Day' => 'bg-slate-50 text-slate-500 border-slate-100',
                                     default => 'bg-slate-50 text-slate-500 border-slate-100',
                                 };
                             @endphp
@@ -211,9 +218,19 @@
                                     </div>
                                 </td>
                                 <td class="px-5 py-4 text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
-                                        {{ __($statusLabel) }}
-                                    </span>
+                                    <div class="flex items-center justify-center gap-1">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
+                                            {{ __($statusLabel) }}
+                                        </span>
+                                        @if($log->getAbnormality())
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-sm shrink-0 cursor-help" title="{{ __($log->getAbnormality()) }}">
+                                                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                                </svg>
+                                                {{ __('Conflict') }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-5 py-4 text-center">
                                     <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->alpha > 0 ? 'bg-red-50 text-red-700 border-red-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
@@ -243,7 +260,7 @@
                                         <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
                                         </svg>
-                                        <p class="text-sm font-semibold text-slate-500">{{ __('No attendance records for this date range') }}</p>
+                                        <p class="text-sm font-semibold text-slate-500">{{ __('No attendance records found') }}</p>
                                          @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
                                              <p class="text-xs text-slate-400">{!! __('Click :strong_openSync from JPayroll:strong_close to fetch data.', ['strong_open' => '<strong>', 'strong_close' => '</strong>']) !!}</p>
                                          @endcan
@@ -254,12 +271,6 @@
                     </tbody>
                 </table>
             </div>
-
-            @if($jpayrollLogs->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $jpayrollLogs->appends(request()->query())->links() }}
-                </div>
-            @endif
         </div>
 
         {{-- ── SECTION 2: Manual Clock-In / Clock-Out Log ───────────────────── --}}
@@ -332,10 +343,16 @@
                                     @if($log->clock_out_at)
                                         <span class="text-xs font-semibold text-slate-700">{{ $log->clock_out_at->timezone('Asia/Jakarta')->format('H:i:s') }}</span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                            {{ __('Active') }}
-                                        </span>
+                                        @if($log->clock_in_at && $log->clock_in_at->timezone('Asia/Jakarta')->isToday())
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                {{ __('Active') }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full" title="{{ __('Missing Clock-Out') }}">
+                                                {{ __('Missing Out') }}
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="px-5 py-3 text-xs text-slate-500 font-medium">{{ $log->duration }}</td>
@@ -352,11 +369,6 @@
                 </table>
             </div>
 
-            @if($manualLogs instanceof \Illuminate\Pagination\LengthAwarePaginator && $manualLogs->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100">
-                    {{ $manualLogs->links() }}
-                </div>
-            @endif
         </div>
     </div>
     </div>

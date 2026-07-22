@@ -23,19 +23,19 @@ class AttendanceLog extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
 
     public function getDurationAttribute()
     {
-        if (!$this->clock_in_at || !$this->clock_out_at) {
+        if (! $this->clock_in_at || ! $this->clock_out_at) {
             return '—';
         }
 
         $mins = $this->clock_in_at->diffInMinutes($this->clock_out_at);
         $h = intdiv($mins, 60);
         $m = $mins % 60;
-        
+
         return $h > 0 ? "{$h}h {$m}m" : "{$m}m";
     }
 }

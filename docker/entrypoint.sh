@@ -39,6 +39,7 @@ php artisan view:cache
 echo "Creating missing storage directories..."
 mkdir -p /var/www/html/storage/app/public
 mkdir -p /var/www/html/storage/app/private/livewire-tmp
+mkdir -p /var/www/html/storage/app/private/biometric
 mkdir -p /var/www/html/storage/framework/cache
 mkdir -p /var/www/html/storage/framework/sessions
 mkdir -p /var/www/html/storage/framework/views
