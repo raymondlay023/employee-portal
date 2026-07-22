@@ -35,7 +35,7 @@
                         <h4 class="text-sm font-extrabold text-amber-900 tracking-tight flex items-center gap-2">
                             {{ __('Critical Security Action Required') }}
                         </h4>
-                        <p class="text-xs text-amber-750 text-amber-850 text-amber-800 leading-relaxed font-semibold max-w-2xl">
+                        <p class="text-xs text-amber-800 leading-relaxed font-semibold max-w-2xl">
                             @if ($isDefaultPassword && $isFallbackEmail)
                                 {!! __('Your account is currently using the :default_pw_startdefault temporary password:default_pw_end and a :temp_email_starttemporary placeholder email:temp_email_end.', ['default_pw_start' => '<span class="text-amber-950 font-black">', 'default_pw_end' => '</span>', 'temp_email_start' => '<span class="text-amber-950 font-black">', 'temp_email_end' => '</span>']) !!}
                             @elseif ($isDefaultPassword)
@@ -43,15 +43,29 @@
                             @else
                                 {!! __('Your account is currently using a :temp_email_starttemporary placeholder email:temp_email_end.', ['temp_email_start' => '<span class="text-amber-950 font-black">', 'temp_email_end' => '</span>']) !!}
                             @endif
-                            {{ __('To secure your employee portal and prevent unauthorized access, please update these credentials immediately.') }}
+                            {{ __('Please update these credentials immediately to secure your employee portal.') }}
                         </p>
                     </div>
                 </div>
                 
-                <div class="flex-shrink-0">
-                    <a href="{{ route('profile') }}" class="inline-flex justify-center items-center px-5 py-3 bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/15 hover:shadow-amber-500/25 rounded-xl font-bold text-xs transition-all hover:-translate-y-0.5 active:translate-y-0 transform cursor-pointer border-0">
-                        {{ __('Secure Your Account') }}
-                    </a>
+                <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
+                    @if ($isDefaultPassword)
+                        <a href="{{ route('profile') }}#security" class="inline-flex justify-center items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/15 rounded-xl font-bold text-xs transition-all hover:-translate-y-0.5 transform cursor-pointer border-0">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                            </svg>
+                            {{ __('Update Password') }}
+                        </a>
+                    @endif
+
+                    @if ($isFallbackEmail)
+                        <a href="{{ route('profile') }}#account" class="inline-flex justify-center items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/15 rounded-xl font-bold text-xs transition-all hover:-translate-y-0.5 transform cursor-pointer border-0">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                            </svg>
+                            {{ __('Update Email') }}
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

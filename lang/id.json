@@ -408,6 +408,18 @@
     "Backup file does not exist on the storage disk.": "File cadangan tidak ada di disk penyimpanan.",
     "Missing Clock-Out": "Tidak Ada Jam Keluar",
     "Missing Out": "Tidak Keluar",
-    "Year": "Tahun"
+    "Year": "Tahun",
+    "Biometric Punch Logs": "Log Cap Biometrik",
+    "Raw clock-in & clock-out punches from device scans": "Catatan mentah jam masuk & keluar dari pemindaian perangkat",
+    "Biometric Device Logs": "Log Perangkat Biometrik",
+    "Updating Attendance Logs...": "Memperbarui Log Kehadiran...",
+    "JPayroll Sync:": "Sinkronisasi JPayroll:",
+    "Biometric Sync:": "Sinkronisasi Biometrik:",
+    "Last Synced:": "Terakhir Disinkronkan:",
+    "Please update these credentials immediately to secure your employee portal.": "Segera perbarui kredensial ini untuk mengamankan portal karyawan Anda.",
+    "Update Email": "Perbarui Email",
+    "Temporary Password In Use": "Kata Sandi Sementara Digunakan",
+    "Your account is currently using the default temporary password. Please create a custom, secure password below.": "Akun Anda saat ini menggunakan kata sandi sementara default. Silakan buat kata sandi khusus yang aman di bawah ini.",
+    "Action Required: You are using a temporary placeholder email. Click \"Change\" below to update to a valid address.": "Tindakan Diperlukan: Anda menggunakan email sementara. Klik \"Ubah\" di bawah untuk memperbarui ke alamat yang valid."
 }
 

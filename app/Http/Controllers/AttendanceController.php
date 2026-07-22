@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Authorization\Permissions;
+use App\Models\ApiSyncLog;
 use App\Models\AttendanceLog;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
@@ -63,6 +64,8 @@ class AttendanceController extends Controller
                     'targetEmployee' => null,
                     'summary' => null,
                     'lastSync' => null,
+                    'jpayrollLastSync' => null,
+                    'biometricLastSync' => null,
                     'unlinkedProfileError' => true,
                 ]);
             }
@@ -189,8 +192,18 @@ class AttendanceController extends Controller
                 ->get();
         }
 
-        // Last JPayroll sync timestamp
-        $lastSync = Cache::get('jpayroll_attendance_last_sync');
+        // Last sync timestamps
+        $jpayrollLastSync = ApiSyncLog::where('api_name', 'jpayroll_attendance')
+            ->where('status', 'success')
+            ->latest('ended_at')
+            ->value('ended_at') ?? Cache::get('jpayroll_attendance_last_sync');
+
+        $biometricLastSync = ApiSyncLog::where('api_name', 'biometric_device')
+            ->where('status', 'success')
+            ->latest('ended_at')
+            ->value('ended_at') ?? AttendanceLog::latest('updated_at')->value('updated_at');
+
+        $lastSync = $jpayrollLastSync;
 
         return view('attendance.index', compact(
             'jpayrollLogs',
@@ -200,6 +213,8 @@ class AttendanceController extends Controller
             'availableMonths',
             'availableYears',
             'lastSync',
+            'jpayrollLastSync',
+            'biometricLastSync',
             'targetEmployee',
             'summary'
         ));

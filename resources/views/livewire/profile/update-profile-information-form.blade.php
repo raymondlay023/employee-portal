@@ -212,6 +212,17 @@ new class extends Component
 
         <!-- Primary Email (Read-only + Change Modal Trigger) -->
         <div>
+            @if (str_contains(auth()->user()->email ?? '', '@employee-portal.local'))
+                <div class="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+                    </svg>
+                    <p class="text-xs text-amber-800 font-semibold">
+                        {{ __('Action Required: You are using a temporary placeholder email. Click "Change" below to update to a valid address.') }}
+                    </p>
+                </div>
+            @endif
+
             <x-input-label :value="__('Email Address')" class="text-slate-700 font-medium mb-1" />
             <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
                 <div>

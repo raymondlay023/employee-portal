@@ -45,6 +45,92 @@
             </div>
         @endif
 
+        {{-- ── GLOBAL CONTROL & FILTER BAR ─────────────────────────────────── --}}
+        <form method="GET" action="{{ route('attendance.index') }}"
+            id="attendance-filter-form"
+            x-data="{ loading: false }"
+            @change="loading = true; $el.submit()"
+            class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm relative overflow-hidden">
+
+            <!-- Loading Backdrop & Spinner Overlay -->
+            <div x-show="loading" x-transition class="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center z-20" style="display:none;" x-cloak>
+                <div class="flex items-center gap-2.5 text-brand-600 font-bold text-xs">
+                    <svg class="animate-spin h-4 w-4 text-brand-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>{{ __('Updating Attendance Logs...') }}</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- Dropdown Select Controls -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <!-- Month Select -->
+                    <div class="flex flex-col gap-1">
+                        <label for="month" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Month') }}</label>
+                        <select id="month" name="month"
+                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+                            @foreach($availableMonths as $m)
+                                <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>{{ __(date('F', mktime(0, 0, 0, $m, 1))) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Year Select -->
+                    <div class="flex flex-col gap-1">
+                        <label for="year" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Year') }}</label>
+                        <select id="year" name="year"
+                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+                            @foreach($availableYears as $y)
+                                <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
+                        <input type="hidden" name="employee_id" value="{{ $targetEmployee->id ?? '' }}">
+                    @endcan
+
+                    <!-- Status Select -->
+                    <div class="flex flex-col gap-1">
+                        <label for="status" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Status') }}</label>
+                        <select id="status" name="status"
+                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+                            <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>{{ __('All Statuses') }}</option>
+                            <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Present') }}</option>
+                            <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>{{ __('Absent') }}</option>
+                            <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>{{ __('Late') }}</option>
+                            <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>{{ __('Leave') }}</option>
+                            <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>{{ __('Sick') }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Reset Link -->
+                    <div class="flex items-end pt-4">
+                        <a href="{{ route('attendance.index') }}"
+                            class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all">
+                            {{ __('Reset') }}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Last Sync Status Badges -->
+                <div class="flex flex-wrap items-center gap-2 text-right">
+                    @if ($jpayrollLastSync)
+                        <span class="text-[11px] text-slate-500 font-medium bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-xs">
+                            <strong class="text-slate-700 font-extrabold">{{ __('JPayroll Sync:') }}</strong> {{ \Carbon\Carbon::parse($jpayrollLastSync)->timezone('Asia/Jakarta')->diffForHumans() }}
+                        </span>
+                    @endif
+                    @if ($biometricLastSync)
+                        <span class="text-[11px] text-slate-500 font-medium bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-xs">
+                            <strong class="text-slate-700 font-extrabold">{{ __('Biometric Sync:') }}</strong> {{ \Carbon\Carbon::parse($biometricLastSync)->timezone('Asia/Jakarta')->diffForHumans() }}
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </form>
+
         {{-- ── SUMMARY REPORT CARDS ────────────────────────────────────────── --}}
         @if(isset($summary))
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -115,7 +201,7 @@
         {{-- ── SECTION 1: JPayroll Attendance Summary ──────────────────────── --}}
         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
 
-            {{-- Card header + date filter --}}
+            {{-- Card header --}}
             <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-2">
                     <div class="p-2 rounded-xl bg-brand-50 border border-brand-100 text-brand-600">
@@ -129,58 +215,12 @@
                     </div>
                 </div>
 
-                {{-- Advanced filter form --}}
-                <form method="GET" action="{{ route('attendance.index') }}"
-                    class="grid grid-cols-1 sm:grid-cols-2 {{ Auth::user()->can(\App\Authorization\Permissions::MANAGE_ATTENDANCE) ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }} gap-3 w-full" id="date-filter-form">
-                    
-                    <div class="flex flex-col gap-1.5">
-                        <label for="month" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Month') }}</label>
-                        <select id="month" name="month" onchange="this.form.submit()"
-                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
-                            @foreach($availableMonths as $m)
-                                <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>{{ __(date('F', mktime(0, 0, 0, $m, 1))) }}</option>
-                            @endforeach
-                        </select>
+                @if ($jpayrollLastSync)
+                    <div class="text-[10px] font-semibold text-slate-400 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>{{ __('Last Synced:') }} {{ \Carbon\Carbon::parse($jpayrollLastSync)->timezone('Asia/Jakarta')->diffForHumans() }}</span>
                     </div>
-
-                    <div class="flex flex-col gap-1.5">
-                        <label for="year" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Year') }}</label>
-                        <select id="year" name="year" onchange="this.form.submit()"
-                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
-                            @foreach($availableYears as $y)
-                                <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
-                        <input type="hidden" name="employee_id" value="{{ $targetEmployee->id ?? '' }}">
-                    @endcan
-
-                    <div class="flex flex-col gap-1.5">
-                        <label for="status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</label>
-                        <select id="status" name="status" onchange="this.form.submit()"
-                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 bg-slate-50">
-                            <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>{{ __('All Statuses') }}</option>
-                            <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Present') }}</option>
-                            <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>{{ __('Absent') }}</option>
-                            <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>{{ __('Late') }}</option>
-                            <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>{{ __('Leave') }}</option>
-                            <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>{{ __('Sick') }}</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center gap-2 pt-5">
-                        <button type="submit"
-                            class="flex-1 px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer border-0 text-center">
-                            {{ __('Filter') }}
-                        </button>
-                        <a href="{{ route('attendance.index') }}"
-                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all text-center">
-                            {{ __('Reset') }}
-                        </a>
-                    </div>
-                </form>
+                @endif
             </div>
 
             {{-- Table --}}
@@ -273,7 +313,7 @@
             </div>
         </div>
 
-        {{-- ── SECTION 2: Manual Clock-In / Clock-Out Log ───────────────────── --}}
+        {{-- ── SECTION 2: Biometric Punch Logs ─────────────────────────────── --}}
         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
 
             <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between gap-4">
@@ -284,8 +324,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">{{ __('Manual Clock Log') }}</h3>
-                        <p class="text-[10px] text-slate-400 font-medium">{{ __('Your clock-in & clock-out records') }}</p>
+                        <h3 class="text-sm font-extrabold text-slate-900">{{ __('Biometric Punch Logs') }}</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">{{ __('Raw clock-in & clock-out punches from device scans') }}</p>
                     </div>
                 </div>
 
@@ -370,7 +410,6 @@
             </div>
 
         </div>
-    </div>
     </div>
 
     @push('styles')

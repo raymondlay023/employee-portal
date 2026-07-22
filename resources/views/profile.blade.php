@@ -9,15 +9,27 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row gap-8">
                 <!-- Sidebar Navigation -->
+                @php
+                    $isDefaultPasswordTab = \Illuminate\Support\Facades\Hash::check('12345678', auth()->user()->password);
+                    $isFallbackEmailTab = str_contains(auth()->user()->email ?? '', '@employee-portal.local');
+                @endphp
                 <div class="w-full md:w-64 flex flex-col space-y-2">
                     <a href="#account"
                        @click="tab = 'account'"
                        :class="{ 'bg-indigo-50 text-indigo-700 font-semibold border-indigo-200': tab === 'account', 'text-slate-600 hover:bg-slate-50 border-transparent': tab !== 'account' }"
-                       class="px-4 py-3 rounded-xl transition-all border flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        {{ __('Account Details') }}
+                       class="px-4 py-3 rounded-xl transition-all border flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span>{{ __('Account Details') }}</span>
+                        </div>
+                        @if ($isFallbackEmailTab)
+                            <span class="flex h-2 w-2 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                        @endif
                     </a>
                     <a href="#employee"
                        @click="tab = 'employee'"
@@ -31,11 +43,19 @@
                     <a href="#security"
                        @click="tab = 'security'"
                        :class="{ 'bg-indigo-50 text-indigo-700 font-semibold border-indigo-200': tab === 'security', 'text-slate-600 hover:bg-slate-50 border-transparent': tab !== 'security' }"
-                       class="px-4 py-3 rounded-xl transition-all border flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                        {{ __('Security') }}
+                       class="px-4 py-3 rounded-xl transition-all border flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <span>{{ __('Security') }}</span>
+                        </div>
+                        @if ($isDefaultPasswordTab)
+                            <span class="flex h-2 w-2 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                        @endif
                     </a>
                 </div>
                 

@@ -50,6 +50,19 @@ new class extends Component
     </header>
 
     <form wire:submit="updatePassword" class="mt-6 space-y-6">
+        @if (\Illuminate\Support\Facades\Hash::check('12345678', auth()->user()->password))
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+                </svg>
+                <div>
+                    <h4 class="text-xs font-bold text-red-900">{{ __('Temporary Password In Use') }}</h4>
+                    <p class="text-xs text-red-800 font-medium mt-0.5">
+                        {{ __('Your account is currently using the default temporary password. Please create a custom, secure password below.') }}
+                    </p>
+                </div>
+            </div>
+        @endif
         <div>
             <x-input-label for="update_password_current_password" :value="__('Current Password')" />
             <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
