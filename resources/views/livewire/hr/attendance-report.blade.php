@@ -26,19 +26,19 @@
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <select wire:model.live="month" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
+                    <select wire:model.live="month" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
                         @foreach($availableMonths as $m)
                             <option value="{{ $m }}">{{ __(date('F', mktime(0, 0, 0, $m, 1))) }}</option>
                         @endforeach
                     </select>
 
-                    <select wire:model.live="year" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
+                    <select wire:model.live="year" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
                         @foreach($availableYears as $y)
                             <option value="{{ $y }}">{{ $y }}</option>
                         @endforeach
                     </select>
                     @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
-                    <select wire:model.live="department_id" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
+                    <select wire:model.live="department_id" class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 focus:border-brand-500 focus:ring focus:ring-brand-200/50">
                         <option value="">{{ __('All Departments') }}</option>
                         @if(isset($departments))
                             @foreach($departments as $dept)

@@ -70,7 +70,7 @@
                     <div class="flex flex-col gap-1">
                         <label for="month" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Month') }}</label>
                         <select id="month" name="month"
-                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+                            class="text-xs border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
                             @foreach($availableMonths as $m)
                                 <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>{{ __(date('F', mktime(0, 0, 0, $m, 1))) }}</option>
                             @endforeach
@@ -81,7 +81,7 @@
                     <div class="flex flex-col gap-1">
                         <label for="year" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Year') }}</label>
                         <select id="year" name="year"
-                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+                            class="text-xs border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
                             @foreach($availableYears as $y)
                                 <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endforeach
@@ -96,7 +96,7 @@
                     <div class="flex flex-col gap-1">
                         <label for="status" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Status') }}</label>
                         <select id="status" name="status"
-                            class="text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+                            class="text-xs border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
                             <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>{{ __('All Statuses') }}</option>
                             <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Present') }}</option>
                             <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>{{ __('Absent') }}</option>
