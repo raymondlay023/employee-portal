@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Authorization\Permissions;
 use App\Models\ApiSyncLog;
 use App\Models\AttendanceLog;
+use App\Models\DailyWorkLog;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
 use Illuminate\Http\Request;
@@ -257,6 +258,12 @@ class AttendanceController extends Controller
 
         $lastSync = $jpayrollLastSync;
 
+        $workLogs = DailyWorkLog::where('user_id', $targetEmployee->user_id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy(fn ($log) => $log->date->toDateString());
+
         return view('attendance.index', compact(
             'jpayrollLogs',
             'manualLogs',
@@ -270,7 +277,8 @@ class AttendanceController extends Controller
             'jpayrollLastSync',
             'biometricLastSync',
             'targetEmployee',
-            'summary'
+            'summary',
+            'workLogs'
         ));
     }
 

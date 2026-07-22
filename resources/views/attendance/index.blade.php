@@ -253,48 +253,55 @@
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Clock In') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Clock Out') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Duration') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Work Logs') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">{{ __('Absent') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">{{ __('Late') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">{{ __('Sick') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved leave / Cuti">{{ __('Leave') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        @forelse($groupedLogs as $weekLabel => $logsInWeek)
-                            <!-- Week Subheader Row -->
-                            <tr class="bg-slate-50/80 border-t-2 border-slate-100">
-                                <td colspan="9" class="px-5 py-2.5">
+                    <tbody class="hidden"></tbody>
+                    @forelse($groupedLogs as $weekLabel => $logsInWeek)
+                        <!-- Week Subheader Row -->
+                        <tbody class="border-t-2 border-slate-100">
+                            <tr class="bg-slate-50/80">
+                                <td colspan="10" class="px-5 py-2.5">
                                     <span class="text-[10px] font-extrabold text-brand-600 uppercase tracking-wider">
                                         {{ __($weekLabel) }}
                                     </span>
                                 </td>
                             </tr>
+                        </tbody>
 
-                            @foreach($logsInWeek as $row)
-                            @php
-                                $jp = $row['jpayroll'];
-                                $bio = $row['biometric'];
-                                $date = $row['date'];
-                                $isJpayroll = $row['type'] === 'jpayroll';
+                        @foreach($logsInWeek as $row)
+                        @php
+                            $jp = $row['jpayroll'];
+                            $bio = $row['biometric'];
+                            $date = $row['date'];
+                            $isJpayroll = $row['type'] === 'jpayroll';
+                            $dateKey = $date->toDateString();
+                            $dayWorkLogs = $workLogs[$dateKey] ?? collect();
+                            $hasWorkLogs = $dayWorkLogs->isNotEmpty();
 
-                                if ($isJpayroll && $jp) {
-                                    $statusLabel = $jp->statusLabel();
-                                    $statusClass = match($statusLabel) {
-                                        'Present' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                                        'Absent', 'Absent (No Biometric)' => 'bg-red-50 text-red-700 border-red-100',
-                                        'Late' => 'bg-amber-50 text-amber-700 border-amber-100',
-                                        'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
-                                        'Sick' => 'bg-orange-50 text-orange-700 border-orange-100',
-                                        'Off Day' => 'bg-slate-50 text-slate-500 border-slate-100',
-                                        default => 'bg-slate-50 text-slate-500 border-slate-100',
-                                    };
-                                    $abnormality = $jp->getAbnormality();
-                                } else {
-                                    $statusLabel = 'Pending Sync';
-                                    $statusClass = 'bg-sky-50 text-sky-700 border-sky-100';
-                                    $abnormality = null;
-                                }
-                            @endphp
+                            if ($isJpayroll && $jp) {
+                                $statusLabel = $jp->statusLabel();
+                                $statusClass = match($statusLabel) {
+                                    'Present' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                    'Absent', 'Absent (No Biometric)' => 'bg-red-50 text-red-700 border-red-100',
+                                    'Late' => 'bg-amber-50 text-amber-700 border-amber-100',
+                                    'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                    'Sick' => 'bg-orange-50 text-orange-700 border-orange-100',
+                                    'Off Day' => 'bg-slate-50 text-slate-500 border-slate-100',
+                                    default => 'bg-slate-50 text-slate-500 border-slate-100',
+                                };
+                                $abnormality = $jp->getAbnormality();
+                            } else {
+                                $statusLabel = 'Pending Sync';
+                                $statusClass = 'bg-sky-50 text-sky-700 border-sky-100';
+                                $abnormality = null;
+                            }
+                        @endphp
+                        <tbody x-data="{ expanded: false }" class="divide-y divide-slate-50 border-b border-slate-100">
                             <tr class="hover:bg-slate-50/40 transition-colors group">
                                 <!-- Date -->
                                 <td class="px-5 py-3.5">
@@ -357,6 +364,20 @@
                                     {{ $bio ? $bio->duration : '—' }}
                                 </td>
 
+                                <!-- Work Logs Badge Button -->
+                                <td class="px-5 py-3.5 text-center">
+                                    @if($hasWorkLogs)
+                                        <button @click="expanded = !expanded" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-extrabold text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors shadow-xs cursor-pointer">
+                                            <span>{{ $dayWorkLogs->count() }} {{ __('Logs') }}</span>
+                                            <svg class="w-3 h-3 transition-transform shrink-0" :class="{'rotate-180': expanded}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <span class="text-xs text-slate-300">—</span>
+                                    @endif
+                                </td>
+
                                 <!-- Absent -->
                                 <td class="px-5 py-3.5 text-center">
                                     @if($jp)
@@ -401,10 +422,45 @@
                                     @endif
                                 </td>
                             </tr>
-                            @endforeach
-                        @empty
-                            <tr>
-                                <td colspan="9" class="px-5 py-12 text-center">
+                            @if($hasWorkLogs)
+                                <tr x-show="expanded" x-transition.opacity class="bg-slate-50/60" style="display: none;">
+                                    <td colspan="10" class="p-0 border-t border-slate-100">
+                                        <div class="px-10 py-4 shadow-inner">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ __('Daily Work Logs') }}</h4>
+                                                <span class="text-[11px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md border border-brand-100">
+                                                    {{ number_format($dayWorkLogs->sum('duration_minutes') / 60, 1) }} {{ __('Hours Total') }}
+                                                </span>
+                                            </div>
+                                            <div class="space-y-2">
+                                                @foreach($dayWorkLogs as $workLog)
+                                                    <div class="flex items-start gap-3 bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
+                                                        <div class="flex flex-col items-center justify-center min-w-[4rem] px-2 py-1 bg-slate-50 rounded-lg border border-slate-100 shrink-0">
+                                                            <span class="text-[10px] font-extrabold text-slate-600">{{ \Carbon\Carbon::parse($workLog->start_time)->format('H:i') }}</span>
+                                                            <span class="text-[10px] font-extrabold text-slate-400">{{ \Carbon\Carbon::parse($workLog->end_time)->format('H:i') }}</span>
+                                                        </div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="text-xs font-bold text-slate-800 truncate">{{ $workLog->activity }}</p>
+                                                            @if($workLog->task_description)
+                                                                <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">{{ $workLog->task_description }}</p>
+                                                            @endif
+                                                        </div>
+                                                        <div class="ml-auto flex items-center shrink-0">
+                                                            <span class="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">{{ number_format($workLog->duration_minutes / 60, 1) }}h</span>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                        @endforeach
+                    @empty
+                            <tbody class="border-t border-slate-100">
+                                <tr>
+                                    <td colspan="10" class="px-5 py-12 text-center">
                                     <div class="flex flex-col items-center gap-2 text-slate-400">
                                         <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>

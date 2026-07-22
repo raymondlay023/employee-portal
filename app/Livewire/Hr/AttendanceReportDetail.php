@@ -3,21 +3,21 @@
 namespace App\Livewire\Hr;
 
 use App\Authorization\Permissions;
+use App\Models\DailyWorkLog;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
 use Illuminate\View\View;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class AttendanceReportDetail extends Component
 {
-    use WithPagination;
-
     public Employee $employee;
 
     public $month;
 
     public $year;
+
+    public $statusFilter = 'all';
 
     public function mount(Employee $employee): void
     {
@@ -35,14 +35,9 @@ class AttendanceReportDetail extends Component
         }
     }
 
-    public function updatingMonth(): void
+    public function setStatusFilter(string $status): void
     {
-        $this->resetPage();
-    }
-
-    public function updatingYear(): void
-    {
-        $this->resetPage();
+        $this->statusFilter = $this->statusFilter === $status ? 'all' : $status;
     }
 
     public function render(): View
@@ -81,13 +76,13 @@ class AttendanceReportDetail extends Component
         $startDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->startOfMonth()->toDateString();
         $endDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->endOfMonth()->toDateString();
 
-        $query = JPayrollAttendance::where('employee_id', $this->employee->id)
+        // Single query for all logs of the month
+        $allLogs = JPayrollAttendance::where('employee_id', $this->employee->id)
             ->whereBetween('shift_date', [$startDate, $endDate])
-            ->orderBy('shift_date', 'asc');
+            ->orderBy('shift_date', 'asc')
+            ->get();
 
-        $logs = $query->paginate(31);
-
-        // Calculate summary for the selected month
+        // Calculate summary stats in a single pass
         $summary = [
             'total' => 0,
             'present' => 0,
@@ -97,33 +92,69 @@ class AttendanceReportDetail extends Component
             'leave' => 0,
         ];
 
-        $allLogs = JPayrollAttendance::where('employee_id', $this->employee->id)
-            ->whereBetween('shift_date', [$startDate, $endDate])
-            ->get();
-
         foreach ($allLogs as $log) {
             $summary['total']++;
-            $status = $log->statusLabel();
-            if ($status === 'Absent' || $status === 'Absent (No Biometric)') {
+            $statusLabel = $log->statusLabel();
+            if ($statusLabel === 'Absent' || $statusLabel === 'Absent (No Biometric)') {
                 $summary['absent']++;
-            } elseif ($status === 'Sick') {
+            } elseif ($statusLabel === 'Sick') {
                 $summary['sick']++;
-            } elseif ($status === 'Leave') {
+            } elseif ($statusLabel === 'Leave') {
                 $summary['leave']++;
-            } elseif ($status === 'Late') {
+            } elseif ($statusLabel === 'Late') {
                 $summary['late']++;
-            } elseif ($status === 'Off Day') {
-                // Exclude off day/non-working day from present or absent summaries
+            } elseif ($statusLabel === 'Off Day') {
+                // Exclude off day
             } else {
                 $summary['present']++;
             }
         }
 
+        // Filter logs based on statusFilter
+        $filteredLogs = $allLogs->filter(function ($log) {
+            if ($this->statusFilter === 'all' || empty($this->statusFilter)) {
+                return true;
+            }
+
+            $statusLabel = strtolower($log->statusLabel());
+            $filter = strtolower($this->statusFilter);
+
+            if ($filter === 'absent') {
+                return str_contains($statusLabel, 'absent');
+            }
+
+            if ($filter === 'present') {
+                return $statusLabel === 'present';
+            }
+
+            return $statusLabel === $filter;
+        });
+
+        // Group filtered logs by calendar week (Monday start)
+        $groupedLogs = $filteredLogs->groupBy(function ($log) {
+            $date = $log->shift_date;
+            $firstDayOfMonth = $date->copy()->startOfMonth();
+            $firstDayOffset = $firstDayOfMonth->dayOfWeekIso - 1;
+            $dayOfMonth = $date->day - 1;
+            $weekNumber = (int) floor(($dayOfMonth + $firstDayOffset) / 7) + 1;
+
+            return 'Week ' . $weekNumber;
+        });
+
+        // Fetch all work logs for the employee in the month
+        $workLogs = DailyWorkLog::where('user_id', $this->employee->user_id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy(fn ($log) => $log->date->toDateString());
+
         return view('livewire.hr.attendance-report-detail', [
-            'logs' => $logs,
+            'groupedLogs' => $groupedLogs,
             'summary' => $summary,
+            'workLogs' => $workLogs,
             'availableYears' => $availableYears,
             'availableMonths' => $availableMonths,
         ])->layout('layouts.app');
     }
 }
+
