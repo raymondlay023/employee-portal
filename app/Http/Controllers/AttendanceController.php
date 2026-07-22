@@ -57,6 +57,8 @@ class AttendanceController extends Controller
                 return view('attendance.index', [
                     'jpayrollLogs' => collect(),
                     'manualLogs' => collect(),
+                    'combinedLogs' => collect(),
+                    'todayLog' => null,
                     'month' => (int) $request->input('month', now()->month),
                     'year' => (int) $request->input('year', now()->year),
                     'availableMonths' => range(1, 12),
@@ -185,12 +187,62 @@ class AttendanceController extends Controller
 
         // ── Manual clock-in / clock-out logs ─────────────────────────────────
         $manualLogs = collect();
+        $todayLog = null;
         if ($employee) {
             $manualLogs = AttendanceLog::where('employee_id', $targetEmployee->employee_id)
                 ->whereBetween('clock_in_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
                 ->orderBy('clock_in_at', 'desc')
                 ->get();
+
+            $todayLog = AttendanceLog::where('employee_id', $employee->employee_id)
+                ->whereNull('clock_out_at')
+                ->whereDate('clock_in_at', today())
+                ->first();
         }
+
+        // ── Construct Unified Combined Logs ─────────────────────────────────
+        $combinedLogs = collect();
+
+        foreach ($jpayrollLogs as $jpLog) {
+            $dateStr = $jpLog->shift_date->toDateString();
+            $combinedLogs->put($dateStr, [
+                'date' => $jpLog->shift_date,
+                'type' => 'jpayroll',
+                'jpayroll' => $jpLog,
+                'biometric' => $jpLog->getBiometricLog(),
+            ]);
+        }
+
+        $statusFilter = request('status', 'all');
+        if ($statusFilter === 'all' || empty($statusFilter)) {
+            foreach ($manualLogs as $manualLog) {
+                if ($manualLog->clock_in_at) {
+                    $dateStr = $manualLog->clock_in_at->toDateString();
+                    if (! $combinedLogs->has($dateStr)) {
+                        $combinedLogs->put($dateStr, [
+                            'date' => $manualLog->clock_in_at->copy()->startOfDay(),
+                            'type' => 'biometric_only',
+                            'jpayroll' => null,
+                            'biometric' => $manualLog,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        $combinedLogs = $combinedLogs->sortByDesc(function ($item) {
+            return $item['date']->timestamp;
+        })->values();
+
+        $groupedLogs = $combinedLogs->groupBy(function ($item) {
+            $date = $item['date'];
+            $firstDayOfMonth = $date->copy()->startOfMonth();
+            $firstDayOffset = $firstDayOfMonth->dayOfWeekIso - 1;
+            $dayOfMonth = $date->day - 1;
+            $weekNumber = (int) floor(($dayOfMonth + $firstDayOffset) / 7) + 1;
+            
+            return 'Week ' . $weekNumber;
+        });
 
         // Last sync timestamps
         $jpayrollLastSync = ApiSyncLog::where('api_name', 'jpayroll_attendance')
@@ -208,6 +260,8 @@ class AttendanceController extends Controller
         return view('attendance.index', compact(
             'jpayrollLogs',
             'manualLogs',
+            'groupedLogs',
+            'todayLog',
             'month',
             'year',
             'availableMonths',

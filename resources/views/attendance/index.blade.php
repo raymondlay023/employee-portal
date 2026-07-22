@@ -198,145 +198,31 @@
             </div>
         @endif
 
-        {{-- ── SECTION 1: JPayroll Attendance Summary ──────────────────────── --}}
+        {{-- ── UNIFIED SECTION: Attendance Records ──────────────────────── --}}
         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
 
             {{-- Card header --}}
-            <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 rounded-xl bg-brand-50 border border-brand-100 text-brand-600">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 rounded-2xl bg-brand-50 border border-brand-100 text-brand-600 shadow-xs">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">{{ __('JPayroll Daily Summary') }}</h3>
-                        <p class="text-[10px] text-slate-400 font-medium">{{ __('Synced from payroll system') }}</p>
+                        <h3 class="text-base font-extrabold text-slate-900">{{ __('Attendance Daily Records') }}</h3>
+                        <p class="text-xs text-slate-400 font-medium">{{ __('Combined JPayroll summary & biometric punch logs') }}</p>
                     </div>
                 </div>
 
-                @if ($jpayrollLastSync)
-                    <div class="text-[10px] font-semibold text-slate-400 flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <span>{{ __('Last Synced:') }} {{ \Carbon\Carbon::parse($jpayrollLastSync)->timezone('Asia/Jakarta')->diffForHumans() }}</span>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Table --}}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-100">
-                    <thead>
-                        <tr class="bg-slate-50/60">
-                            <th class="px-5 py-4 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Date') }}</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">{{ __('Absent') }}</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">{{ __('Late') }}</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">{{ __('Sick') }}</th>
-                            <th class="px-5 py-4 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved leave / Cuti">{{ __('Leave') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        @forelse($jpayrollLogs as $log)
-                            @php
-                                $statusLabel = $log->statusLabel();
-                                $statusClass = match($statusLabel) {
-                                    'Present' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                                    'Absent', 'Absent (No Biometric)' => 'bg-red-50 text-red-700 border-red-100',
-                                    'Late' => 'bg-amber-50 text-amber-700 border-amber-100',
-                                    'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
-                                    'Sick' => 'bg-orange-50 text-orange-700 border-orange-100',
-                                    'Off Day' => 'bg-slate-50 text-slate-500 border-slate-100',
-                                    default => 'bg-slate-50 text-slate-500 border-slate-100',
-                                };
-                            @endphp
-                            <tr class="hover:bg-slate-50/40 transition-colors group">
-                                <td class="px-5 py-4">
-                                    <div class="flex flex-col">
-                                        <span class="text-xs font-bold text-slate-800">{{ $log->shift_date->translatedFormat('d M Y') }}</span>
-                                        <span class="text-[10px] text-slate-400">{{ $log->shift_date->translatedFormat('l') }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
-                                            {{ __($statusLabel) }}
-                                        </span>
-                                        @if($log->getAbnormality())
-                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-sm shrink-0 cursor-help" title="{{ __($log->getAbnormality()) }}">
-                                                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                                                </svg>
-                                                {{ __('Conflict') }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->alpha > 0 ? 'bg-red-50 text-red-700 border-red-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
-                                        {{ $log->alpha }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->telat > 0 ? 'bg-amber-50 text-amber-700 border-amber-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
-                                        {{ $log->telat }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->sakit > 0 ? 'bg-purple-50 text-purple-700 border-purple-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
-                                        {{ $log->sakit }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $log->izin > 0 ? 'bg-blue-50 text-blue-700 border-blue-200/60 shadow-sm' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
-                                        {{ $log->izin }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-5 py-12 text-center">
-                                    <div class="flex flex-col items-center gap-2 text-slate-400">
-                                        <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
-                                        </svg>
-                                        <p class="text-sm font-semibold text-slate-500">{{ __('No attendance records found') }}</p>
-                                         @can(\App\Authorization\Permissions::MANAGE_ATTENDANCE)
-                                             <p class="text-xs text-slate-400">{!! __('Click :strong_openSync from JPayroll:strong_close to fetch data.', ['strong_open' => '<strong>', 'strong_close' => '</strong>']) !!}</p>
-                                         @endcan
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- ── SECTION 2: Biometric Punch Logs ─────────────────────────────── --}}
-        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-
-            <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">{{ __('Biometric Punch Logs') }}</h3>
-                        <p class="text-[10px] text-slate-400 font-medium">{{ __('Raw clock-in & clock-out punches from device scans') }}</p>
-                    </div>
-                </div>
-
-                {{-- Clock In / Out actions --}}
-                @if(config('app.enable_manual_attendance'))
-                    <div class="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0 lg:ml-auto">
+                {{-- Clock In / Out actions & Sync badges --}}
+                <div class="flex flex-wrap items-center gap-3 lg:ml-auto">
+                    @if(config('app.enable_manual_attendance'))
                         @if (!$todayLog)
                             <form action="{{ route('attendance.clock-in') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 transform transition-all">
-                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <button type="submit" class="inline-flex justify-center items-center px-5 py-2 border border-transparent text-xs font-extrabold rounded-xl shadow-xs text-white bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 transform transition-all cursor-pointer">
+                                    <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                     </svg>
                                     {{ __('Clock In') }}
@@ -345,70 +231,192 @@
                         @else
                             <form action="{{ route('attendance.clock-out') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 transform transition-all">
-                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <button type="submit" class="inline-flex justify-center items-center px-5 py-2 border border-transparent text-xs font-extrabold rounded-xl shadow-xs text-white bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 transform transition-all cursor-pointer">
+                                    <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                     </svg>
                                     {{ __('Clock Out') }}
                                 </button>
                             </form>
                         @endif
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
 
+            {{-- Table --}}
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-100">
                     <thead>
                         <tr class="bg-slate-50/60">
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Date') }}</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Clock In') }}</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Clock Out') }}</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Duration') }}</th>
-                            <th class="px-5 py-3 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Note') }}</th>
+                            <th class="px-5 py-3.5 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Date') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Clock In') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Clock Out') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Duration') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">{{ __('Absent') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">{{ __('Late') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">{{ __('Sick') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved leave / Cuti">{{ __('Leave') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
-                        @forelse($manualLogs as $log)
-                            <tr class="hover:bg-slate-50/40 transition-colors">
-                                <td class="px-5 py-3 text-xs font-bold text-slate-800">
-                                    {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->translatedFormat('d M Y') : '—' }}
-                                </td>
-                                <td class="px-5 py-3">
-                                    <span class="text-xs font-semibold text-emerald-700">
-                                        {{ $log->clock_in_at ? $log->clock_in_at->timezone('Asia/Jakarta')->format('H:i:s') : '—' }}
+                        @forelse($groupedLogs as $weekLabel => $logsInWeek)
+                            <!-- Week Subheader Row -->
+                            <tr class="bg-slate-50/80 border-t-2 border-slate-100">
+                                <td colspan="9" class="px-5 py-2.5">
+                                    <span class="text-[10px] font-extrabold text-brand-600 uppercase tracking-wider">
+                                        {{ __($weekLabel) }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3">
-                                    @if($log->clock_out_at)
-                                        <span class="text-xs font-semibold text-slate-700">{{ $log->clock_out_at->timezone('Asia/Jakarta')->format('H:i:s') }}</span>
-                                    @else
-                                        @if($log->clock_in_at && $log->clock_in_at->timezone('Asia/Jakarta')->isToday())
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                {{ __('Active') }}
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full" title="{{ __('Missing Clock-Out') }}">
-                                                {{ __('Missing Out') }}
+                            </tr>
+
+                            @foreach($logsInWeek as $row)
+                            @php
+                                $jp = $row['jpayroll'];
+                                $bio = $row['biometric'];
+                                $date = $row['date'];
+                                $isJpayroll = $row['type'] === 'jpayroll';
+
+                                if ($isJpayroll && $jp) {
+                                    $statusLabel = $jp->statusLabel();
+                                    $statusClass = match($statusLabel) {
+                                        'Present' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                        'Absent', 'Absent (No Biometric)' => 'bg-red-50 text-red-700 border-red-100',
+                                        'Late' => 'bg-amber-50 text-amber-700 border-amber-100',
+                                        'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                        'Sick' => 'bg-orange-50 text-orange-700 border-orange-100',
+                                        'Off Day' => 'bg-slate-50 text-slate-500 border-slate-100',
+                                        default => 'bg-slate-50 text-slate-500 border-slate-100',
+                                    };
+                                    $abnormality = $jp->getAbnormality();
+                                } else {
+                                    $statusLabel = 'Pending Sync';
+                                    $statusClass = 'bg-sky-50 text-sky-700 border-sky-100';
+                                    $abnormality = null;
+                                }
+                            @endphp
+                            <tr class="hover:bg-slate-50/40 transition-colors group">
+                                <!-- Date -->
+                                <td class="px-5 py-3.5">
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-bold text-slate-800">{{ $date->translatedFormat('d M Y') }}</span>
+                                        <span class="text-[10px] text-slate-400">{{ $date->translatedFormat('l') }}</span>
+                                    </div>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="px-5 py-3.5 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusClass }}">
+                                            {{ __($statusLabel) }}
+                                        </span>
+                                        @if($abnormality)
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-xs shrink-0 cursor-help" title="{{ __($abnormality) }}">
+                                                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                                </svg>
+                                                {{ __('Conflict') }}
                                             </span>
                                         @endif
+                                    </div>
+                                </td>
+
+                                <!-- Clock In -->
+                                <td class="px-5 py-3.5 text-center">
+                                    @if($bio && $bio->clock_in_at)
+                                        <span class="text-xs font-semibold text-emerald-700">
+                                            {{ $bio->clock_in_at->timezone('Asia/Jakarta')->format('H:i:s') }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-300">—</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-3 text-xs text-slate-500 font-medium">{{ $log->duration }}</td>
-                                <td class="px-5 py-3 text-xs text-slate-400">{{ $log->note ?? '—' }}</td>
+
+                                <!-- Clock Out -->
+                                <td class="px-5 py-3.5 text-center">
+                                    @if($bio && $bio->clock_out_at)
+                                        <span class="text-xs font-semibold text-slate-700">
+                                            {{ $bio->clock_out_at->timezone('Asia/Jakarta')->format('H:i:s') }}
+                                        </span>
+                                    @elseif($bio && $bio->clock_in_at && $bio->clock_in_at->timezone('Asia/Jakarta')->isToday())
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            {{ __('Active') }}
+                                        </span>
+                                    @elseif($bio && $bio->clock_in_at && $bio->clock_in_at->timezone('Asia/Jakarta')->isBefore(today()))
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full" title="{{ __('Missing Clock-Out') }}">
+                                            {{ __('Missing Out') }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-300">—</span>
+                                    @endif
+                                </td>
+
+                                <!-- Duration -->
+                                <td class="px-5 py-3.5 text-center text-xs text-slate-500 font-medium">
+                                    {{ $bio ? $bio->duration : '—' }}
+                                </td>
+
+                                <!-- Absent -->
+                                <td class="px-5 py-3.5 text-center">
+                                    @if($jp)
+                                        <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $jp->alpha > 0 ? 'bg-red-50 text-red-700 border-red-200/60 shadow-xs' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
+                                            {{ $jp->alpha }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-300">—</span>
+                                    @endif
+                                </td>
+
+                                <!-- Late -->
+                                <td class="px-5 py-3.5 text-center">
+                                    @if($jp)
+                                        <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $jp->telat > 0 ? 'bg-amber-50 text-amber-700 border-amber-200/60 shadow-xs' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
+                                            {{ $jp->telat }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-300">—</span>
+                                    @endif
+                                </td>
+
+                                <!-- Sick -->
+                                <td class="px-5 py-3.5 text-center">
+                                    @if($jp)
+                                        <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $jp->sakit > 0 ? 'bg-purple-50 text-purple-700 border-purple-200/60 shadow-xs' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
+                                            {{ $jp->sakit }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-300">—</span>
+                                    @endif
+                                </td>
+
+                                <!-- Leave -->
+                                <td class="px-5 py-3.5 text-center">
+                                    @if($jp)
+                                        <span class="inline-flex items-center justify-center min-w-[2rem] px-1 py-0.5 {{ $jp->izin > 0 ? 'bg-blue-50 text-blue-700 border-blue-200/60 shadow-xs' : 'text-slate-400 bg-slate-50/50' }} font-bold text-xs rounded border border-transparent">
+                                            {{ $jp->izin }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-300">—</span>
+                                    @endif
+                                </td>
                             </tr>
+                            @endforeach
                         @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-10 text-center">
-                                    <p class="text-sm font-semibold text-slate-400">{{ __('No clock records yet.') }}</p>
+                                <td colspan="9" class="px-5 py-12 text-center">
+                                    <div class="flex flex-col items-center gap-2 text-slate-400">
+                                        <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+                                        </svg>
+                                        <p class="text-sm font-semibold text-slate-500">{{ __('No attendance records found') }}</p>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
 
