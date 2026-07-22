@@ -55,6 +55,7 @@ new class extends Component
             'phone' => ['nullable', 'string', 'max:20'],
             'gender' => ['nullable', 'string', 'max:10'],
             'skills' => ['nullable', 'array'],
+            'skills.*' => ['string', 'max:50'],
         ]);
 
         $employee->phone = $this->phone;

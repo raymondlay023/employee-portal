@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Testing\File;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -98,5 +101,46 @@ class ProfileTest extends TestCase
             ->assertNoRedirect();
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_employee_information_can_be_updated(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $component = Volt::test('profile.update-employee-information-form')
+            ->set('phone', '081234567890')
+            ->set('gender', 'Male')
+            ->set('skills', ['Laravel', 'Vue.js'])
+            ->call('updateEmployeeInformation');
+
+        $component->assertHasNoErrors();
+
+        $employee->refresh();
+        $this->assertSame('081234567890', $employee->phone);
+        $this->assertSame('Male', $employee->gender);
+        $this->assertSame(['Laravel', 'Vue.js'], $employee->skills);
+    }
+
+    public function test_avatar_can_be_uploaded(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $file = File::image('avatar.jpg');
+
+        $component = Volt::test('profile.update-profile-information-form')
+            ->set('avatar', $file)
+            ->call('updateProfileInformation');
+
+        $component->assertHasNoErrors();
+
+        $user->refresh();
+        $this->assertNotNull($user->avatar);
+        Storage::disk('public')->assertExists($user->avatar);
     }
 }

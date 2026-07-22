@@ -116,11 +116,50 @@ class Overview extends Component
             }
         }
 
+        // Work Log Reminders & Missing Workday checks
+        $todayStr = now()->toDateString();
+        $hasClockedInToday = false;
+        if ($employee) {
+            $hasClockedInToday = AttendanceLog::where('employee_id', $employee->employee_id)
+                ->whereDate('clock_in_at', $todayStr)
+                ->exists();
+        }
+
+        $needsWorkLogToday = $hasClockedInToday && $todayWorkLogs->isEmpty();
+
+        $missingPastDates = [];
+        if ($employee) {
+            $pastDays = collect(range(1, 7))->map(fn ($i) => now()->subDays($i)->toDateString());
+
+            foreach ($pastDays as $dateStr) {
+                $wasPresent = AttendanceLog::where('employee_id', $employee->employee_id)
+                    ->whereDate('clock_in_at', $dateStr)
+                    ->exists()
+                    || JPayrollAttendance::where('employee_id', $employee->id)
+                        ->whereDate('shift_date', $dateStr)
+                        ->where('alpha', 0)
+                        ->where('sakit', 0)
+                        ->where('izin', 0)
+                        ->exists();
+
+                if ($wasPresent) {
+                    $hasWorkLogs = DailyWorkLog::where('user_id', $user->id)
+                        ->where('date', $dateStr)
+                        ->exists();
+
+                    if (! $hasWorkLogs) {
+                        $missingPastDates[] = $dateStr;
+                    }
+                }
+            }
+        }
+
         return view('livewire.dashboard.overview', compact(
             'user', 'employee', 'todayLog', 'pendingLeaves', 'isManagerial',
             'isDefaultPassword', 'isFallbackEmail', 'needsSecurityUpdate',
             'todayWorkLogs', 'todayTotalHours', 'todayPercentage', 'todayIsComplete', 'todayFormattedHours',
-            'activeEmployeesCount', 'pendingLeavesCount', 'presentTodayCount', 'isManagerWithoutDept'
+            'activeEmployeesCount', 'pendingLeavesCount', 'presentTodayCount', 'isManagerWithoutDept',
+            'needsWorkLogToday', 'missingPastDates'
         ));
     }
 }

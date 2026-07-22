@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Dashboard\Overview;
+use App\Models\AttendanceLog;
 use App\Models\DailyWorkLog;
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Livewire\Livewire;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -380,5 +384,26 @@ class WorkLogTest extends TestCase
         // Navigate to the next week
         $component->call('nextWeek');
         $this->assertSame('2026-07-01', $component->get('date'));
+    }
+
+    /**
+     * Test that overview dashboard detects clocked-in status with missing work logs.
+     */
+    public function test_work_log_warning_triggered_when_clocked_in_without_work_logs(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->create(['user_id' => $user->id]);
+
+        // Create clock-in attendance log for today
+        AttendanceLog::create([
+            'employee_id' => $employee->employee_id,
+            'clock_in_at' => now(),
+        ]);
+
+        $this->actingAs($user);
+
+        $component = Livewire::test(Overview::class);
+
+        $component->assertViewHas('needsWorkLogToday', true);
     }
 }

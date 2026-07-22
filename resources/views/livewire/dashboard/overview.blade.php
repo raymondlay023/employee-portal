@@ -79,6 +79,48 @@
         </div>
     @endif
 
+    <!-- Work Log Reminder Alert -->
+    @if ($needsWorkLogToday || !empty($missingPastDates))
+        <div x-data="{ dismissed: false }" x-show="!dismissed" class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-50 to-orange-50/70 border border-amber-200 p-6 shadow-sm transition-all duration-300 hover:shadow-md">
+            <div class="absolute -right-10 -top-10 w-36 h-36 bg-amber-200/40 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex items-start gap-4">
+                    <div class="p-3 rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/20 animate-pulse flex-shrink-0">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0zm-9 3.75h.008v.008H12v-.008z" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="text-sm font-extrabold text-amber-950 tracking-tight flex items-center gap-2">
+                            {{ __('Work Log Action Required') }}
+                        </h4>
+                        <p class="text-xs text-amber-800 leading-relaxed font-semibold max-w-2xl">
+                            @if ($needsWorkLogToday && !empty($missingPastDates))
+                                {{ __('You have clocked in today and have missing work logs for past attended date(s): :dates. Please fill out your activities.', ['dates' => implode(', ', array_map(fn($d) => \Carbon\Carbon::parse($d)->format('M d'), $missingPastDates))]) }}
+                            @elseif ($needsWorkLogToday)
+                                {{ __("You have clocked in for today's shift but haven't recorded any work log entries yet. Please log your hourly activities.") }}
+                            @else
+                                {{ __('You have past attended date(s) with no work logs recorded: :dates. Please fill out your timesheet.', ['dates' => implode(', ', array_map(fn($d) => \Carbon\Carbon::parse($d)->format('M d'), $missingPastDates))]) }}
+                            @endif
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <a href="{{ route('daily-work-logs.index') }}" class="inline-flex justify-center items-center px-5 py-3 bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/15 rounded-xl font-bold text-xs transition-all hover:-translate-y-0.5 transform cursor-pointer border-0">
+                        {{ __('Fill Work Log Now') }}
+                    </a>
+                    <button type="button" @click="dismissed = true" class="p-2 text-amber-600 hover:text-amber-800 rounded-xl hover:bg-amber-100/50 transition-colors border-0 bg-transparent cursor-pointer" title="{{ __('Dismiss for this session') }}">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- 1. Premium Welcome Hero Banner -->
     <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 to-brand-900 text-white shadow-xl border-0 p-8 md:p-10 group transition-all duration-300 hover:shadow-2xl">
         <!-- Glassmorphic light background effect -->

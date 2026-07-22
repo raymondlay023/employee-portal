@@ -139,6 +139,9 @@ new class extends Component
         $user->name = $this->name;
         $user->locale = $this->locale;
         if ($this->avatar) {
+            if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
             $path = $this->avatar->store('avatars', 'public');
             $user->avatar = $path;
         }

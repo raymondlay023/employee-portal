@@ -99,6 +99,66 @@ new class extends Component
     }
 
     /**
+     * Check if user has unlogged attendance days.
+     */
+    public function getHasUnloggedAttendanceProperty(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        $employee = $user->employee;
+        if (! $employee) {
+            return false;
+        }
+
+        $todayStr = now()->toDateString();
+        $hasClockedInToday = \App\Models\AttendanceLog::where('employee_id', $employee->employee_id)
+            ->whereDate('clock_in_at', $todayStr)
+            ->exists()
+            || \App\Models\JPayrollAttendance::where('employee_id', $employee->id)
+                ->whereDate('shift_date', $todayStr)
+                ->where('alpha', 0)
+                ->where('sakit', 0)
+                ->where('izin', 0)
+                ->exists();
+
+        if ($hasClockedInToday) {
+            $hasTodayLogs = \App\Models\DailyWorkLog::where('user_id', $user->id)
+                ->where('date', $todayStr)
+                ->exists();
+            if (! $hasTodayLogs) {
+                return true;
+            }
+        }
+
+        $pastDays = collect(range(1, 7))->map(fn ($i) => now()->subDays($i)->toDateString());
+        foreach ($pastDays as $dateStr) {
+            $wasPresent = \App\Models\AttendanceLog::where('employee_id', $employee->employee_id)
+                ->whereDate('clock_in_at', $dateStr)
+                ->exists()
+                || \App\Models\JPayrollAttendance::where('employee_id', $employee->id)
+                    ->whereDate('shift_date', $dateStr)
+                    ->where('alpha', 0)
+                    ->where('sakit', 0)
+                    ->where('izin', 0)
+                    ->exists();
+
+            if ($wasPresent) {
+                $hasWorkLogs = \App\Models\DailyWorkLog::where('user_id', $user->id)
+                    ->where('date', $dateStr)
+                    ->exists();
+                if (! $hasWorkLogs) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Log the current user out of the application.
      */
     public function logout(Logout $logout): void
@@ -143,11 +203,19 @@ new class extends Component
                             <div class="space-y-1">
                                 <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-2">My Portal</div>
                                 @foreach($personalLinks as $link)
-                                    <a href="{{ route($link['route'], $link['params']) }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors">
-                                        <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            {!! $link['icon'] !!}
-                                        </svg>
-                                        {{ __($link['label']) }}
+                                    <a href="{{ route($link['route'], $link['params']) }}" @click="sidebarOpen = false" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors justify-between">
+                                        <div class="flex items-center">
+                                            <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-4 flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                {!! $link['icon'] !!}
+                                            </svg>
+                                            {{ __($link['label']) }}
+                                        </div>
+                                        @if ($link['route'] === 'daily-work-logs.index' && $this->hasUnloggedAttendance)
+                                            <span class="flex h-2 w-2 relative">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                            </span>
+                                        @endif
                                     </a>
                                 @endforeach
                             </div>
@@ -232,11 +300,19 @@ new class extends Component
                         <div class="space-y-1">
                             <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">My Portal</div>
                             @foreach($personalLinks as $link)
-                                <a href="{{ route($link['route'], $link['params']) }}" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
-                                    <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        {!! $link['icon'] !!}
-                                    </svg>
-                                    {{ __($link['label']) }}
+                                <a href="{{ route($link['route'], $link['params']) }}" wire:navigate class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors justify-between">
+                                    <div class="flex items-center">
+                                        <svg class="{{ request()->routeIs($link['pattern']) && (empty($link['params']['scope']) || request('scope') === $link['params']['scope']) ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-500' }} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            {!! $link['icon'] !!}
+                                        </svg>
+                                        {{ __($link['label']) }}
+                                    </div>
+                                    @if ($link['route'] === 'daily-work-logs.index' && $this->hasUnloggedAttendance)
+                                        <span class="flex h-2 w-2 relative">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                        </span>
+                                    @endif
                                 </a>
                             @endforeach
                         </div>
