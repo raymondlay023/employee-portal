@@ -2,12 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Employee;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Employee;
-use App\Models\User;
-use Exception;
 
 class ImportPasswords extends Command
 {
@@ -39,14 +38,16 @@ class ImportPasswords extends Command
         $hasHeader = $this->option('header');
         $dryRun = (bool) $this->option('dry-run');
 
-        if (!file_exists($file)) {
+        if (! file_exists($file)) {
             $this->error("File not found: {$file}");
+
             return 1;
         }
 
         $handle = fopen($file, 'r');
         if ($handle === false) {
             $this->error("Unable to open file: {$file}");
+
             return 1;
         }
 
@@ -64,6 +65,7 @@ class ImportPasswords extends Command
                 if (count($data) < 3) {
                     $this->warn("Skipping row {$row}: not enough columns");
                     $skipped++;
+
                     continue;
                 }
 
@@ -73,13 +75,15 @@ class ImportPasswords extends Command
                 if ($employeeId === '' || $passcode === '') {
                     $this->warn("Skipping row {$row}: empty employee id or passcode");
                     $skipped++;
+
                     continue;
                 }
 
                 $employee = Employee::where('employee_id', $employeeId)->first();
-                if (!$employee || !$employee->user) {
+                if (! $employee || ! $employee->user) {
                     $this->warn("Row {$row}: employee {$employeeId} or user not found");
                     $skipped++;
+
                     continue;
                 }
 
@@ -89,6 +93,7 @@ class ImportPasswords extends Command
                 if ($dryRun) {
                     $this->info("Row {$row}: would update user {$user->id} (employee {$employeeId})");
                     $updated++;
+
                     continue;
                 }
 
@@ -106,12 +111,14 @@ class ImportPasswords extends Command
         } catch (Exception $e) {
             DB::rollBack();
             fclose($handle);
-            $this->error("Import failed: " . $e->getMessage());
+            $this->error('Import failed: '.$e->getMessage());
+
             return 1;
         }
 
         fclose($handle);
         $this->line("Completed. Updated: {$updated}. Skipped: {$skipped}.");
+
         return 0;
     }
 }

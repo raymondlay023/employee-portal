@@ -183,9 +183,13 @@ new class extends Component
                     <a href="{{ route('profile') }}" wire:navigate class="group block flex-shrink-0 w-full">
                         <div class="flex items-center">
                             <div>
-                                <div class="inline-block h-9 w-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold">
-                                    {{ substr(auth()->user()->name, 0, 1) }}
-                                </div>
+                                @if (auth()->user()->avatar)
+                                    <img class="h-9 w-9 object-cover rounded-full border border-slate-200 shadow-sm" src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}">
+                                @else
+                                    <div class="inline-block h-9 w-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold shadow-sm">
+                                        {{ substr(auth()->user()->name, 0, 1) }}
+                                    </div>
+                                @endif
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-slate-700 group-hover:text-slate-900" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
@@ -268,9 +272,13 @@ new class extends Component
                 <a href="{{ route('profile') }}" wire:navigate class="group block w-full flex-shrink-0 p-4 hover:bg-slate-50 transition-colors">
                     <div class="flex items-center">
                         <div>
-                            <div class="inline-block h-9 w-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold">
-                                {{ substr(auth()->user()->name, 0, 1) }}
-                            </div>
+                            @if (auth()->user()->avatar)
+                                <img class="h-9 w-9 object-cover rounded-full border border-slate-200 shadow-sm" src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}">
+                            @else
+                                <div class="inline-block h-9 w-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold shadow-sm">
+                                    {{ substr(auth()->user()->name, 0, 1) }}
+                                </div>
+                            @endif
                         </div>
                         <div class="ml-3">
                             <p class="text-sm font-medium text-slate-700 group-hover:text-slate-900" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>

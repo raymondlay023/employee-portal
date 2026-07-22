@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class JPayrollService
 {
     protected string $baseUrl;
+
     protected string $apiKey;
+
     protected string $companyArea;
 
     public function __construct()
@@ -32,24 +34,26 @@ class JPayrollService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 // Ensure the response status is 200
                 if (isset($data['data'])) {
                     return $data['data'] ?? [];
                 }
 
                 Log::error('JPayroll API returned non-200 status in payload', ['response' => $data]);
+
                 return [];
             }
 
             Log::error('JPayroll API HTTP error', [
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => $response->body(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('JPayroll API Exception', ['message' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -57,10 +61,9 @@ class JPayrollService
     /**
      * Fetch attendance from JPayroll API
      *
-     * @param string $date1 Start date (Format: d/m/Y)
-     * @param string $date2 End date (Format: d/m/Y)
-     * @param string|null $nik Optional Employee NIK
-     * @return array
+     * @param  string  $date1  Start date (Format: d/m/Y)
+     * @param  string  $date2  End date (Format: d/m/Y)
+     * @param  string|null  $nik  Optional Employee NIK
      */
     public function fetchAttendance(string $date1, string $date2, ?string $nik = null): array
     {
@@ -87,27 +90,25 @@ class JPayrollService
                 }
 
                 Log::error('JPayroll API (Attendance) returned non-200 status in payload', ['response' => $data]);
+
                 return [];
             }
 
             Log::error('JPayroll API (Attendance) HTTP error', [
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => $response->body(),
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('JPayroll API (Attendance) Exception', ['message' => $e->getMessage()]);
+
             return [];
         }
     }
 
     /**
      * Fetch annual leave details from JPayroll API
-     *
-     * @param string $year
-     * @param string $nik
-     * @return array|null
      */
     public function fetchAnnualLeave(string $year, string $nik): ?array
     {
@@ -128,6 +129,7 @@ class JPayrollService
                     if (is_array($records) && count($records) > 0) {
                         return $records[0];
                     }
+
                     return is_array($records) ? null : $records;
                 }
 
@@ -136,14 +138,14 @@ class JPayrollService
 
             Log::error('JPayroll API (Annual Leave) HTTP error', [
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => $response->body(),
             ]);
 
             return null;
         } catch (\Exception $e) {
             Log::error('JPayroll API (Annual Leave) Exception', ['message' => $e->getMessage()]);
+
             return null;
         }
     }
 }
-

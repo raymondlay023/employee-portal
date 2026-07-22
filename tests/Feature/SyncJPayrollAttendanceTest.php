@@ -2,16 +2,13 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use App\Services\JPayrollService;
-use App\Models\Employee;
 use App\Models\Department;
-use App\Models\JPayrollAttendance;
+use App\Models\Employee;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 class SyncJPayrollAttendanceTest extends TestCase
 {
@@ -30,12 +27,13 @@ class SyncJPayrollAttendanceTest extends TestCase
     private function createEmployee(string $nik): Employee
     {
         $dept = Department::firstOrCreate(['name' => 'Test Dept']);
+
         return Employee::create([
             'employee_id' => $nik,
-            'first_name'  => 'Test',
-            'last_name'   => 'User',
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'department_id' => $dept->id,
-            'status'      => 'active',
+            'status' => 'active',
         ]);
     }
 
@@ -45,18 +43,19 @@ class SyncJPayrollAttendanceTest extends TestCase
         $data = [];
         foreach (range(1, 6) as $day) {
             $data[] = [
-                'NIK'       => $nik,
-                'Name'      => 'RAYMOND LAY',
+                'NIK' => $nik,
+                'Name' => 'RAYMOND LAY',
                 'ShiftDate' => sprintf('%02d/05/2026', $day),
-                'ABS'       => '0',
-                'LT'        => '0',
-                'CT'        => '0',
-                'OP'        => '0',
-                'HOS'       => '0',
-                'WA'        => '0',
-                'HOSWA'     => '0',
+                'ABS' => '0',
+                'LT' => '0',
+                'CT' => '0',
+                'OP' => '0',
+                'HOS' => '0',
+                'WA' => '0',
+                'HOSWA' => '0',
             ];
         }
+
         return ['data' => $data, 'total' => (string) count($data)];
     }
 
@@ -71,14 +70,14 @@ class SyncJPayrollAttendanceTest extends TestCase
         $this->artisan('jpayroll:sync-attendance', [
             '--date1' => '01/05/2026',
             '--date2' => '06/05/2026',
-            '--nik'   => '07073',
+            '--nik' => '07073',
         ])->assertSuccessful();
 
         $this->assertDatabaseCount('jpayroll_attendances', 6);
         $this->assertDatabaseHas('jpayroll_attendances', [
             'shift_date' => '2026-05-01',
-            'alpha'      => 0,
-            'telat'      => 0,
+            'alpha' => 0,
+            'telat' => 0,
         ]);
     }
 
@@ -94,13 +93,13 @@ class SyncJPayrollAttendanceTest extends TestCase
         $this->artisan('jpayroll:sync-attendance', [
             '--date1' => '01/05/2026',
             '--date2' => '06/05/2026',
-            '--nik'   => '07073',
+            '--nik' => '07073',
         ])->assertSuccessful();
 
         $this->artisan('jpayroll:sync-attendance', [
             '--date1' => '01/05/2026',
             '--date2' => '06/05/2026',
-            '--nik'   => '07073',
+            '--nik' => '07073',
         ])->assertSuccessful();
 
         // Still only 6 rows — no duplicates
@@ -117,7 +116,7 @@ class SyncJPayrollAttendanceTest extends TestCase
         $this->artisan('jpayroll:sync-attendance', [
             '--date1' => '01/05/2026',
             '--date2' => '06/05/2026',
-            '--nik'   => '99999',
+            '--nik' => '99999',
         ])->assertSuccessful(); // command itself succeeds (exit 0)
 
         // Nothing persisted
@@ -149,16 +148,16 @@ class SyncJPayrollAttendanceTest extends TestCase
         Http::fake([
             'https://api.jpayroll.test/API_View_Attendance.php' => Http::response([
                 'data' => [[
-                    'NIK'       => '07073',
-                    'Name'      => 'RAYMOND LAY',
+                    'NIK' => '07073',
+                    'Name' => 'RAYMOND LAY',
                     'ShiftDate' => '01/05/2026',
-                    'ABS'       => '1',
-                    'LT'        => '2',
-                    'CT'        => '3',
-                    'OP'        => '0',
-                    'HOS'       => '1',
-                    'WA'        => '0',
-                    'HOSWA'     => '1',
+                    'ABS' => '1',
+                    'LT' => '2',
+                    'CT' => '3',
+                    'OP' => '0',
+                    'HOS' => '1',
+                    'WA' => '0',
+                    'HOSWA' => '1',
                 ]],
                 'total' => '1',
             ], 200),
@@ -171,10 +170,10 @@ class SyncJPayrollAttendanceTest extends TestCase
 
         $this->assertDatabaseHas('jpayroll_attendances', [
             'shift_date' => '2026-05-01',
-            'alpha'      => 1,
-            'telat'      => 2,
-            'izin'       => 3,
-            'sakit'      => 2, // HOS (1) + WA (0) + HOSWA (1)
+            'alpha' => 1,
+            'telat' => 2,
+            'izin' => 3,
+            'sakit' => 2, // HOS (1) + WA (0) + HOSWA (1)
         ]);
     }
 

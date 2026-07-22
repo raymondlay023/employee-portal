@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\EmployeeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    /** @use HasFactory<\Database\Factories\EmployeeFactory> */
+    /** @use HasFactory<EmployeeFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -59,6 +60,7 @@ class Employee extends Model
     {
         $first = substr($this->first_name ?? '', 0, 1);
         $last = $this->last_name ? substr($this->last_name, 0, 1) : '';
-        return strtoupper($first . $last);
+
+        return strtoupper($first.$last);
     }
 }

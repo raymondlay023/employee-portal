@@ -2,49 +2,53 @@
 
 namespace App\Livewire\Attendance;
 
-use Livewire\Component;
-use App\Models\Employee;
 use App\Models\ApiSyncLog;
+use App\Models\Employee;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use Livewire\Component;
 
 class SyncJpayroll extends Component
 {
     public $date_from;
+
     public $date_to;
+
     public $nik;
-    
+
     public $syncRequestedAt = null;
+
     public $showModal = false;
 
     public function mount()
     {
         $this->date_from = now()->subDays(7)->format('Y-m-d');
-        $this->date_to   = now()->format('Y-m-d');
+        $this->date_to = now()->format('Y-m-d');
     }
 
     public function sync()
     {
         $this->validate([
             'date_from' => 'required|date',
-            'date_to'   => 'required|date|after_or_equal:date_from',
-            'nik'       => 'nullable|string',
+            'date_to' => 'required|date|after_or_equal:date_from',
+            'nik' => 'nullable|string',
         ]);
 
         $start = Carbon::parse($this->date_from);
-        $end   = Carbon::parse($this->date_to);
+        $end = Carbon::parse($this->date_to);
 
         if ($start->diffInDays($end) > 31) {
             $this->addError('date_to', 'Date range cannot exceed 31 days to prevent API overload.');
+
             return;
         }
 
         $options = array_filter([
-            '--date1'        => $start->format('d/m/Y'),
-            '--date2'        => $end->format('d/m/Y'),
-            '--nik'          => $this->nik ?: null,
-            '--trigger'      => 'manual',
+            '--date1' => $start->format('d/m/Y'),
+            '--date2' => $end->format('d/m/Y'),
+            '--nik' => $this->nik ?: null,
+            '--trigger' => 'manual',
             '--triggered-by' => Auth::id(),
         ]);
 
@@ -69,32 +73,32 @@ class SyncJpayroll extends Component
     public function render()
     {
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
-        
+
         // Auto-recover logs stuck in 'running' for > 10 minutes (killed by queue worker timeout)
         ApiSyncLog::where('api_name', 'jpayroll_attendance')
             ->where('status', 'running')
             ->where('started_at', '<', now()->subMinutes(10))
             ->update([
-                'status'        => 'failed',
+                'status' => 'failed',
                 'error_message' => 'Job timed out or was interrupted before completing.',
-                'ended_at'      => now(),
+                'ended_at' => now(),
             ]);
 
         $latestLog = ApiSyncLog::where('api_name', 'jpayroll_attendance')
             ->orderBy('started_at', 'desc')
             ->first();
-            
+
         $isRunning = $latestLog && $latestLog->status === 'running';
-        
+
         if ($this->syncRequestedAt) {
-            $requestedAt = \Carbon\Carbon::parse($this->syncRequestedAt);
-            if ($latestLog && \Carbon\Carbon::parse($latestLog->created_at)->gte($requestedAt)) {
+            $requestedAt = Carbon::parse($this->syncRequestedAt);
+            if ($latestLog && Carbon::parse($latestLog->created_at)->gte($requestedAt)) {
                 if ($latestLog->status !== 'running') {
                     $this->redirect(route('attendance.index'));
                 }
             }
         }
-        
+
         $lastSync = ApiSyncLog::where('api_name', 'jpayroll_attendance')
             ->where('status', 'success')
             ->max('started_at');
@@ -103,8 +107,8 @@ class SyncJpayroll extends Component
             'employees' => $employees,
             'latestLog' => $latestLog,
             'isRunning' => $isRunning,
-            'justQueued' => $this->syncRequestedAt !== null && !$isRunning,
-            'lastSync'  => $lastSync,
+            'justQueued' => $this->syncRequestedAt !== null && ! $isRunning,
+            'lastSync' => $lastSync,
         ]);
     }
 }

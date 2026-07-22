@@ -27,7 +27,7 @@ class ApiSyncLog extends Model
     protected $casts = [
         'parameters' => 'array',
         'started_at' => 'datetime',
-        'ended_at'   => 'datetime',
+        'ended_at' => 'datetime',
     ];
 
     /**

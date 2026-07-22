@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreignId('designation_id')->nullable()->constrained()->nullOnDelete();
             $table->string('phone')->nullable();
             $table->date('joined_at')->nullable();
-            $table->enum('status', ['active','inactive','resigned','on_leave'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'resigned', 'on_leave'])->default('active');
             $table->string('account_type')->nullable(); // DIRECT or INDIRECT
             $table->integer('organization_structure')->nullable();
             $table->string('branch')->nullable();

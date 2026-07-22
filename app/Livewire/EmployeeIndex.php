@@ -2,17 +2,19 @@
 
 namespace App\Livewire;
 
+use App\Models\Department;
+use App\Models\Employee;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Employee;
-use App\Models\Department;
 
 class EmployeeIndex extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $department = '';
+
     public $activeOnly = true;
 
     protected $queryString = [
@@ -44,17 +46,17 @@ class EmployeeIndex extends Component
             $query->active();
         }
 
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $q = $this->search;
-            $query->where(function($r) use ($q) {
+            $query->where(function ($r) use ($q) {
                 $r->where('first_name', 'like', "%{$q}%")
-                  ->orWhere('last_name', 'like', "%{$q}%")
-                  ->orWhere('email', 'like', "%{$q}%")
-                  ->orWhere('employee_id', 'like', "%{$q}%");
+                    ->orWhere('last_name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('employee_id', 'like', "%{$q}%");
             });
         }
 
-        if (!empty($this->department)) {
+        if (! empty($this->department)) {
             $query->where('department_id', $this->department);
         }
 

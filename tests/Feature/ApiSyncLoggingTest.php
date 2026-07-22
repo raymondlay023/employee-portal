@@ -2,16 +2,18 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Config;
-use App\Models\User;
-use App\Models\Employee;
+use App\Authorization\Permissions;
+use App\Livewire\Attendance\SyncJpayroll;
 use App\Models\Department;
-use App\Models\ApiSyncLog;
-use Spatie\Permission\Models\Role;
+use App\Models\Employee;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class ApiSyncLoggingTest extends TestCase
 {
@@ -29,23 +31,25 @@ class ApiSyncLoggingTest extends TestCase
     private function createAdminUser(): User
     {
         $role = Role::findOrCreate('Admin');
-        $permission = Permission::findOrCreate(\App\Authorization\Permissions::MANAGE_ATTENDANCE);
+        $permission = Permission::findOrCreate(Permissions::MANAGE_ATTENDANCE);
         $role->givePermissionTo($permission);
 
         $user = User::factory()->create();
         $user->assignRole($role);
+
         return $user;
     }
 
     private function createEmployee(string $nik): Employee
     {
         $dept = Department::firstOrCreate(['name' => 'Test Dept']);
+
         return Employee::create([
             'employee_id' => $nik,
-            'first_name'  => 'Test',
-            'last_name'   => 'User',
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'department_id' => $dept->id,
-            'status'      => 'active',
+            'status' => 'active',
         ]);
     }
 
@@ -63,22 +67,22 @@ class ApiSyncLoggingTest extends TestCase
             ], 200),
         ]);
 
-        \Livewire\Livewire::actingAs($user)
-            ->test(\App\Livewire\Attendance\SyncJpayroll::class)
+        Livewire::actingAs($user)
+            ->test(SyncJpayroll::class)
             ->set('date_from', '2026-05-01')
             ->set('date_to', '2026-05-01')
             ->set('nik', '07073')
             ->call('sync')
             ->assertRedirect(route('attendance.index'));
-        
+
         $this->assertDatabaseHas('api_sync_logs', [
-            'api_name'             => 'jpayroll_attendance',
-            'trigger_type'         => 'manual',
+            'api_name' => 'jpayroll_attendance',
+            'trigger_type' => 'manual',
             'triggered_by_user_id' => $user->id,
-            'status'               => 'success',
-            'records_fetched'      => 1,
-            'records_processed'    => 1,
-            'records_failed'       => 0,
+            'status' => 'success',
+            'records_fetched' => 1,
+            'records_processed' => 1,
+            'records_failed' => 0,
         ]);
     }
 
@@ -89,17 +93,17 @@ class ApiSyncLoggingTest extends TestCase
         ]);
 
         $this->artisan('jpayroll:sync-attendance', [
-            '--date1'   => '01/05/2026',
-            '--date2'   => '06/05/2026',
+            '--date1' => '01/05/2026',
+            '--date2' => '06/05/2026',
             '--trigger' => 'scheduled',
         ])->assertFailed();
 
         $this->assertDatabaseHas('api_sync_logs', [
-            'api_name'             => 'jpayroll_attendance',
-            'trigger_type'         => 'scheduled',
+            'api_name' => 'jpayroll_attendance',
+            'trigger_type' => 'scheduled',
             'triggered_by_user_id' => null,
-            'status'               => 'failed',
-            'error_message'        => 'No attendance data fetched from JPayroll or an error occurred.',
+            'status' => 'failed',
+            'error_message' => 'No attendance data fetched from JPayroll or an error occurred.',
         ]);
     }
 }

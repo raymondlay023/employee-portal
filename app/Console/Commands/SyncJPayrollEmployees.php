@@ -2,12 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Services\JPayrollService;
-use App\Models\Employee;
+use App\Models\ApiSyncLog;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\Employee;
+use App\Models\User;
+use App\Services\JPayrollService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class SyncJPayrollEmployees extends Command
 {
@@ -34,13 +36,13 @@ class SyncJPayrollEmployees extends Command
         $triggeredBy = $this->option('triggered-by') ?: null;
 
         // Initialize API audit log
-        $syncLog = \App\Models\ApiSyncLog::create([
-            'api_name'             => 'jpayroll_employees',
-            'trigger_type'         => $trigger,
+        $syncLog = ApiSyncLog::create([
+            'api_name' => 'jpayroll_employees',
+            'trigger_type' => $trigger,
             'triggered_by_user_id' => $triggeredBy,
-            'parameters'           => [],
-            'status'               => 'running',
-            'started_at'           => now(),
+            'parameters' => [],
+            'status' => 'running',
+            'started_at' => now(),
         ]);
 
         $this->info('Starting JPayroll Employee Sync...');
@@ -51,14 +53,15 @@ class SyncJPayrollEmployees extends Command
             if (empty($employees)) {
                 $this->error('No data fetched from JPayroll or an error occurred.');
                 $syncLog->update([
-                    'status'        => 'failed',
-                    'ended_at'      => now(),
+                    'status' => 'failed',
+                    'ended_at' => now(),
                     'error_message' => 'No data fetched from JPayroll or an error occurred.',
                 ]);
+
                 return 1;
             }
 
-            $this->info('Fetched ' . count($employees) . ' employees from JPayroll. Syncing...');
+            $this->info('Fetched '.count($employees).' employees from JPayroll. Syncing...');
 
             $syncedCount = 0;
             $failedCount = 0;
@@ -66,13 +69,14 @@ class SyncJPayrollEmployees extends Command
             foreach ($employees as $emp) {
                 if (empty($emp['NIK'])) {
                     $failedCount++;
+
                     continue;
                 }
 
                 try {
                     // Map Dates
                     $joinedAt = null;
-                    if (!empty($emp['StartDate'])) {
+                    if (! empty($emp['StartDate'])) {
                         try {
                             $joinedAt = Carbon::createFromFormat('d/m/Y', $emp['StartDate'])->format('Y-m-d');
                         } catch (\Exception $e) {
@@ -81,7 +85,7 @@ class SyncJPayrollEmployees extends Command
                     }
 
                     $endDate = null;
-                    if (!empty($emp['EndDate'])) {
+                    if (! empty($emp['EndDate'])) {
                         try {
                             $endDate = Carbon::createFromFormat('d/m/Y', $emp['EndDate'])->format('Y-m-d');
                         } catch (\Exception $e) {
@@ -108,7 +112,7 @@ class SyncJPayrollEmployees extends Command
 
                     // Resolve Department
                     $departmentId = null;
-                    if (!empty($emp['CostCenterCode'])) {
+                    if (! empty($emp['CostCenterCode'])) {
                         $dept = Department::firstOrCreate(['name' => $emp['CostCenterCode']]);
                         $departmentId = $dept->id;
                     }
@@ -118,7 +122,7 @@ class SyncJPayrollEmployees extends Command
 
                     // Determine Account Type
                     $accountType = null;
-                    if (!empty($emp['AccountCode'])) {
+                    if (! empty($emp['AccountCode'])) {
                         $accountCode = strtoupper($emp['AccountCode']);
                         if (str_contains($accountCode, 'DIRECT') || str_contains($accountCode, 'INDIRECT')) {
                             $accountType = $emp['AccountCode'];
@@ -138,12 +142,12 @@ class SyncJPayrollEmployees extends Command
                     }
 
                     // Resolve and provision User account
-                    $user = \App\Models\User::where('nik', $emp['NIK'])->first();
-                    if (!$user) {
-                        $user = \App\Models\User::create([
+                    $user = User::where('nik', $emp['NIK'])->first();
+                    if (! $user) {
+                        $user = User::create([
                             'name' => $emp['Name'] ?? 'Unknown',
                             'nik' => $emp['NIK'],
-                            'email' => $emp['NIK'] . '@employee-portal.local',
+                            'email' => $emp['NIK'].'@employee-portal.local',
                             'password' => bcrypt('12345678'), // Default password
                         ]);
                     } else {
@@ -154,7 +158,7 @@ class SyncJPayrollEmployees extends Command
                     }
 
                     // Securely assign the Employee role if they do not have a role yet
-                    if (!$user->hasRole('Employee') && !$user->hasRole('Admin') && !$user->hasRole('HR') && !$user->hasRole('Manager')) {
+                    if (! $user->hasRole('Employee') && ! $user->hasRole('Admin') && ! $user->hasRole('HR') && ! $user->hasRole('Manager')) {
                         $user->assignRole('Employee');
                     }
 
@@ -183,26 +187,27 @@ class SyncJPayrollEmployees extends Command
             }
 
             $syncLog->update([
-                'status'            => 'success',
-                'ended_at'          => now(),
-                'records_fetched'   => count($employees),
+                'status' => 'success',
+                'ended_at' => now(),
+                'records_fetched' => count($employees),
                 'records_processed' => $syncedCount + $failedCount,
-                'records_saved'     => $syncedCount,
-                'records_failed'    => $failedCount,
+                'records_saved' => $syncedCount,
+                'records_failed' => $failedCount,
             ]);
 
             $this->info("Sync completed successfully. Synced {$syncedCount} employees.");
+
             return 0;
-            
+
         } catch (\Exception $e) {
-            $this->error('Error during JPayroll sync: ' . $e->getMessage());
-            
+            $this->error('Error during JPayroll sync: '.$e->getMessage());
+
             $syncLog->update([
-                'status'        => 'failed',
-                'ended_at'      => now(),
+                'status' => 'failed',
+                'ended_at' => now(),
                 'error_message' => $e->getMessage(),
             ]);
-            
+
             return 1;
         }
     }

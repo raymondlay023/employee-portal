@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Services\JPayrollService;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Tests\TestCase;
 
 class JPayrollServiceTest extends TestCase
 {
@@ -27,11 +27,11 @@ class JPayrollServiceTest extends TestCase
                 'status' => 200,
                 'data' => [
                     ['NIK' => '07038', 'Name' => 'John Doe'],
-                ]
-            ], 200)
+                ],
+            ], 200),
         ]);
 
-        $service = new JPayrollService();
+        $service = new JPayrollService;
         $employees = $service->fetchAllEmployees();
 
         $this->assertCount(1, $employees);
@@ -52,11 +52,11 @@ class JPayrollServiceTest extends TestCase
                 'data' => [
                     ['NIK' => '07073', 'Name' => 'RAYMOND LAY', 'ShiftDate' => '01/05/2026', 'ABS' => '0', 'LT' => '0', 'CT' => '0', 'OP' => '0', 'HOS' => '0', 'WA' => '0', 'HOSWA' => '0'],
                     ['NIK' => '07074', 'Name' => 'JANE DOE',    'ShiftDate' => '01/05/2026', 'ABS' => '1', 'LT' => '0', 'CT' => '0', 'OP' => '0', 'HOS' => '0', 'WA' => '0', 'HOSWA' => '0'],
-                ]
-            ], 200)
+                ],
+            ], 200),
         ]);
 
-        $service = new JPayrollService();
+        $service = new JPayrollService;
         $attendance = $service->fetchAttendance('01/05/2026', '06/05/2026');
 
         $this->assertCount(2, $attendance);
@@ -68,7 +68,7 @@ class JPayrollServiceTest extends TestCase
                 && $request['CompanyArea'] === '10000'
                 && $request['Date1'] === '01/05/2026'
                 && $request['Date2'] === '06/05/2026'
-                && !isset($request['NIK']);
+                && ! isset($request['NIK']);
         });
     }
 
@@ -79,11 +79,11 @@ class JPayrollServiceTest extends TestCase
                 'status' => 200,
                 'data' => [
                     ['NIK' => '07073', 'Name' => 'RAYMOND LAY', 'ShiftDate' => '01/05/2026', 'ABS' => '0', 'LT' => '0', 'CT' => '0', 'OP' => '0', 'HOS' => '0', 'WA' => '0', 'HOSWA' => '0'],
-                ]
-            ], 200)
+                ],
+            ], 200),
         ]);
 
-        $service = new JPayrollService();
+        $service = new JPayrollService;
         $attendance = $service->fetchAttendance('01/05/2026', '06/05/2026', '07073');
 
         $this->assertCount(1, $attendance);
@@ -102,7 +102,7 @@ class JPayrollServiceTest extends TestCase
     public function test_fetch_attendance_handles_failure(): void
     {
         Http::fake([
-            'https://api.jpayroll.test/API_View_Attendance.php' => Http::response('Internal Server Error', 500)
+            'https://api.jpayroll.test/API_View_Attendance.php' => Http::response('Internal Server Error', 500),
         ]);
 
         Log::shouldReceive('error')
@@ -111,7 +111,7 @@ class JPayrollServiceTest extends TestCase
                 return $data['status'] === 500 && $data['body'] === 'Internal Server Error';
             }));
 
-        $service = new JPayrollService();
+        $service = new JPayrollService;
         $attendance = $service->fetchAttendance('01/05/2025', '06/05/2025');
 
         $this->assertEmpty($attendance);
@@ -129,14 +129,14 @@ class JPayrollServiceTest extends TestCase
                         'EndDate' => '31/12/2026',
                         'Balance' => '12',
                         'Posted' => '6',
-                        'Remain' => '6'
-                    ]
+                        'Remain' => '6',
+                    ],
                 ],
-                'total' => '1'
-            ], 200)
+                'total' => '1',
+            ], 200),
         ]);
 
-        $service = new JPayrollService();
+        $service = new JPayrollService;
         $leave = $service->fetchAnnualLeave('2026', '07073');
 
         $this->assertNotNull($leave);
@@ -157,7 +157,7 @@ class JPayrollServiceTest extends TestCase
     public function test_fetch_annual_leave_handles_failure(): void
     {
         Http::fake([
-            'https://api.jpayroll.test/API_View_AnnualLeave.php' => Http::response('Internal Server Error', 500)
+            'https://api.jpayroll.test/API_View_AnnualLeave.php' => Http::response('Internal Server Error', 500),
         ]);
 
         Log::shouldReceive('error')
@@ -166,7 +166,7 @@ class JPayrollServiceTest extends TestCase
                 return $data['status'] === 500 && $data['body'] === 'Internal Server Error';
             }));
 
-        $service = new JPayrollService();
+        $service = new JPayrollService;
         $leave = $service->fetchAnnualLeave('2026', '07073');
 
         $this->assertNull($leave);

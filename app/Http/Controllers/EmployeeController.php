@@ -2,12 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Employee;
-use App\Models\Department;
-use App\Models\Designation;
-use App\Http\Requests\StoreEmployeeRequest;
-use App\Http\Requests\UpdateEmployeeRequest;
+use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
@@ -24,7 +20,8 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->load(['department','designation']);
+        $employee->load(['department', 'designation']);
+
         return view('employees.show', compact('employee'));
     }
 }

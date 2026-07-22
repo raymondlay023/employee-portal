@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
+use App\Authorization\Roles;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
-use App\Authorization\Roles;
-use App\Authorization\Permissions;
+use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class LeaveRequestTest extends TestCase
 {
@@ -17,7 +17,7 @@ class LeaveRequestTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
     }
 
     private function createEmployeeUser(): User
@@ -25,6 +25,7 @@ class LeaveRequestTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole(Roles::EMPLOYEE);
         Employee::factory()->create(['user_id' => $user->id]);
+
         return $user;
     }
 
@@ -33,6 +34,7 @@ class LeaveRequestTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole(Roles::HR);
         Employee::factory()->create(['user_id' => $user->id]);
+
         return $user;
     }
 
@@ -60,7 +62,7 @@ class LeaveRequestTest extends TestCase
         ]);
 
         $response = $this->actingAs($employee1)->get(route('leave-requests.index'));
-        
+
         $response->assertStatus(200);
         $response->assertSee('Vacation');
         $response->assertDontSee('Doctor appointment');

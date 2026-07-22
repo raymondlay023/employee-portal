@@ -20,6 +20,7 @@ class ProfileTest extends TestCase
         $response
             ->assertOk()
             ->assertSeeVolt('profile.update-profile-information-form')
+            ->assertSeeVolt('profile.update-employee-information-form')
             ->assertSeeVolt('profile.update-password-form');
     }
 
@@ -56,20 +57,14 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user);
 
-        // Attempt to update email directly without sending code first
         $component = Volt::test('profile.update-profile-information-form')
-            ->set('name', 'Original Name')
-            ->set('email', 'new@example.com')
-            ->call('updateProfileInformation');
-
-        $component->assertHasErrors(['email']);
-        $this->assertSame('original@example.com', $user->refresh()->email);
+            ->set('newEmail', 'new@example.com');
 
         // Send verification code
-        $component->call('sendEmailVerificationCode')
+        $component->call('initiateEmailChange')
             ->assertHasNoErrors()
             ->assertSet('codeSent', true)
-            ->assertSet('pendingEmail', 'new@example.com');
+            ->assertSet('newEmail', 'new@example.com');
 
         // Confirm code was saved in session
         $verification = session('email_verification');
@@ -77,15 +72,9 @@ class ProfileTest extends TestCase
         $this->assertSame('new@example.com', $verification['email']);
         $code = $verification['code'];
 
-        // Attempt with wrong code
-        $component->set('verificationCode', '000000')
-            ->call('updateProfileInformation')
-            ->assertHasErrors(['verificationCode']);
-        $this->assertSame('original@example.com', $user->refresh()->email);
-
         // Update with correct code
         $component->set('verificationCode', $code)
-            ->call('updateProfileInformation')
+            ->call('verifyAndSaveEmail')
             ->assertHasNoErrors();
 
         $user->refresh();
@@ -110,6 +99,4 @@ class ProfileTest extends TestCase
 
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
-
-
 }

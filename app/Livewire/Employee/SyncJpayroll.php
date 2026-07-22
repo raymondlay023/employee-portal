@@ -2,25 +2,26 @@
 
 namespace App\Livewire\Employee;
 
-use Livewire\Component;
+use App\Models\ApiSyncLog;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ApiSyncLog;
+use Livewire\Component;
 
 class SyncJpayroll extends Component
 {
     public $syncRequestedAt = null;
+
     public $showModal = false;
 
     public function sync()
     {
         $options = array_filter([
-            '--trigger'      => 'manual',
+            '--trigger' => 'manual',
             '--triggered-by' => Auth::id(),
         ]);
 
         Artisan::queue('jpayroll:sync-employees', $options);
-        
+
         session()->flash('sync_success', 'Master Employee sync queued successfully. Please watch the logs.');
         $this->syncRequestedAt = now()->toDateTimeString();
         $this->showModal = false;
@@ -31,7 +32,7 @@ class SyncJpayroll extends Component
         $latestLog = ApiSyncLog::where('api_name', 'jpayroll_employees')
             ->orderBy('started_at', 'desc')
             ->first();
-            
+
         $isRunning = $latestLog && $latestLog->status === 'running';
 
         if ($this->syncRequestedAt) {
@@ -45,7 +46,7 @@ class SyncJpayroll extends Component
         return view('livewire.employee.sync-jpayroll', [
             'latestLog' => $latestLog,
             'isRunning' => $isRunning,
-            'justQueued' => $this->syncRequestedAt !== null && !$isRunning,
+            'justQueued' => $this->syncRequestedAt !== null && ! $isRunning,
         ]);
     }
 }
