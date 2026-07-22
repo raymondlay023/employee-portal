@@ -195,6 +195,8 @@ class AttendanceController extends Controller
                 ->orderBy('clock_in_at', 'desc')
                 ->get();
 
+            JPayrollAttendance::seedBiometricLogsCache($targetEmployee->employee_id, $manualLogs, $startDate, $endDate);
+
             $todayLog = AttendanceLog::where('employee_id', $employee->employee_id)
                 ->whereNull('clock_out_at')
                 ->whereDate('clock_in_at', today())
@@ -241,8 +243,8 @@ class AttendanceController extends Controller
             $firstDayOffset = $firstDayOfMonth->dayOfWeekIso - 1;
             $dayOfMonth = $date->day - 1;
             $weekNumber = (int) floor(($dayOfMonth + $firstDayOffset) / 7) + 1;
-            
-            return 'Week ' . $weekNumber;
+
+            return 'Week '.$weekNumber;
         });
 
         // Last sync timestamps

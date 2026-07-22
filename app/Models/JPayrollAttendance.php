@@ -70,6 +70,32 @@ class JPayrollAttendance extends Model
     }
 
     /**
+     * Pre-load the biometric proof cache to prevent N+1 queries.
+     *
+     * @param  string  $employeeId  The employee string ID (e.g. EMP001)
+     * @param  iterable  $logs  Collection of AttendanceLog instances
+     * @param  string  $startDate  'Y-m-d'
+     * @param  string  $endDate  'Y-m-d'
+     */
+    public static function seedBiometricLogsCache(string $employeeId, iterable $logs, string $startDate, string $endDate): void
+    {
+        $currentDate = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        while ($currentDate->lte($end)) {
+            $dateStr = $currentDate->toDateString();
+            self::$biometricProofCache["{$employeeId}_{$dateStr}"] = null;
+            $currentDate->addDay();
+        }
+
+        foreach ($logs as $log) {
+            if ($log->clock_in_at) {
+                $dateStr = $log->clock_in_at->toDateString();
+                self::$biometricProofCache["{$employeeId}_{$dateStr}"] = $log;
+            }
+        }
+    }
+
+    /**
      * Get the biometric or manual clock-in log for this shift date.
      */
     public function getBiometricLog(): ?AttendanceLog

@@ -3,6 +3,7 @@
 namespace App\Livewire\Hr;
 
 use App\Authorization\Permissions;
+use App\Models\AttendanceLog;
 use App\Models\DailyWorkLog;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
@@ -76,8 +77,16 @@ class AttendanceReportDetail extends Component
         $startDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->startOfMonth()->toDateString();
         $endDate = now()->setYear((int) $this->year)->setMonth((int) $this->month)->endOfMonth()->toDateString();
 
+        // Pre-fetch manual logs for the month to prevent N+1 in statusLabel() & getBiometricLog()
+        $manualLogs = AttendanceLog::where('employee_id', $this->employee->employee_id)
+            ->whereBetween('clock_in_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->get();
+
+        JPayrollAttendance::seedBiometricLogsCache($this->employee->employee_id, $manualLogs, $startDate, $endDate);
+
         // Single query for all logs of the month
-        $allLogs = JPayrollAttendance::where('employee_id', $this->employee->id)
+        $allLogs = JPayrollAttendance::with('employee')
+            ->where('employee_id', $this->employee->id)
             ->whereBetween('shift_date', [$startDate, $endDate])
             ->orderBy('shift_date', 'asc')
             ->get();
@@ -138,7 +147,7 @@ class AttendanceReportDetail extends Component
             $dayOfMonth = $date->day - 1;
             $weekNumber = (int) floor(($dayOfMonth + $firstDayOffset) / 7) + 1;
 
-            return 'Week ' . $weekNumber;
+            return 'Week '.$weekNumber;
         });
 
         // Fetch all work logs for the employee in the month
@@ -157,4 +166,3 @@ class AttendanceReportDetail extends Component
         ])->layout('layouts.app');
     }
 }
-

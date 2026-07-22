@@ -69,7 +69,25 @@
             </div>
 
             <!-- Main Data Table -->
-            <div class="bg-white rounded-3xl shadow-xs border border-slate-200 overflow-hidden relative">
+            <div class="bg-white rounded-3xl shadow-xs border border-slate-200 overflow-hidden relative" x-data="{ showLogs: false }">
+                <!-- Toggle Header -->
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-end">
+                    <div class="flex items-center gap-2.5 bg-slate-50/80 hover:bg-slate-100/80 px-3.5 py-2 rounded-xl border border-slate-200/80 transition-all shadow-2xs">
+                        <button type="button" 
+                                @click="showLogs = !showLogs"
+                                :class="showLogs ? 'bg-brand-600' : 'bg-slate-300'"
+                                class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
+                                role="switch" 
+                                :aria-checked="showLogs">
+                            <span :class="showLogs ? 'translate-x-4' : 'translate-x-0'"
+                                  class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                        <span @click="showLogs = !showLogs" class="text-xs font-extrabold text-slate-700 select-none cursor-pointer">
+                            {{ __('Show Punch & Work Logs') }}
+                        </span>
+                    </div>
+                </div>
+
                 <div wire:loading class="absolute inset-0 bg-white/50 backdrop-blur-xs z-10 flex items-center justify-center">
                     <svg class="animate-spin h-8 w-8 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -82,7 +100,10 @@
                             <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-extrabold tracking-wider text-slate-500">
                                 <th class="py-4 px-6">{{ __('Date') }}</th>
                                 <th class="py-4 px-4 text-center">{{ __('Status') }}</th>
-                                <th class="py-4 px-4 text-center">{{ __('Work Logs') }}</th>
+                                <th x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">{{ __('Clock In') }}</th>
+                                <th x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">{{ __('Clock Out') }}</th>
+                                <th x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">{{ __('Duration') }}</th>
+                                <th x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">{{ __('Work Logs') }}</th>
                                 <th class="py-4 px-4 text-center">{{ __('Absent') }}</th>
                                 <th class="py-4 px-4 text-center">{{ __('Late') }}</th>
                                 <th class="py-4 px-4 text-center">{{ __('Sick') }}</th>
@@ -94,7 +115,7 @@
                             <!-- Week Subheader Row -->
                             <tbody class="border-t-2 border-slate-100">
                                 <tr class="bg-slate-50/80">
-                                    <td colspan="7" class="px-6 py-2.5">
+                                    <td :colspan="showLogs ? 10 : 6" class="px-6 py-2.5">
                                         <span class="text-[10px] font-extrabold text-brand-600 uppercase tracking-wider">
                                             {{ __($weekLabel) }}
                                         </span>
@@ -107,6 +128,7 @@
                                 $dateKey = $log->shift_date->toDateString();
                                 $dayWorkLogs = $workLogs[$dateKey] ?? collect();
                                 $hasWorkLogs = $dayWorkLogs->isNotEmpty();
+                                $biometricLog = $log->getBiometricLog();
                             @endphp
                             <tbody x-data="{ expanded: false }" class="border-b border-slate-100">
                                 <tr class="hover:bg-slate-50/60 transition-colors group">
@@ -140,8 +162,35 @@
                                             @endif
                                         </div>
                                     </td>
+                                    <td x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">
+                                        @if($biometricLog && $biometricLog->clock_in_at)
+                                            <span class="text-xs font-extrabold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                                {{ $biometricLog->clock_in_at->timezone('Asia/Jakarta')->format('H:i') }}
+                                            </span>
+                                        @else
+                                            <span class="text-xs text-slate-300">—</span>
+                                        @endif
+                                    </td>
+                                    <td x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">
+                                        @if($biometricLog && $biometricLog->clock_out_at)
+                                            <span class="text-xs font-extrabold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                                {{ $biometricLog->clock_out_at->timezone('Asia/Jakarta')->format('H:i') }}
+                                            </span>
+                                        @else
+                                            <span class="text-xs text-slate-300">—</span>
+                                        @endif
+                                    </td>
+                                    <td x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">
+                                        @if($biometricLog && $biometricLog->clock_in_at && $biometricLog->clock_out_at)
+                                            <span class="text-xs font-bold text-slate-500">
+                                                {{ $biometricLog->clock_in_at->diff($biometricLog->clock_out_at)->format('%hh %Im') }}
+                                            </span>
+                                        @else
+                                            <span class="text-xs text-slate-300">—</span>
+                                        @endif
+                                    </td>
                                     <!-- Work Logs Badge Button -->
-                                    <td class="py-4 px-4 text-center">
+                                    <td x-show="showLogs" x-cloak class="py-4 px-4 text-center" style="display: none;">
                                         @if($hasWorkLogs)
                                             <button @click="expanded = !expanded" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-extrabold text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors shadow-xs cursor-pointer">
                                                 <span>{{ $dayWorkLogs->count() }} {{ __('Logs') }}</span>
@@ -176,7 +225,7 @@
                                 </tr>
                                 @if($hasWorkLogs)
                                     <tr x-show="expanded" x-transition.opacity class="bg-slate-50/60" style="display: none;">
-                                        <td colspan="7" class="p-0 border-t border-slate-100">
+                                        <td :colspan="showLogs ? 10 : 6" class="p-0 border-t border-slate-100">
                                             <div class="px-12 py-4 shadow-inner">
                                                 <div class="flex items-center justify-between mb-3">
                                                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ __('Daily Work Logs') }}</h4>
@@ -212,7 +261,7 @@
                         @empty
                             <tbody>
                                 <tr>
-                                    <td colspan="7" class="py-16 text-center">
+                                    <td :colspan="showLogs ? 10 : 6" class="py-16 text-center">
                                         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
                                             <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

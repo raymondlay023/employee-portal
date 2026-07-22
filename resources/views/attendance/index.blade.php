@@ -92,27 +92,7 @@
                         <input type="hidden" name="employee_id" value="{{ $targetEmployee->id ?? '' }}">
                     @endcan
 
-                    <!-- Status Select -->
-                    <div class="flex flex-col gap-1">
-                        <label for="status" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Status') }}</label>
-                        <select id="status" name="status"
-                            class="text-xs border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-slate-700 font-bold bg-slate-50 focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
-                            <option value="all" {{ request('status') === 'all' || !request()->has('status') ? 'selected' : '' }}>{{ __('All Statuses') }}</option>
-                            <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Present') }}</option>
-                            <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>{{ __('Absent') }}</option>
-                            <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>{{ __('Late') }}</option>
-                            <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>{{ __('Leave') }}</option>
-                            <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>{{ __('Sick') }}</option>
-                        </select>
-                    </div>
-
-                    <!-- Reset Link -->
-                    <div class="flex items-end pt-4">
-                        <a href="{{ route('attendance.index') }}"
-                            class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all">
-                            {{ __('Reset') }}
-                        </a>
-                    </div>
+                    <input type="hidden" name="status" value="{{ request('status', 'all') }}">
                 </div>
 
                 <!-- Last Sync Status Badges -->
@@ -133,73 +113,43 @@
 
         {{-- ── SUMMARY REPORT CARDS ────────────────────────────────────────── --}}
         @if(isset($summary))
+            @php $currentStatus = request('status', 'all'); @endphp
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="p-1.5 rounded-lg bg-slate-50 text-slate-400">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{{ __('Total Days') }}</span>
-                    </div>
-                    <span class="text-2xl font-black text-slate-800">{{ (int) $summary->total_days }}</span>
-                </div>
-                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-emerald-400 relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 opacity-5">
-                        <svg class="w-24 h-24 text-emerald-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                    </div>
-                    <div class="flex items-center gap-2 mb-2 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">{{ __('Present') }}</span>
-                    </div>
-                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->present_days }}</span>
-                </div>
-                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-red-400 relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 opacity-5">
-                        <svg class="w-24 h-24 text-red-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
-                    </div>
-                    <div class="flex items-center gap-2 mb-2 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                        <span class="text-[10px] font-extrabold text-red-600 uppercase tracking-wider">{{ __('Absent') }}</span>
-                    </div>
-                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->absent_days }}</span>
-                </div>
-                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-amber-400 relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 opacity-5">
-                        <svg class="w-24 h-24 text-amber-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
-                    </div>
-                    <div class="flex items-center gap-2 mb-2 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider">{{ __('Late') }}</span>
-                    </div>
-                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->late_days }}</span>
-                </div>
-                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-purple-400 relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 opacity-5">
-                        <svg class="w-24 h-24 text-purple-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
-                    </div>
-                    <div class="flex items-center gap-2 mb-2 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-                        <span class="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider">{{ __('Sick') }}</span>
-                    </div>
-                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) $summary->sick_days }}</span>
-                </div>
-                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-center border-b-4 border-b-blue-400 relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 opacity-5">
-                        <svg class="w-24 h-24 text-blue-900" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
-                    </div>
-                    <div class="flex items-center gap-2 mb-2 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span class="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">{{ __('Leave') }}</span>
-                    </div>
-                    <span class="text-2xl font-black text-slate-800 relative z-10">{{ (int) ($summary->leave_days + ($summary->permitted_days ?? 0)) }}</span>
-                </div>
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'all']) }}"
+                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $currentStatus === 'all' ? 'border-brand-500 ring-2 ring-brand-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Total') }}</div>
+                    <div class="text-2xl font-extrabold text-slate-800">{{ (int) $summary->total_days }}</div>
+                </a>
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'present']) }}"
+                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $currentStatus === 'present' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-green-600 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Present') }}</div>
+                    <div class="text-2xl font-extrabold text-green-700">{{ (int) $summary->present_days }}</div>
+                </a>
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'absent']) }}"
+                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $currentStatus === 'absent' ? 'border-red-500 ring-2 ring-red-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-red-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Absent') }}</div>
+                    <div class="text-2xl font-extrabold text-red-600">{{ (int) $summary->absent_days }}</div>
+                </a>
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'late']) }}"
+                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $currentStatus === 'late' ? 'border-amber-500 ring-2 ring-amber-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-amber-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Late') }}</div>
+                    <div class="text-2xl font-extrabold text-amber-600">{{ (int) $summary->late_days }}</div>
+                </a>
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'sick']) }}"
+                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $currentStatus === 'sick' ? 'border-purple-500 ring-2 ring-purple-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-purple-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Sick') }}</div>
+                    <div class="text-2xl font-extrabold text-purple-600">{{ (int) $summary->sick_days }}</div>
+                </a>
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'leave']) }}"
+                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $currentStatus === 'leave' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Leave') }}</div>
+                    <div class="text-2xl font-extrabold text-blue-600">{{ (int) ($summary->leave_days + ($summary->permitted_days ?? 0)) }}</div>
+                </a>
             </div>
         @endif
 
         {{-- ── UNIFIED SECTION: Attendance Records ──────────────────────── --}}
-        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden" x-data="{ showLogs: false }">
 
             {{-- Card header --}}
             <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -217,6 +167,21 @@
 
                 {{-- Clock In / Out actions & Sync badges --}}
                 <div class="flex flex-wrap items-center gap-3 lg:ml-auto">
+                    <!-- Toggle Switch for Work & Biometric Logs -->
+                    <div class="flex items-center gap-2.5 bg-slate-50/80 hover:bg-slate-100/80 px-3.5 py-2 rounded-xl border border-slate-200/80 transition-all shadow-2xs">
+                        <button type="button" 
+                                @click="showLogs = !showLogs"
+                                :class="showLogs ? 'bg-brand-600' : 'bg-slate-300'"
+                                class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
+                                role="switch" 
+                                :aria-checked="showLogs">
+                            <span :class="showLogs ? 'translate-x-4' : 'translate-x-0'"
+                                  class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                        <span @click="showLogs = !showLogs" class="text-xs font-extrabold text-slate-700 select-none cursor-pointer">
+                            {{ __('Show Punch & Work Logs') }}
+                        </span>
+                    </div>
                     @if(config('app.enable_manual_attendance'))
                         @if (!$todayLog)
                             <form action="{{ route('attendance.clock-in') }}" method="POST">
@@ -250,10 +215,10 @@
                         <tr class="bg-slate-50/60">
                             <th class="px-5 py-3.5 text-left text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Date') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Status') }}</th>
-                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Clock In') }}</th>
-                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Clock Out') }}</th>
-                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Duration') }}</th>
-                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">{{ __('Work Logs') }}</th>
+                            <th x-show="showLogs" x-cloak class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" style="display: none;">{{ __('Clock In') }}</th>
+                            <th x-show="showLogs" x-cloak class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" style="display: none;">{{ __('Clock Out') }}</th>
+                            <th x-show="showLogs" x-cloak class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" style="display: none;">{{ __('Duration') }}</th>
+                            <th x-show="showLogs" x-cloak class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" style="display: none;">{{ __('Work Logs') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">{{ __('Absent') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">{{ __('Late') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">{{ __('Sick') }}</th>
@@ -265,7 +230,7 @@
                         <!-- Week Subheader Row -->
                         <tbody class="border-t-2 border-slate-100">
                             <tr class="bg-slate-50/80">
-                                <td colspan="10" class="px-5 py-2.5">
+                                <td :colspan="showLogs ? 10 : 6" class="px-5 py-2.5">
                                     <span class="text-[10px] font-extrabold text-brand-600 uppercase tracking-wider">
                                         {{ __($weekLabel) }}
                                     </span>
@@ -329,7 +294,7 @@
                                 </td>
 
                                 <!-- Clock In -->
-                                <td class="px-5 py-3.5 text-center">
+                                <td x-show="showLogs" x-cloak class="px-5 py-3.5 text-center" style="display: none;">
                                     @if($bio && $bio->clock_in_at)
                                         <span class="text-xs font-semibold text-emerald-700">
                                             {{ $bio->clock_in_at->timezone('Asia/Jakarta')->format('H:i:s') }}
@@ -340,7 +305,7 @@
                                 </td>
 
                                 <!-- Clock Out -->
-                                <td class="px-5 py-3.5 text-center">
+                                <td x-show="showLogs" x-cloak class="px-5 py-3.5 text-center" style="display: none;">
                                     @if($bio && $bio->clock_out_at)
                                         <span class="text-xs font-semibold text-slate-700">
                                             {{ $bio->clock_out_at->timezone('Asia/Jakarta')->format('H:i:s') }}
@@ -360,12 +325,12 @@
                                 </td>
 
                                 <!-- Duration -->
-                                <td class="px-5 py-3.5 text-center text-xs text-slate-500 font-medium">
+                                <td x-show="showLogs" x-cloak class="px-5 py-3.5 text-center text-xs text-slate-500 font-medium" style="display: none;">
                                     {{ $bio ? $bio->duration : '—' }}
                                 </td>
 
                                 <!-- Work Logs Badge Button -->
-                                <td class="px-5 py-3.5 text-center">
+                                <td x-show="showLogs" x-cloak class="px-5 py-3.5 text-center" style="display: none;">
                                     @if($hasWorkLogs)
                                         <button @click="expanded = !expanded" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-extrabold text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors shadow-xs cursor-pointer">
                                             <span>{{ $dayWorkLogs->count() }} {{ __('Logs') }}</span>
@@ -423,8 +388,8 @@
                                 </td>
                             </tr>
                             @if($hasWorkLogs)
-                                <tr x-show="expanded" x-transition.opacity class="bg-slate-50/60" style="display: none;">
-                                    <td colspan="10" class="p-0 border-t border-slate-100">
+                                <tr x-show="expanded && showLogs" x-transition.opacity class="bg-slate-50/60" style="display: none;">
+                                    <td :colspan="showLogs ? 10 : 6" class="p-0 border-t border-slate-100">
                                         <div class="px-10 py-4 shadow-inner">
                                             <div class="flex items-center justify-between mb-3">
                                                 <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ __('Daily Work Logs') }}</h4>
@@ -460,7 +425,7 @@
                     @empty
                             <tbody class="border-t border-slate-100">
                                 <tr>
-                                    <td colspan="10" class="px-5 py-12 text-center">
+                                    <td :colspan="showLogs ? 10 : 6" class="px-5 py-12 text-center">
                                     <div class="flex flex-col items-center gap-2 text-slate-400">
                                         <svg class="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
