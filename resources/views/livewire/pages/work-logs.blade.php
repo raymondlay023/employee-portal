@@ -25,18 +25,18 @@
                     {{ __('Weekly Timesheet Navigation') }}
                 </span>
                 
-                <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-1.5 sm:p-2 rounded-2xl w-full sm:w-auto">
+                <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-2xl">
                     <!-- Previous Week -->
                     <button type="button" wire:click="previousWeek" 
-                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0" 
+                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center" 
                         title="{{ __('Previous Week') }}">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </button>
 
-                    <!-- Days Ribbon (Flexible full-width on mobile) -->
-                    <div class="flex items-center gap-1 sm:gap-1.5 flex-1 justify-between overflow-x-auto no-scrollbar">
+                    <!-- Days Ribbon -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         @foreach ($weekDays as $day)
                             @php
                                 $dotColor = 'bg-white/20';
@@ -49,12 +49,12 @@
                                 }
                             @endphp
                             <button type="button" wire:click="$set('date', '{{ $day['date'] }}')"
-                                class="flex flex-col items-center justify-between flex-1 min-w-[34px] sm:min-w-[44px] h-12 sm:h-13 py-1 rounded-xl transition-all cursor-pointer border-0 bg-transparent
+                                class="flex flex-col items-center justify-between w-11 h-13 py-1.5 rounded-xl border transition-all cursor-pointer border-0 bg-transparent
                                 {{ $day['is_active'] 
                                     ? 'bg-white text-slate-800 shadow-md font-extrabold border-white scale-105' 
                                     : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent' }}">
-                                <span class="text-[8px] sm:text-[9px] uppercase tracking-wider opacity-60 font-bold {{ $day['is_active'] ? 'text-slate-500' : 'text-white/60' }}">{{ $day['day_label'] }}</span>
-                                <span class="text-xs sm:text-sm font-black -mt-0.5">{{ $day['day_number'] }}</span>
+                                <span class="text-[9px] uppercase tracking-wider opacity-60 font-bold {{ $day['is_active'] ? 'text-slate-500' : 'text-white/60' }}">{{ $day['day_label'] }}</span>
+                                <span class="text-sm font-black -mt-0.5">{{ $day['day_number'] }}</span>
                                 <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} mt-0.5"></span>
                             </button>
                         @endforeach
@@ -62,7 +62,7 @@
 
                     <!-- Next Week -->
                     <button type="button" wire:click="nextWeek" 
-                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0" 
+                        class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center" 
                         title="{{ __('Next Week') }}">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -70,7 +70,7 @@
                     </button>
 
                     <!-- Arbitrary Date Picker Dropdown -->
-                    <div class="relative flex items-center shrink-0">
+                    <div class="relative flex items-center">
                         <label for="hidden-date-picker" class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center" title="{{ __('Pick Custom Date') }}">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
