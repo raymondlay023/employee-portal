@@ -149,7 +149,7 @@ class AttendanceController extends Controller
 
         $summary = $summaryQuery->selectRaw('
             COUNT(jpayroll_attendances.id) as total_days,
-            SUM(CASE WHEN jpayroll_attendances.alpha > 0 OR (jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NULL) THEN 1 ELSE 0 END) as absent_days,
+            SUM(CASE WHEN jpayroll_attendances.alpha > 0 THEN 1 ELSE 0 END) as absent_days,
             SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit > 0 THEN 1 ELSE 0 END) as sick_days,
             SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as leave_days,
             SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as late_days,
@@ -165,16 +165,7 @@ class AttendanceController extends Controller
                     ->where('jpayroll_attendances.sakit', 0)
                     ->whereNotNull('logs.employee_id');
             } elseif ($status === 'absent') {
-                $jpayrollQuery->where(function ($q) {
-                    $q->where('jpayroll_attendances.alpha', '>', 0)
-                        ->orWhere(function ($sub) {
-                            $sub->where('jpayroll_attendances.alpha', 0)
-                                ->where('jpayroll_attendances.sakit', 0)
-                                ->where('jpayroll_attendances.izin', 0)
-                                ->where('jpayroll_attendances.telat', '>', 0)
-                                ->whereNull('logs.employee_id');
-                        });
-                });
+                $jpayrollQuery->where('jpayroll_attendances.alpha', '>', 0);
             } elseif ($status === 'late') {
                 $jpayrollQuery->where('jpayroll_attendances.telat', '>', 0);
             } elseif ($status === 'leave') {
