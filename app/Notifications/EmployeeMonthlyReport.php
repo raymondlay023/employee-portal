@@ -48,7 +48,7 @@ class EmployeeMonthlyReport extends Notification implements ShouldQueue
             ->line(__('Absent').": **{$s->absentDays}** | ".
                    __('Late').": **{$s->lateDays}**")
             ->line(__('Sick').": **{$s->sickDays}** | ".
-                   __('Leave').": **{$s->leaveDays}**")
+                   __('Permit').": **{$s->permitDays}**")
             ->action(__('View My Attendance'), route('attendance.index'));
     }
 
@@ -71,7 +71,7 @@ class EmployeeMonthlyReport extends Notification implements ShouldQueue
                     'absent' => $s->absentDays,
                     'late' => $s->lateDays,
                     'sick' => $s->sickDays,
-                    'leave' => $s->leaveDays,
+                    'permit' => $s->permitDays,
                     'rate' => $s->attendanceRate(),
                 ],
             ],

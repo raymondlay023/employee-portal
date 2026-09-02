@@ -76,7 +76,7 @@ class ManagerMonthlyReport extends Notification implements ShouldQueue
                             'absent' => $s->absentDays,
                             'late' => $s->lateDays,
                             'sick' => $s->sickDays,
-                            'leave' => $s->leaveDays,
+                            'permit' => $s->permitDays,
                             'rate' => $s->attendanceRate(),
                         ];
                     })->toArray(),

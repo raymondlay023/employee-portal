@@ -28,7 +28,7 @@ class AttendanceController extends Controller
             'month' => ['nullable', 'integer', 'between:1,12'],
             'year' => ['nullable', 'integer', 'between:2020,2030'],
             'employee_id' => ['nullable', 'exists:employees,id'],
-            'status' => ['nullable', 'in:all,present,absent,late,leave,sick'],
+            'status' => ['nullable', 'in:all,present,absent,late,leave,sick,permit'],
         ]);
 
         $targetEmployeeId = null;
@@ -152,6 +152,7 @@ class AttendanceController extends Controller
             SUM(CASE WHEN jpayroll_attendances.alpha > 0 THEN 1 ELSE 0 END) as absent_days,
             SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit > 0 THEN 1 ELSE 0 END) as sick_days,
             SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as leave_days,
+            SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as permit_days,
             SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as late_days,
             SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as present_days
         ')->first();
@@ -168,7 +169,7 @@ class AttendanceController extends Controller
                 $jpayrollQuery->where('jpayroll_attendances.alpha', '>', 0);
             } elseif ($status === 'late') {
                 $jpayrollQuery->where('jpayroll_attendances.telat', '>', 0);
-            } elseif ($status === 'leave') {
+            } elseif ($status === 'permit' || $status === 'leave') {
                 $jpayrollQuery->where('jpayroll_attendances.izin', '>', 0);
             } elseif ($status === 'sick') {
                 $jpayrollQuery->where('jpayroll_attendances.sakit', '>', 0);

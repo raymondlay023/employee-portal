@@ -98,6 +98,7 @@ class AttendanceReportDetail extends Component
             'absent' => 0,
             'late' => 0,
             'sick' => 0,
+            'permit' => 0,
             'leave' => 0,
         ];
 
@@ -108,7 +109,8 @@ class AttendanceReportDetail extends Component
                 $summary['absent']++;
             } elseif ($statusLabel === 'Sick') {
                 $summary['sick']++;
-            } elseif ($statusLabel === 'Leave') {
+            } elseif ($statusLabel === 'Permit' || $statusLabel === 'Leave') {
+                $summary['permit']++;
                 $summary['leave']++;
             } elseif ($statusLabel === 'Late') {
                 $summary['late']++;
@@ -134,6 +136,10 @@ class AttendanceReportDetail extends Component
 
             if ($filter === 'present') {
                 return $statusLabel === 'present';
+            }
+
+            if ($filter === 'permit' || $filter === 'leave') {
+                return $statusLabel === 'permit' || $statusLabel === 'leave';
             }
 
             return $statusLabel === $filter;

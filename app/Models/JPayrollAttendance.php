@@ -141,7 +141,7 @@ class JPayrollAttendance extends Model
                 return 'Punched while marked Sick';
             }
             if ($this->izin > 0) {
-                return 'Punched while marked on Leave';
+                return 'Punched while marked on Permit';
             }
 
             // Check for missing clock-out on past dates
@@ -178,7 +178,7 @@ class JPayrollAttendance extends Model
             return 'Sick';
         }
         if ($this->izin > 0) {
-            return 'Leave';
+            return 'Permit';
         }
 
         if (! $this->hasBiometricProof()) {

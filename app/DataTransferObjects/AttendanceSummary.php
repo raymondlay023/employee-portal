@@ -12,7 +12,7 @@ final readonly class AttendanceSummary
         public int $absentDays,
         public int $lateDays,
         public int $sickDays,
-        public int $leaveDays,
+        public int $permitDays = 0,
     ) {}
 
     /**

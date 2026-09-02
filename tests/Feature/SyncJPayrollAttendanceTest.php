@@ -172,7 +172,7 @@ class SyncJPayrollAttendanceTest extends TestCase
             'shift_date' => '2026-05-01',
             'alpha' => 1,
             'telat' => 2,
-            'izin' => 3,
+            'izin' => 0, // JPayroll CT is leave, so API sync defaults izin to 0
             'sakit' => 2, // HOS (1) + WA (0) + HOSWA (1)
         ]);
     }

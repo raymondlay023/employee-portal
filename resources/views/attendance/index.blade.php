@@ -140,10 +140,10 @@
                     <div class="text-purple-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Sick') }}</div>
                     <div class="text-2xl font-extrabold text-purple-600">{{ (int) $summary->sick_days }}</div>
                 </a>
-                <a href="{{ request()->fullUrlWithQuery(['status' => 'leave']) }}"
-                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $currentStatus === 'leave' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-100 hover:border-slate-300' }}">
-                    <div class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Leave') }}</div>
-                    <div class="text-2xl font-extrabold text-blue-600">{{ (int) ($summary->leave_days + ($summary->permitted_days ?? 0)) }}</div>
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'permit']) }}"
+                   class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ ($currentStatus === 'permit' || $currentStatus === 'leave') ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Permit') }}</div>
+                    <div class="text-2xl font-extrabold text-blue-600">{{ (int) ($summary->permit_days ?? $summary->izin_days ?? $summary->leave_days ?? 0) }}</div>
                 </a>
             </div>
         @endif
@@ -187,7 +187,7 @@
                             <form action="{{ route('attendance.clock-in') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="inline-flex justify-center items-center px-5 py-2 border border-transparent text-xs font-extrabold rounded-xl shadow-xs text-white bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 transform transition-all cursor-pointer">
-                                    <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                     </svg>
                                     {{ __('Clock In') }}
@@ -222,7 +222,7 @@
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Absent without leave">{{ __('Absent') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Late arrival">{{ __('Late') }}</th>
                             <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Sick leave">{{ __('Sick') }}</th>
-                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved leave / Cuti">{{ __('Leave') }}</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider" title="Approved Permit / Izin">{{ __('Permit') }}</th>
                         </tr>
                     </thead>
                     <tbody class="hidden"></tbody>
@@ -254,7 +254,7 @@
                                     'Present' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
                                     'Absent', 'Absent (No Biometric)' => 'bg-red-50 text-red-700 border-red-100',
                                     'Late' => 'bg-amber-50 text-amber-700 border-amber-100',
-                                    'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                    'Permit', 'Leave' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
                                     'Sick' => 'bg-orange-50 text-orange-700 border-orange-100',
                                     'Off Day' => 'bg-slate-50 text-slate-500 border-slate-100',
                                     default => 'bg-slate-50 text-slate-500 border-slate-100',

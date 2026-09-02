@@ -34,6 +34,8 @@
         </div>
 
         <div class="flex items-center gap-3">
+            <livewire:attendance.upload-permit-csv />
+
             <button type="button"
                 wire:click="$set('showModal', true)"
                 class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-slate-900/10 transition-all cursor-pointer border-0">

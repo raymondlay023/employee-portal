@@ -126,7 +126,7 @@ class MonthlyReportServiceTest extends TestCase
         $this->assertEquals(1, $summary->absentDays);
         $this->assertEquals(1, $summary->lateDays);
         $this->assertEquals(1, $summary->sickDays);
-        $this->assertEquals(1, $summary->leaveDays);
+        $this->assertEquals(1, $summary->permitDays);
         $this->assertEquals(40.0, $summary->attendanceRate());
     }
 
@@ -330,7 +330,7 @@ class MonthlyReportServiceTest extends TestCase
             absentDays: 0,
             lateDays: 0,
             sickDays: 0,
-            leaveDays: 0
+            permitDays: 0,
         );
 
         $this->assertEquals(0.0, $summary->attendanceRate());

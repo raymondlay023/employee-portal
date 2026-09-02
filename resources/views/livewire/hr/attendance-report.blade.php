@@ -133,10 +133,10 @@
                                         @endif
                                     </div>
                                 </th>
-                                <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('leave_days')">
+                                <th class="py-4 px-4 text-center cursor-pointer hover:bg-slate-100 transition-colors" wire:click="sortBy('permit_days')">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        {{ __('Leave') }}
-                                        @if($sortField === 'leave_days')
+                                        {{ __('Permit') }}
+                                        @if($sortField === 'permit_days' || $sortField === 'leave_days')
                                             <span class="text-brand-600 font-bold {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}">▼</span>
                                         @endif
                                     </div>

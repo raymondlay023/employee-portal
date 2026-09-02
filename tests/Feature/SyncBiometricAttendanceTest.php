@@ -10,6 +10,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -25,11 +26,18 @@ class SyncBiometricAttendanceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow('2026-07-20 12:00:00');
         Config::set('services.biometric_device.urls', [
             'http://192.168.6.96/iWsService',
             'http://192.168.6.97/iWsService',
         ]);
         Storage::fake('local');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     private function createEmployee(string $employeeId, string $deptCode): Employee

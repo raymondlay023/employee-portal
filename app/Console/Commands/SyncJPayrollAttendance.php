@@ -119,7 +119,7 @@ class SyncJPayrollAttendance extends Command
                     'shift_date' => $shiftDate,
                     'alpha' => (int) ($row['ABS'] ?? 0),
                     'telat' => (int) ($row['LT'] ?? 0),
-                    'izin' => (int) ($row['CT'] ?? 0),
+                    'izin' => 0, // Izin is uploaded via CSV rather than fetched from JPayroll CT (Leave)
                     'sakit' => (int) ($row['HOS'] ?? 0) + (int) ($row['WA'] ?? 0) + (int) ($row['HOSWA'] ?? 0),
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -133,7 +133,7 @@ class SyncJPayrollAttendance extends Command
                     JPayrollAttendance::upsert(
                         $chunk,
                         ['employee_id', 'shift_date'],
-                        ['alpha', 'telat', 'izin', 'sakit', 'updated_at']
+                        ['alpha', 'telat', 'sakit', 'updated_at']
                     );
                     Log::channel('jpayroll')->debug('Synced chunk of '.count($chunk).' attendance records');
                 }

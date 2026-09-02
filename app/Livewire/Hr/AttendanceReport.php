@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\JPayrollAttendance;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -39,6 +40,7 @@ class AttendanceReport extends Component
         'late_days' => 'late_days',
         'sick_days' => 'sick_days',
         'leave_days' => 'leave_days',
+        'permit_days' => 'permit_days',
         'total_days' => 'total_days',
     ];
 
@@ -50,6 +52,12 @@ class AttendanceReport extends Component
         if (! auth()->user()->can(Permissions::MANAGE_ATTENDANCE)) {
             $this->department_id = auth()->user()->employee?->department_id ?? '';
         }
+    }
+
+    #[On('permit-uploaded')]
+    public function refreshReport(): void
+    {
+        $this->resetPage();
     }
 
     public function updatingDepartmentId(): void
@@ -140,6 +148,7 @@ class AttendanceReport extends Component
                 SUM(CASE WHEN jpayroll_attendances.alpha > 0 THEN 1 ELSE 0 END) as absent_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit > 0 THEN 1 ELSE 0 END) as sick_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as leave_days,
+                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as permit_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as late_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as present_days
             ')

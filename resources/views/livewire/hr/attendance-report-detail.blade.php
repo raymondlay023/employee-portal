@@ -62,9 +62,9 @@
                     <div class="text-purple-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Sick') }}</div>
                     <div class="text-2xl font-extrabold text-purple-600">{{ $summary['sick'] }}</div>
                 </button>
-                <button type="button" wire:click="setStatusFilter('leave')" class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ $statusFilter === 'leave' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-100 hover:border-slate-300' }}">
-                    <div class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Leave') }}</div>
-                    <div class="text-2xl font-extrabold text-blue-600">{{ $summary['leave'] }}</div>
+                <button type="button" wire:click="setStatusFilter('permit')" class="bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-center text-center cursor-pointer {{ ($statusFilter === 'permit' || $statusFilter === 'leave') ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-100 hover:border-slate-300' }}">
+                    <div class="text-blue-500 text-xs font-bold uppercase tracking-wider mb-1">{{ __('Permit') }}</div>
+                    <div class="text-2xl font-extrabold text-blue-600">{{ $summary['permit'] ?? $summary['leave'] }}</div>
                 </button>
             </div>
 
@@ -107,7 +107,7 @@
                                 <th class="py-4 px-4 text-center">{{ __('Absent') }}</th>
                                 <th class="py-4 px-4 text-center">{{ __('Late') }}</th>
                                 <th class="py-4 px-4 text-center">{{ __('Sick') }}</th>
-                                <th class="py-4 px-4 text-center">{{ __('Leave') }}</th>
+                                <th class="py-4 px-4 text-center">{{ __('Permit') }}</th>
                             </tr>
                         </thead>
                         <tbody class="hidden"></tbody>
@@ -142,7 +142,7 @@
                                                 'Present' => 'bg-green-100 text-green-700 border-green-200',
                                                 'Absent', 'Absent (No Biometric)' => 'bg-red-100 text-red-700 border-red-200',
                                                 'Late' => 'bg-amber-100 text-amber-700 border-amber-200',
-                                                'Leave' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                                'Permit', 'Leave' => 'bg-blue-100 text-blue-700 border-blue-200',
                                                 'Sick' => 'bg-purple-100 text-purple-700 border-purple-200',
                                                 'Off Day' => 'bg-slate-100 text-slate-600 border-slate-200',
                                                 default => 'bg-slate-100 text-slate-700 border-slate-200',

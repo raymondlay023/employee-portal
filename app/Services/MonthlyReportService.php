@@ -44,7 +44,7 @@ class MonthlyReportService
                 SUM(CASE WHEN jpayroll_attendances.alpha > 0 THEN 1 ELSE 0 END) as absent_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as late_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit > 0 THEN 1 ELSE 0 END) as sick_days,
-                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as leave_days
+                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as permit_days
             ")
             ->groupBy('jpayroll_attendances.employee_id', 'employees.first_name', 'employees.last_name')
             ->orderBy('employee_name')
@@ -59,7 +59,7 @@ class MonthlyReportService
                 absentDays: (int) $row->absent_days,
                 lateDays: (int) $row->late_days,
                 sickDays: (int) $row->sick_days,
-                leaveDays: (int) $row->leave_days,
+                permitDays: (int) $row->permit_days,
             );
         });
     }
@@ -90,7 +90,7 @@ class MonthlyReportService
                 SUM(CASE WHEN jpayroll_attendances.alpha > 0 THEN 1 ELSE 0 END) as absent_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha = 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin = 0 AND jpayroll_attendances.telat > 0 AND logs.employee_id IS NOT NULL THEN 1 ELSE 0 END) as late_days,
                 SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit > 0 THEN 1 ELSE 0 END) as sick_days,
-                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as leave_days
+                SUM(CASE WHEN jpayroll_attendances.alpha <= 0 AND jpayroll_attendances.sakit = 0 AND jpayroll_attendances.izin > 0 THEN 1 ELSE 0 END) as permit_days
             ')
             ->first();
 
@@ -102,7 +102,7 @@ class MonthlyReportService
             absentDays: (int) ($row->absent_days ?? 0),
             lateDays: (int) ($row->late_days ?? 0),
             sickDays: (int) ($row->sick_days ?? 0),
-            leaveDays: (int) ($row->leave_days ?? 0),
+            permitDays: (int) ($row->permit_days ?? 0),
         );
     }
 }

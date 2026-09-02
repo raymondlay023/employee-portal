@@ -9,10 +9,10 @@
 ]) }}
 
 <x-mail::table>
-| {{ __('Employee') }} | {{ __('Absent') }} | {{ __('Late') }} | {{ __('Sick') }} | {{ __('Leave') }} |
+| {{ __('Employee') }} | {{ __('Absent') }} | {{ __('Late') }} | {{ __('Sick') }} | {{ __('Permit') }} |
 | :--- | :---: | :---: | :---: | :---: |
 @foreach ($attendanceSummaries as $summary)
-| **{{ $summary->employeeName }}** | {{ $summary->absentDays }} | {{ $summary->lateDays }} | {{ $summary->sickDays }} | {{ $summary->leaveDays }} |
+| **{{ $summary->employeeName }}** | {{ $summary->absentDays }} | {{ $summary->lateDays }} | {{ $summary->sickDays }} | {{ $summary->permitDays }} |
 @endforeach
 </x-mail::table>
 
