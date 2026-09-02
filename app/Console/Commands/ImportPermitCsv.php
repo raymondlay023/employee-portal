@@ -20,7 +20,7 @@ class ImportPermitCsv extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Import employee monthly permit counts from a CSV file into JPayroll attendance records';
+    protected $description = 'Import employee permit dates from a CSV file into JPayroll attendance records';
 
     /**
      * The console command aliases.

@@ -3,19 +3,20 @@
 namespace App\Services;
 
 use App\Models\ApiSyncLog;
-use App\Models\AttendanceLog;
 use App\Models\Employee;
 use App\Models\JPayrollAttendance;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use Throwable;
 
 class PermitImportService
 {
     /**
-     * Parse and import Permit CSV data into JPayroll Attendance records for a given month and year.
+     * Parse and import Permit CSV data (with exact dates) into JPayroll Attendance records for a given month and year.
      *
      * @param  string|resource|UploadedFile  $file
      * @return array{
@@ -70,14 +71,6 @@ class PermitImportService
             $totalPermitDays = 0;
             $unmatchedNiks = [];
 
-            // Preload biometric clock-in dates for all matching employees in this month
-            $biometricPunches = AttendanceLog::whereIn('employee_id', $csvNiks)
-                ->whereBetween('clock_in_at', ["{$startDate} 00:00:00", "{$endDate} 23:59:59"])
-                ->selectRaw('employee_id, DATE(clock_in_at) as punch_date')
-                ->get()
-                ->groupBy('employee_id')
-                ->map(fn ($logs) => $logs->pluck('punch_date')->unique()->values()->all());
-
             DB::transaction(function () use (
                 $parsedRows,
                 $employees,
@@ -86,12 +79,11 @@ class PermitImportService
                 $daysInMonth,
                 $year,
                 $month,
-                $biometricPunches,
                 &$employeesProcessed,
                 &$totalPermitDays,
                 &$unmatchedNiks
             ) {
-                foreach ($parsedRows as $nik => $permitCount) {
+                foreach ($parsedRows as $nik => $permitDates) {
                     /** @var Employee|null $employee */
                     $employee = $employees->get($nik);
 
@@ -101,8 +93,13 @@ class PermitImportService
                         continue;
                     }
 
-                    $totalPermitDays += $permitCount;
+                    // Filter permit dates belonging to target month and year
+                    $validDatesInMonth = array_filter($permitDates, function ($d) use ($startDate, $endDate) {
+                        return $d >= $startDate && $d <= $endDate;
+                    });
+
                     $employeesProcessed++;
+                    $totalPermitDays += count($validDatesInMonth);
 
                     // Fetch existing attendance records for the employee in this month
                     $records = JPayrollAttendance::where('employee_id', $employee->id)
@@ -139,41 +136,47 @@ class PermitImportService
                         ->whereBetween('shift_date', [$startDate, $endDate])
                         ->update(['izin' => 0]);
 
-                    if ($permitCount <= 0) {
+                    if (empty($validDatesInMonth)) {
                         continue;
                     }
 
-                    $empPunches = $biometricPunches->get($nik, []);
-
-                    // Rank candidate dates to assign permit:
-                    // 1. Shift dates without biometric punch and sick=0 and alpha=0
-                    // 2. Shift dates without biometric punch and sick=0
-                    // 3. Shift dates with sick=0
-                    // 4. Any remaining shift dates
-                    $sortedRecords = $records->values()->sort(function ($a, $b) use ($empPunches) {
-                        $aDate = $a->shift_date instanceof Carbon ? $a->shift_date->toDateString() : (string) $a->shift_date;
-                        $bDate = $b->shift_date instanceof Carbon ? $b->shift_date->toDateString() : (string) $b->shift_date;
-
-                        $aScore = $this->calculateCandidateScore($a, in_array($aDate, $empPunches));
-                        $bScore = $this->calculateCandidateScore($b, in_array($bDate, $empPunches));
-
-                        if ($aScore === $bScore) {
-                            return strcmp($aDate, $bDate);
+                    // Directly assign izin = 1 for the exact dates specified in CSV
+                    foreach ($validDatesInMonth as $dateStr) {
+                        if (isset($records[$dateStr])) {
+                            JPayrollAttendance::where('id', $records[$dateStr]->id)->update(['izin' => 1]);
+                        } else {
+                            JPayrollAttendance::updateOrCreate(
+                                [
+                                    'employee_id' => $employee->id,
+                                    'shift_date' => $dateStr,
+                                ],
+                                [
+                                    'izin' => 1,
+                                    'alpha' => 0,
+                                    'telat' => 0,
+                                    'sakit' => 0,
+                                ]
+                            );
                         }
-
-                        return $bScore <=> $aScore; // Higher score first
-                    });
-
-                    // Assign izin=1 to top $permitCount records
-                    $targetIds = $sortedRecords->take($permitCount)->pluck('id')->all();
-
-                    if (! empty($targetIds)) {
-                        JPayrollAttendance::whereIn('id', $targetIds)->update(['izin' => 1]);
                     }
                 }
             });
 
-            $result = [
+            $syncLog->update([
+                'status' => 'success',
+                'records_processed' => $employeesProcessed,
+                'summary_payload' => [
+                    'month' => $month,
+                    'year' => $year,
+                    'employees_processed' => $employeesProcessed,
+                    'total_permit_days' => $totalPermitDays,
+                    'total_unique_employees_in_csv' => count($parsedRows),
+                    'unmatched_niks' => $unmatchedNiks,
+                ],
+                'completed_at' => now(),
+            ]);
+
+            return [
                 'status' => 'success',
                 'month' => $month,
                 'year' => $year,
@@ -183,23 +186,17 @@ class PermitImportService
                 'unmatched_niks' => $unmatchedNiks,
                 'skipped_rows' => count($unmatchedNiks),
             ];
-
-            $syncLog->update([
-                'status' => 'success',
-                'records_fetched' => count($parsedRows),
-                'records_processed' => $employeesProcessed,
-                'records_failed' => count($unmatchedNiks),
-                'ended_at' => now(),
+        } catch (Throwable $e) {
+            Log::error('Permit CSV import failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'month' => $month,
+                'year' => $year,
             ]);
-
-            return $result;
-        } catch (\Throwable $e) {
-            Log::error('PermitImportService import failed: '.$e->getMessage(), ['exception' => $e]);
 
             $syncLog->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                'ended_at' => now(),
+                'completed_at' => now(),
             ]);
 
             return [
@@ -217,36 +214,15 @@ class PermitImportService
     }
 
     /**
-     * Score a record for assigning Permit. Higher score means better candidate.
-     */
-    private function calculateCandidateScore(JPayrollAttendance $record, bool $hasPunch): int
-    {
-        $score = 0;
-
-        // No biometric clock-in is the highest indicator of an off/permit day
-        if (! $hasPunch) {
-            $score += 100;
-        }
-
-        // Not sick
-        if ($record->sakit === 0) {
-            $score += 50;
-        }
-
-        // Unexcused absence can be converted to permitted absence
-        if ($record->alpha > 0) {
-            $score += 20;
-        } elseif ($record->alpha === 0) {
-            $score += 10;
-        }
-
-        return $score;
-    }
-
-    /**
-     * Parse CSV stream or file and extract map: ['00147' => 1, '06551' => 3, ...]
+     * Parse the date-specific Permit CSV content into an array of [NIK => [DateString, ...]].
      *
-     * @return array<string, int>
+     * Format:
+     * No.; Employee ID; Name; Date; Attendance Status
+     * 1;07169;ANDYCO AMIHARDY;08/08/2026;FD
+     * 5;07232;ARIFIN SHOLEH;24/08/2026;FD
+     * ;;;25/08/2026;FD  (continuation row inherits previous Employee ID)
+     *
+     * @return array<string, array<string>> Key is Employee NIK, value is array of unique 'YYYY-MM-DD' date strings.
      */
     public function parseCsv(mixed $file): array
     {
@@ -290,10 +266,10 @@ class PermitImportService
 
         $parsed = [];
         $nikColIndex = 1;
-        $permitColIndex = 3;
-        $headerIdentified = false;
+        $dateColIndex = 3;
+        $currentNik = null;
 
-        foreach ($lines as $lineIndex => $line) {
+        foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '') {
                 continue;
@@ -308,10 +284,11 @@ class PermitImportService
 
             // Check if this row is a header line
             $isHeader = false;
-            foreach ($cleanedCols as $idx => $val) {
+            foreach ($cleanedCols as $val) {
                 $lower = strtolower($val);
-                if (in_array($lower, ['employee id', 'employee_id', 'nik', 'id karyawan', 'no.'])) {
+                if (in_array($lower, ['employee id', 'employee_id', 'nik', 'id karyawan', 'attendance status', 'status kehadiran'])) {
                     $isHeader = true;
+                    break;
                 }
             }
 
@@ -322,58 +299,84 @@ class PermitImportService
                     if (in_array($lower, ['employee id', 'employee_id', 'nik', 'id karyawan'])) {
                         $nikColIndex = $idx;
                     }
-                    if (in_array($lower, ['column1', 'permit', 'izin', 'jumlah izin', 'total izin', 'leave', 'cuti'])) {
-                        $permitColIndex = $idx;
+                    if (in_array($lower, ['date', 'tanggal', 'shift date', 'shift_date', 'tgl'])) {
+                        $dateColIndex = $idx;
                     }
                 }
-                $headerIdentified = true;
 
                 continue;
             }
 
-            // Extract NIK
-            $rawNik = $cleanedCols[$nikColIndex] ?? null;
+            // Extract or inherit NIK
+            $rawNik = $cleanedCols[$nikColIndex] ?? '';
+            if ($rawNik !== '' && preg_match('/\d+/', $rawNik)) {
+                $currentNik = trim($rawNik);
+            }
 
-            // Fallback: if only 2-3 columns or default index didn't work, search for numeric NIK column
-            if (! $rawNik || ! preg_match('/^\d+$/', $rawNik)) {
-                foreach ($cleanedCols as $idx => $val) {
-                    if (preg_match('/^\d{4,10}$/', $val) && $idx !== 0) {
-                        $rawNik = $val;
-                        $nikColIndex = $idx;
+            if (! $currentNik) {
+                continue;
+            }
+
+            // Extract Date column
+            $rawDate = $cleanedCols[$dateColIndex] ?? '';
+            if ($rawDate === '') {
+                // If not at $dateColIndex, scan columns for a date string
+                foreach ($cleanedCols as $val) {
+                    if (preg_match('/\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/', $val) || preg_match('/\b\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/', $val)) {
+                        $rawDate = $val;
                         break;
                     }
                 }
             }
 
-            if (! $rawNik) {
+            if ($rawDate === '') {
                 continue;
             }
 
-            // Ensure leading zeros are preserved (e.g. "00147")
-            $nik = trim($rawNik);
-
-            // Extract Permit Count
-            $rawPermit = $cleanedCols[$permitColIndex] ?? null;
-            if ($rawPermit === null || ! is_numeric($rawPermit)) {
-                // If not at $permitColIndex, check the last numeric column
-                for ($i = count($cleanedCols) - 1; $i >= 0; $i--) {
-                    if ($i !== $nikColIndex && is_numeric($cleanedCols[$i])) {
-                        $rawPermit = $cleanedCols[$i];
-                        break;
-                    }
-                }
+            $parsedDate = $this->parseDateString($rawDate);
+            if (! $parsedDate) {
+                continue;
             }
 
-            $permitCount = max(0, (int) ($rawPermit ?? 0));
+            if (! isset($parsed[$currentNik])) {
+                $parsed[$currentNik] = [];
+            }
 
-            // Sum up if NIK appears multiple times in CSV
-            if (isset($parsed[$nik])) {
-                $parsed[$nik] += $permitCount;
-            } else {
-                $parsed[$nik] = $permitCount;
+            if (! in_array($parsedDate, $parsed[$currentNik], true)) {
+                $parsed[$currentNik][] = $parsedDate;
             }
         }
 
         return $parsed;
+    }
+
+    /**
+     * Parse date string formatted as DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD into YYYY-MM-DD.
+     */
+    private function parseDateString(string $dateStr): ?string
+    {
+        $dateStr = trim($dateStr);
+
+        try {
+            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $dateStr, $matches)) {
+                $day = (int) $matches[1];
+                $month = (int) $matches[2];
+                $year = (int) $matches[3];
+
+                return Carbon::createFromDate($year, $month, $day)->toDateString();
+            }
+
+            if (preg_match('/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/', $dateStr, $matches)) {
+                $year = (int) $matches[1];
+                $month = (int) $matches[2];
+                $day = (int) $matches[3];
+
+                return Carbon::createFromDate($year, $month, $day)->toDateString();
+            }
+
+            return Carbon::parse($dateStr)->toDateString();
+        } catch (Exception) {
+            return null;
+        }
     }
 }

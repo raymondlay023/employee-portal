@@ -162,7 +162,7 @@
                                             @endif
 
                                             <p class="text-[10px] text-slate-400 font-medium mt-1">
-                                                {{ __('Expected format: Semicolon (;) or comma (,) separated CSV with headers: No.; Employee ID; Name; Column1') }}
+                                                {{ __('Expected format: Semicolon (;) or comma (,) separated CSV with headers: No.; Employee ID; Name; Date; Attendance Status') }}
                                             </p>
                                             @error('csv_file') <span class="text-[10px] text-red-500 font-bold mt-0.5 block">{{ $message }}</span> @enderror
                                         </div>

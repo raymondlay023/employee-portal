@@ -47,72 +47,79 @@ class UploadPermitCsvTest extends TestCase
         ]);
     }
 
-    public function test_csv_parser_parses_semicolon_delimited_csv_correctly(): void
+    public function test_csv_parser_parses_date_format_and_continuation_rows_correctly(): void
     {
         $csvContent = <<<'CSV'
-No.;Employee ID;Name;Column1
-1;00001;BERNADETT;0
-2;00147;BEJO SANTOSO;1
-3;06551;YOGA SUGIH PRATOMO;3
-No.;Employee ID;Name;Column1
-1;07055;ANDREAS LEONARDO;2
-2;07073;RAYMOND LAY;0
+No.;Employee ID;Name;Date;Attendance Status
+1;07169;ANDYCO AMIHARDY;08/08/2026;FD
+2;00147;BEJO SANTOSO;08/08/2026;FD
+5;07232;ARIFIN SHOLEH;24/08/2026;FD
+;;;25/08/2026;FD
+21;06551;YOGA SUGIH PRATOMO;06/08/2026;FD
+;;;10/08/2026;FD
+;;;11/08/2026;FD
 CSV;
 
         $service = new PermitImportService;
         $parsed = $service->parseCsv($csvContent);
 
         $this->assertEquals([
-            '00001' => 0,
-            '00147' => 1,
-            '06551' => 3,
-            '07055' => 2,
-            '07073' => 0,
+            '07169' => ['2026-08-08'],
+            '00147' => ['2026-08-08'],
+            '07232' => ['2026-08-24', '2026-08-25'],
+            '06551' => ['2026-08-06', '2026-08-10', '2026-08-11'],
         ], $parsed);
     }
 
-    public function test_service_imports_permit_and_assigns_permit_days(): void
+    public function test_service_imports_permit_and_assigns_exact_shift_dates(): void
     {
         $emp1 = $this->createEmployee('00147', 'Bejo', 'Santoso');
         $emp2 = $this->createEmployee('06551', 'Yoga', 'Sugih');
         $emp3 = $this->createEmployee('07073', 'Raymond', 'Lay');
 
-        $csvContent = "No.;Employee ID;Name;Column1\n1;00147;BEJO SANTOSO;1\n2;06551;YOGA SUGIH;3\n3;07073;RAYMOND LAY;0\n4;99999;UNKNOWN;1\n";
+        $csvContent = <<<'CSV'
+No.;Employee ID;Name;Date;Attendance Status
+1;00147;BEJO SANTOSO;08/08/2026;FD
+2;06551;YOGA SUGIH;06/08/2026;FD
+;;;10/08/2026;FD
+;;;11/08/2026;FD
+3;99999;UNKNOWN;15/08/2026;FD
+CSV;
 
         $service = new PermitImportService;
         $result = $service->import($csvContent, 8, 2026);
 
         $this->assertEquals('success', $result['status']);
-        $this->assertEquals(3, $result['employees_processed']);
-        $this->assertEquals(4, $result['total_permit_days']); // 1 + 3 + 0
+        $this->assertEquals(2, $result['employees_processed']);
+        $this->assertEquals(4, $result['total_permit_days']); // 1 for emp1 + 3 for emp2
         $this->assertEquals(['99999'], $result['unmatched_niks']);
 
-        // Check DB: emp1 has 1 permit day in August 2026
-        $emp1PermitCount = JPayrollAttendance::where('employee_id', $emp1->id)
-            ->whereBetween('shift_date', ['2026-08-01', '2026-08-31'])
-            ->where('izin', 1)
-            ->count();
-        $this->assertEquals(1, $emp1PermitCount);
+        // Check DB: emp1 has izin=1 on EXACTLY 2026-08-08
+        $emp1Permit = JPayrollAttendance::where('employee_id', $emp1->id)
+            ->where('shift_date', '2026-08-08')
+            ->first();
+        $this->assertNotNull($emp1Permit);
+        $this->assertEquals(1, $emp1Permit->izin);
 
-        // Check DB: emp2 has 3 permit days in August 2026
-        $emp2PermitCount = JPayrollAttendance::where('employee_id', $emp2->id)
-            ->whereBetween('shift_date', ['2026-08-01', '2026-08-31'])
+        // Check DB: emp2 has izin=1 on EXACTLY 2026-08-06, 2026-08-10, 2026-08-11
+        $emp2PermitDates = JPayrollAttendance::where('employee_id', $emp2->id)
             ->where('izin', 1)
-            ->count();
-        $this->assertEquals(3, $emp2PermitCount);
+            ->pluck('shift_date')
+            ->map(fn ($d) => is_string($d) ? substr($d, 0, 10) : $d->toDateString())
+            ->sort()
+            ->values()
+            ->all();
 
-        // Check DB: emp3 has 0 permit days in August 2026
-        $emp3PermitCount = JPayrollAttendance::where('employee_id', $emp3->id)
-            ->whereBetween('shift_date', ['2026-08-01', '2026-08-31'])
-            ->where('izin', 1)
-            ->count();
-        $this->assertEquals(0, $emp3PermitCount);
+        $this->assertEquals(['2026-08-06', '2026-08-10', '2026-08-11'], $emp2PermitDates);
+
+        // Check DB: emp3 has 0 permit days
+        $this->assertEquals(0, JPayrollAttendance::where('employee_id', $emp3->id)->where('izin', 1)->count());
 
         // ApiSyncLog recorded
         $this->assertDatabaseHas('api_sync_logs', [
             'api_name' => 'jpayroll_permit_upload',
             'status' => 'success',
-            'records_processed' => 3,
+            'records_processed' => 2,
         ]);
     }
 
@@ -120,26 +127,20 @@ CSV;
     {
         $emp = $this->createEmployee('00147', 'Bejo', 'Santoso');
 
-        $csvContentFirst = "No.;Employee ID;Name;Column1\n1;00147;BEJO SANTOSO;3\n";
-        $csvContentSecond = "No.;Employee ID;Name;Column1\n1;00147;BEJO SANTOSO;1\n";
+        $csvFirst = "No.;Employee ID;Name;Date;Attendance Status\n1;00147;BEJO SANTOSO;08/08/2026;FD\n;;;09/08/2026;FD\n";
+        $csvSecond = "No.;Employee ID;Name;Date;Attendance Status\n1;00147;BEJO SANTOSO;15/08/2026;FD\n";
 
         $service = new PermitImportService;
-        $service->import($csvContentFirst, 8, 2026);
+        $service->import($csvFirst, 8, 2026);
 
-        $firstCount = JPayrollAttendance::where('employee_id', $emp->id)
-            ->whereBetween('shift_date', ['2026-08-01', '2026-08-31'])
-            ->where('izin', 1)
-            ->count();
-        $this->assertEquals(3, $firstCount);
+        $this->assertEquals(2, JPayrollAttendance::where('employee_id', $emp->id)->where('izin', 1)->count());
 
-        // Re-upload with 1
-        $service->import($csvContentSecond, 8, 2026);
+        // Re-upload with different date
+        $service->import($csvSecond, 8, 2026);
 
-        $secondCount = JPayrollAttendance::where('employee_id', $emp->id)
-            ->whereBetween('shift_date', ['2026-08-01', '2026-08-31'])
-            ->where('izin', 1)
-            ->count();
-        $this->assertEquals(1, $secondCount);
+        $secondRecords = JPayrollAttendance::where('employee_id', $emp->id)->where('izin', 1)->get();
+        $this->assertCount(1, $secondRecords);
+        $this->assertEquals('2026-08-15', substr((string) $secondRecords->first()->shift_date, 0, 10));
     }
 
     public function test_artisan_command_imports_csv_successfully(): void
@@ -147,7 +148,7 @@ CSV;
         $this->createEmployee('00147', 'Bejo', 'Santoso');
 
         $tempFile = tempnam(sys_get_temp_dir(), 'permit_').'.csv';
-        file_put_contents($tempFile, "No.;Employee ID;Name;Column1\n1;00147;BEJO SANTOSO;2\n");
+        file_put_contents($tempFile, "No.;Employee ID;Name;Date;Attendance Status\n1;00147;BEJO SANTOSO;08/08/2026;FD\n;;;12/08/2026;FD\n");
 
         $this->artisan('jpayroll:import-permit', [
             'file' => $tempFile,
@@ -168,8 +169,8 @@ CSV;
         $user->givePermissionTo(Permissions::MANAGE_ATTENDANCE);
 
         $csv = UploadedFile::fake()->createWithContent(
-            'permit_august_2026.csv',
-            "No.;Employee ID;Name;Column1\n1;07073;RAYMOND LAY;1\n"
+            'Izin_Karyawan_1-31_Agustus_2026.csv',
+            "No.;Employee ID;Name;Date;Attendance Status\n1;07073;RAYMOND LAY;08/08/2026;FD\n"
         );
 
         Livewire::actingAs($user)
@@ -189,8 +190,8 @@ CSV;
         $user = User::factory()->create(); // No MANAGE_ATTENDANCE permission
 
         $csv = UploadedFile::fake()->createWithContent(
-            'permit.csv',
-            "No.;Employee ID;Name;Column1\n1;07073;RAYMOND LAY;1\n"
+            'Izin_Karyawan_1-31_Agustus_2026.csv',
+            "No.;Employee ID;Name;Date;Attendance Status\n1;07073;RAYMOND LAY;08/08/2026;FD\n"
         );
 
         Livewire::actingAs($user)
@@ -206,8 +207,8 @@ CSV;
     {
         $emp = $this->createEmployee('07073', 'Raymond', 'Lay');
 
-        // 1. Upload Permit CSV to set 2 permit days
-        $csvContent = "No.;Employee ID;Name;Column1\n1;07073;RAYMOND LAY;2\n";
+        // 1. Upload Permit CSV to set permit on 2026-05-02 and 2026-05-03
+        $csvContent = "No.;Employee ID;Name;Date;Attendance Status\n1;07073;RAYMOND LAY;02/05/2026;FD\n;;;03/05/2026;FD\n";
         $service = new PermitImportService;
         $service->import($csvContent, 5, 2026);
 
